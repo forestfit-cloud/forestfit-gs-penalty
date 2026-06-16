@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>포레스트핏 전채널 납기관리 입고/납기 자동 비교</title>
+<title>포레스트핏 장기지연건 입고/납기 자동 비교</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 <style>
 body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
@@ -16,7 +16,7 @@ label{display:block;font-weight:bold;margin-bottom:8px;color:#6B5310}
 input,select,textarea,button{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #465163;border-radius:10px;font-size:14px;margin-bottom:12px;background:#FFFFFF;color:#4A3A12}
 textarea{min-height:96px;resize:vertical}
 button{cursor:pointer;border:0;background:#C9A227;color:#6B5310;font-weight:bold}
-button.secondary{background:#D8B84E}
+button.secondary{background:#BFA45A;color:#FFFFFF}
 .small{font-size:13px;color:#AEB8C6;line-height:1.5}
 .pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#FFF2BF;color:#6B5310;margin:3px;font-size:12px}
 .guide{margin:14px 0 12px;padding:14px;background:#FFF6D6;border:1px solid #E2C96B;border-radius:10px;color:#6B5310}
@@ -54,11 +54,24 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
   color:#5f6570;
 }
 
+
+button{
+  transition:all .18s ease;
+  box-shadow:0 3px 8px rgba(87,67,24,.16);
+}
+button:hover{
+  filter:brightness(.96);
+  transform:translateY(-1px);
+}
+button.secondary:hover{
+  filter:brightness(.97);
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>포레스트핏 전채널 납기관리 입고/납기 자동 비교</h1>
+<h1>포레스트핏 장기지연건 입고/납기 자동 비교</h1>
 <div class="desc">
 처음 사용하는 경우, 각 업로드 영역 아래의 <b>첨부 파일 다운로드 방법</b>을 순서대로 따라 파일을 다운로드한 뒤 첨부해 주세요.<br>
 기존 파일과 오늘 파일을 비교하여 입고예정일 변경 여부를 확인하고, 브리치 파일을 함께 업로드하면 비플로우 건의 출고준수일을 보정합니다.
@@ -233,7 +246,7 @@ function calcDefaultDue(row,holidays){
  if(seller.includes("롯데ON"))return addMonths(orderDate,1);
  if(seller.includes("카카오톡스토어"))return addMonths(orderDate,1);
  if(seller.includes("퀸잇"))return addWorkdays(orderDate,21,holidays);
- if(seller.includes("하프클럽"))return addWorkdays(orderDate,14,holidays);
+ if(seller.includes("하프클럽"))return addWorkdays(orderDate,15,holidays);
  if(seller.includes("비플로우"))return addWorkdays(orderDate,5,holidays);
  if(seller.includes("와디즈"))return"와디즈";
  return"";
@@ -370,8 +383,8 @@ function downloadResult(){
  ];
 
  const wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"전채널 납기관리");
- XLSX.writeFile(wb,"전채널 납기관리_입고납기_비교결과.xlsx");
+ XLSX.utils.book_append_sheet(wb,ws,"장기지연건");
+ XLSX.writeFile(wb,"장기지연건_입고납기_비교결과.xlsx");
 }
 
 document.getElementById("baseFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=evt=>{baseWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});fillSelect(baseWorkbook,"baseSheet")};r.readAsArrayBuffer(f)});
