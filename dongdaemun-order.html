@@ -4,44 +4,44 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>포레스트핏 동대문 주문취합</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
 body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
-.wrap{max-width:1280px;margin:0 auto;padding:46px 28px 80px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}
+.wrap{max-width:1220px;margin:0 auto;padding:42px 24px 70px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
 .logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
-.badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750;box-shadow:0 8px 24px rgba(31,42,36,.06)}
-h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 12px;font-weight:900}
-.desc{font-size:15px;color:#6d776f;line-height:1.65;margin-bottom:24px;font-weight:600}
-.card{background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:22px;margin-bottom:18px;box-shadow:0 18px 45px rgba(38,49,43,.08)}
-label{display:block;font-size:16px;font-weight:850;margin-bottom:10px;color:#173d2b}
+.badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750}
+h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 10px;font-weight:900}
+.desc{font-size:15px;color:#6d776f;line-height:1.6;margin-bottom:22px;font-weight:600}
+.card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 35px rgba(38,49,43,.07)}
+label{display:block;font-size:16px;font-weight:850;margin-bottom:9px;color:#173d2b}
 input,select,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
-button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer;transition:.18s ease}
-button:hover{filter:brightness(.96);transform:translateY(-1px)}
+button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer}
 button.secondary{background:#7b8b82}
-button.mini{width:auto;padding:8px 12px;border-radius:10px;font-size:13px;margin:0 6px 8px 0}
-.small{font-size:13px;color:#7c867f;line-height:1.6}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.tab{width:auto;padding:10px 14px;border:1px solid #d8dfdb;background:#fff;color:#486052;border-radius:999px;font-weight:850;cursor:pointer}
-.tab.active{background:#244734;color:#fff;border-color:#244734}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
-.kpi{background:#fff;border:1px solid #e5ebe8;border-radius:18px;padding:16px}
-.kpi b{display:block;font-size:26px;color:#173d2b;margin-bottom:4px}
-.kpi span{font-size:13px;color:#7c867f;font-weight:750}
-.table-wrap{max-height:420px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
+.small{font-size:13px;color:#7c867f;line-height:1.55}
+.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.summarybox{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px;min-height:260px;max-height:360px;overflow:auto}
+.summarybox h3{margin:0 0 10px;font-size:16px;color:#173d2b}
+.summarybox b{font-size:24px;color:#244734}
+.mini-list{display:flex;flex-direction:column;gap:8px}
+.mini-card{border:1px solid #e1e8e4;border-radius:14px;padding:12px;text-align:left;line-height:1.45;font-size:13px;font-weight:700}
+.mini-card.soldout-card{background:#fff5f5;color:#4a2f2f}
+.mini-card.sample-card{background:#edf7ff;color:#25516b}
+.mini-card.check-card{background:#fff8dc;color:#6b3d00}
+.mini-card .label{font-weight:900;color:#173d2b}
+.schedule-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.schedule-item{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:14px}
+.table-wrap{max-height:360px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
 th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
-td.memo{color:#7a4a00;background:#fff8dc;font-weight:700}
-td.soldout{color:#4a2f2f;background:#fff5f5;font-weight:750}
-td.sample{background:#edf7ff;color:#25516b;font-weight:750}
-td.summary-text{text-align:left;white-space:normal;line-height:1.45}
-.schedule-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.schedule-item{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:14px}
-.schedule-item .count{font-size:12px;color:#7c867f;font-weight:750;margin-top:4px}
-.hidden{display:none}
-@media(max-width:900px){.kpis,.schedule-box{grid-template-columns:1fr}.wrap{padding:32px 18px}.table-wrap{max-height:520px}}
+td.text{text-align:left;white-space:normal;line-height:1.45}
+.warn{background:#fff5f5;color:#4a2f2f;font-weight:750}
+.sample{background:#edf7ff;color:#25516b;font-weight:750}
+.memo{background:#fff8dc;color:#6b3d00;font-weight:750}
+@media(max-width:900px){.grid3,.schedule-box{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -53,42 +53,37 @@ td.summary-text{text-align:left;white-space:normal;line-height:1.45}
 
   <h1>동대문 주문취합</h1>
   <div class="desc">
-    동대문 주문내역 파일 1개를 업로드하면 샘플, 품절, 입고일정 건을 자동으로 분류합니다.<br>
-    일정 키워드별 실제 입고일을 입력하면 Q열 바코드 기준으로 셀메이트 입고예정일 입력 파일을 생성합니다. 화면은 빠른 확인을 위해 일부만 미리보기로 표시하고, 다운로드는 전체 반영됩니다.
+    파일 1개를 업로드하면 품절/샘플/확인필요/입고일정 건을 빠르게 분류합니다.<br>
+    화면에는 일부만 미리보기로 표시하고, 다운로드는 전체 데이터 기준으로 생성합니다.
   </div>
 
   <div class="card">
-    <label>1. 동대문 주문내역 파일 업로드</label>
+    <label>1. 파일 업로드</label>
     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
     <label>시트 선택</label>
     <select id="sheetSelect"></select>
-    <button onclick="processFile()">주문취합 정리 실행</button>
+    <button id="runBtn" onclick="processFile()">주문취합 정리 실행</button>
+    <div id="status" class="status"></div>
     <div class="small">
-      기준 열: A 공급처 / D 사입명 / E 상품명 / F 옵션 / H 주문수 / J 입고수 / N 메모<br>
-      제외 기준: 상품명에 샘플·반품 포함, 메모 품절/종료 건은 입고일정에서 제외
+      기준 열: A 거래처명 / D 사입상품명 / E 상품명 / F 옵션명 / H 주문수 / J 입고수 / N 거래처 메모 / Q 바코드
     </div>
   </div>
 
   <div class="card">
     <label>2. 요약</label>
-    <div class="small" style="margin-bottom:12px;">
-      품절/종료 요청과 샘플 건을 바로 확인할 수 있도록 정리합니다.
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-      <div>
-        <label style="font-size:15px;">품절/종료 요청 <span id="soldoutCnt" class="small">0건</span></label>
-        <div class="table-wrap" style="max-height:300px;" id="soldoutSummaryTable"></div>
+    <div class="small" style="margin-bottom:14px;">품절/종료 요청과 샘플 건을 바로 확인할 수 있도록 정리합니다.</div>
+    <div class="grid3">
+      <div class="summarybox">
+        <h3>품절/종료 요청 <span id="soldoutCnt" class="small">0건</span></h3>
+        <div id="soldoutSummary" class="mini-list"></div>
       </div>
-
-      <div>
-        <label style="font-size:15px;">샘플 포함 <span id="sampleCnt" class="small">0건</span></label>
-        <div class="table-wrap" style="max-height:300px;" id="sampleSummaryTable"></div>
+      <div class="summarybox">
+        <h3>샘플 포함 <span id="sampleCnt" class="small">0건</span></h3>
+        <div id="sampleSummary" class="mini-list"></div>
       </div>
-
-      <div>
-        <label style="font-size:15px;">확인 필요/가능 <span id="checkCnt" class="small">0건</span></label>
-        <div class="table-wrap" style="max-height:300px;" id="checkSummaryTable"></div>
+      <div class="summarybox">
+        <h3>확인 필요/가능 <span id="checkCnt" class="small">0건</span></h3>
+        <div id="checkSummary" class="mini-list"></div>
       </div>
     </div>
   </div>
@@ -96,28 +91,16 @@ td.summary-text{text-align:left;white-space:normal;line-height:1.45}
   <div class="card">
     <label>3. 일정 키워드별 실제 입고일 입력</label>
     <div id="scheduleInputs" class="schedule-box"></div>
-    <div class="small">예: 수밤 → 2026-06-18 / 목밤 → 2026-06-19 / 다음주중 → 2026-06-25</div>
+    <div class="small">입고일정 키워드별 날짜를 입력하면 셀메이트 CSV를 생성합니다.</div>
     <br>
-    <button onclick="downloadCellmateFile()">셀메이트 입고일 입력 파일 만들기</button>
-    <button class="secondary" onclick="downloadSummaryFile()">정리 결과 전체 다운로드</button>
+    <button onclick="downloadCellmateCsv()">셀메이트 입고일 CSV 만들기</button>
+    <button class="secondary" onclick="downloadSummaryCsv()">전체 정리 CSV 다운로드</button>
   </div>
 
   <div class="card">
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('schedule')">입고일정</button>
-      <button class="tab" onclick="showTab('soldout')">품절 요청</button>
-      <button class="tab" onclick="showTab('sample')">샘플</button>
-    </div>
-
-    <div id="tab-schedule">
-      <div class="table-wrap" id="scheduleTable"></div>
-    </div>
-    <div id="tab-soldout" class="hidden">
-      <div class="table-wrap" id="soldoutTable"></div>
-    </div>
-    <div id="tab-sample" class="hidden">
-      <div class="table-wrap" id="sampleTable"></div>
-    </div>
+    <label>4. 미리보기</label>
+    <div class="small" style="margin-bottom:10px;">각 항목은 최대 80건만 화면 표시됩니다.</div>
+    <div class="table-wrap" id="previewTable"></div>
   </div>
 </div>
 
@@ -127,427 +110,240 @@ let scheduleRows=[];
 let soldoutRows=[];
 let sampleRows=[];
 let checkRows=[];
-let allRows=[];
-let scheduleKeywords=[];
-const PREVIEW_LIMIT=100;
-const SUMMARY_LIMIT=50;
+let allValidRows=[];
+const PREVIEW_LIMIT=80;
 
 const soldoutWords=["깔품","품절","판매종료","종료"];
+const returnWords=["반품","반납"];
+const excludeScheduleWords=["매입중","차감요청"];
 
 function txt(v){return v==null?"":String(v).trim();}
-function norm(v){return txt(v).replace(/\u00A0/g," ").replace(/\s+/g," ").trim();}
-function includesAny(text, words){const s=txt(text); return words.some(w=>s.includes(w));}
-function isSample(row){return txt(row.product).includes("샘플") || txt(row.buyName).includes("샘플") || txt(row.memo).includes("샘플");}
-function isReturn(row){return txt(row.product).includes("반품") || txt(row.buyName).includes("반품") || txt(row.product).includes("반납") || txt(row.buyName).includes("반납") || txt(row.memo).includes("반납");}
-function isSoldout(row){return includesAny(row.memo, soldoutWords);}
-function isCheckMemo(row){
-  const m=txt(row.memo || row.product || "");
-  return m.includes("확인");
-}
-
-function isScheduleMemo(memo){
-  const m=txt(memo);
-  if(!m)return false;
-  if(isSoldout({memo:m}))return false;
-  if(["매입중","차감요청"].some(x=>m.includes(x)))return false;
-  return true;
-}
-function buildItemText(row){
-  return [
-    row.supplier ? `공급처: ${row.supplier}` : "",
-    row.buyName ? `사입명: ${row.buyName}` : "",
-    row.product ? `상품명: ${row.product}` : "",
-    row.option ? `옵션: ${row.option}` : ""
-  ].filter(Boolean).join(" / ");
-}
+function num(v){const n=Number(txt(v).replace(/,/g,"")); return Number.isFinite(n)?n:0;}
+function setStatus(msg){const el=document.getElementById("status"); el.style.display="block"; el.textContent=msg;}
+function escapeCsv(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
+function includesAny(s, arr){s=txt(s); return arr.some(w=>s.includes(w));}
 
 function getRows(){
-  const sheetName=document.getElementById("sheetSelect").value;
-  return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
+  const name=document.getElementById("sheetSelect").value;
+  return XLSX.utils.sheet_to_json(workbook.Sheets[name],{header:1,raw:false,defval:"",blankrows:false});
+}
+
+function buildText(r){
+  return `거래처명: ${r.supplier||"-"} / 사입상품명: ${r.buyName||"-"} / 상품명: ${r.product||"-"} / 옵션명: ${r.option||"-"} / 거래처 메모: ${r.memo||"-"}`;
+}
+
+function isSample(r){return txt(r.product).includes("샘플") || txt(r.buyName).includes("샘플") || txt(r.memo).includes("샘플");}
+function isReturn(r){return includesAny(r.product,returnWords) || includesAny(r.buyName,returnWords) || includesAny(r.memo,returnWords);}
+function isSoldout(r){return includesAny(r.memo,soldoutWords);}
+function isCheck(r){return txt(r.memo).includes("확인") || txt(r.product).includes("확인");}
+function isSchedule(r){
+  const m=txt(r.memo);
+  if(!m) return false;
+  if(isSoldout(r) || isSample(r) || isReturn(r) || isCheck(r)) return false;
+  if(includesAny(m,excludeScheduleWords)) return false;
+  return true;
+}
+
+function findStartRow(rows){
+  for(let i=0;i<Math.min(rows.length,30);i++){
+    const a=txt(rows[i][0]), e=txt(rows[i][4]);
+    if(a.includes("공급처") || a.includes("거래처") || e.includes("상품명")) return i+1;
+  }
+  return 1;
 }
 
 function processFile(){
-  try{
-
   if(!workbook){alert("파일을 업로드해주세요.");return;}
-  const summaryEl=document.getElementById("summary");
-  if(summaryEl) summaryEl.innerHTML="처리 중입니다. 잠시만 기다려주세요...";
-  const scheduleTableEl=document.getElementById("scheduleTable");
-  const soldoutTableEl=document.getElementById("soldoutTable");
-  const sampleTableEl=document.getElementById("sampleTable");
-  if(scheduleTableEl) scheduleTableEl.innerHTML="";
-  if(soldoutTableEl) soldoutTableEl.innerHTML="";
-  if(sampleTableEl) sampleTableEl.innerHTML="";
+  const btn=document.getElementById("runBtn");
+  btn.disabled=true;
+  btn.textContent="처리 중...";
+  setStatus("파일 읽는 중입니다...");
 
-  const rows=getRows();
-  allRows=[]; scheduleRows=[]; soldoutRows=[]; sampleRows=[]; checkRows=[];
+  setTimeout(()=>{
+    try{
+      scheduleRows=[]; soldoutRows=[]; sampleRows=[]; checkRows=[]; allValidRows=[];
+      const rows=getRows();
+      const start=findStartRow(rows);
 
-  let curSupplier="", curBuyName="", curProduct="";
-  let startRow=0;
+      let curSupplier="", curBuyName="", curProduct="";
 
-  // 헤더 '공급처' 찾기
-  for(let i=0;i<Math.min(rows.length,20);i++){
-    if(txt(rows[i][0]).includes("공급처") && txt(rows[i][4]).includes("상품명")){
-      startRow=i+1;
-      break;
+      for(let i=start;i<rows.length;i++){
+        const r=rows[i]||[];
+        if(r.every(v=>txt(v)==="")) continue;
+
+        if(txt(r[0])) curSupplier=txt(r[0]);
+        if(txt(r[3])) curBuyName=txt(r[3]);
+        if(txt(r[4])) curProduct=txt(r[4]);
+
+        const row={
+          rowNo:i+1,
+          supplier:curSupplier,
+          buyName:curBuyName,
+          product:curProduct,
+          option:txt(r[5]),
+          orderQty:num(r[7]),
+          receivedQty:num(r[9]),
+          memo:txt(r[13]),
+          barcode:txt(r[16])
+        };
+
+        if(!row.supplier && !row.buyName && !row.product && !row.option && !row.memo) continue;
+
+        row.unreceivedQty=Math.max(row.orderQty-row.receivedQty,0);
+        row.text=buildText(row);
+        allValidRows.push(row);
+
+        if(isSample(row)){sampleRows.push(row); continue;}
+        if(isReturn(row)) continue;
+        if(isSoldout(row)){soldoutRows.push(row); continue;}
+        if(isCheck(row)){checkRows.push(row); continue;}
+        if(isSchedule(row)) scheduleRows.push(row);
+      }
+
+      renderResult();
+      setStatus(`정리 완료: 입고일정 ${scheduleRows.length}건 / 품절 ${soldoutRows.length}건 / 샘플 ${sampleRows.length}건 / 확인 ${checkRows.length}건`);
+    }catch(err){
+      console.error(err);
+      alert("실행 오류: " + (err && err.message ? err.message : err));
+      setStatus("오류가 발생했습니다. 콘솔 오류를 확인해주세요.");
+    }finally{
+      btn.disabled=false;
+      btn.textContent="주문취합 정리 실행";
     }
-  }
-
-  for(let i=startRow;i<rows.length;i++){
-    const r=rows[i]||[];
-    if(r.every(v=>txt(v)==="")) continue;
-
-    if(txt(r[0])) curSupplier=txt(r[0]);
-    if(txt(r[3])) curBuyName=txt(r[3]);
-    if(txt(r[4])) curProduct=txt(r[4]);
-
-    const row={
-      no:i+1,
-      supplier:curSupplier,
-      buyName:curBuyName,
-      product:curProduct,
-      option:txt(r[5]),
-      cost:txt(r[6]),
-      orderQty:Number(txt(r[7]).replace(/,/g,""))||0,
-      shippedQty:Number(txt(r[8]).replace(/,/g,""))||0,
-      receivedQty:Number(txt(r[9]).replace(/,/g,""))||0,
-      returnQty:Number(txt(r[11]).replace(/,/g,""))||0,
-      note:txt(r[12]),
-      memo:txt(r[13]),
-      barcode:txt(r[16]),
-      raw:r
-    };
-
-    if(!row.supplier && !row.buyName && !row.product && !row.option && !row.memo) continue;
-    row.itemText=buildItemText(row);
-    allRows.push(row);
-
-    if(isSample(row)){
-      sampleRows.push({
-        supplier:row.supplier,
-        buyName:row.buyName,
-        product:row.product,
-        option:row.option,
-        sampleContent:row.memo || row.option || row.note,
-        itemText:row.itemText
-      });
-      continue;
-    }
-
-    if(isReturn(row)) continue;
-
-    if(isSoldout(row)){
-      soldoutRows.push({
-        supplier:row.supplier,
-        buyName:row.buyName,
-        product:row.product,
-        option:row.option,
-        memo:row.memo,
-        request:"셀메이트 품절처리 및 전채널 재고 0처리 부탁드립니다.",
-        itemText:row.itemText
-      });
-      continue;
-    }
-
-    if(isCheckMemo(row)){
-      checkRows.push({
-        supplier:row.supplier,
-        buyName:row.buyName,
-        product:row.product,
-        option:row.option,
-        memo:row.memo,
-        itemText:row.itemText
-      });
-      // 확인 필요/가능 건은 화면에서 별도 표시하고 입고일 입력 대상에서는 제외
-      continue;
-    }
-
-    if(isScheduleMemo(row.memo)){
-      scheduleRows.push({
-        supplier:row.supplier,
-        buyName:row.buyName,
-        product:row.product,
-        option:row.option,
-        orderQty:row.orderQty,
-        receivedQty:row.receivedQty,
-        unreceivedQty:Math.max(row.orderQty-row.receivedQty,0),
-        memo:row.memo,
-        barcode:row.barcode,
-        itemText:row.itemText
-      });
-    }
-  }
-
-  scheduleKeywords=[...new Set(scheduleRows.map(r=>r.memo).filter(Boolean))].sort();
-  renderAll();
+  },20);
 }
 
-  }catch(err){
-    console.error(err);
-    alert("정리 실행 중 오류가 발생했습니다: " + (err && err.message ? err.message : err));
-  }
-}
-
-function renderAll(){
+function renderResult(){
   document.getElementById("soldoutCnt").textContent=soldoutRows.length + "건";
   document.getElementById("sampleCnt").textContent=sampleRows.length + "건";
-  const checkCntEl=document.getElementById("checkCnt");
-  if(checkCntEl) checkCntEl.textContent=checkRows.length + "건";
-
+  document.getElementById("checkCnt").textContent=checkRows.length + "건";
+  renderSummaryCards();
   renderScheduleInputs();
+  renderPreview();
+}
 
-  // 요약 영역: 페이지에서 바로 볼 수 있게 핵심 내용 표시
-  renderSummaryTable(
-    "soldoutSummaryTable",
-    ["품절/종료 요청 내용"],
-    soldoutRows.map(r=>[
-      `거래처명: ${r.supplier || "-"}<br>` +
-      `사입상품명: ${r.buyName || "-"}<br>` +
-      `상품명: ${r.product || "-"}<br>` +
-      `옵션명: ${r.option || "-"}<br>` +
-      `거래처 메모: ${r.memo || "-"}<br>` +
-      `<b>요청:</b> ${r.request}`
-    ]),
-    "soldout"
-  );
+function summaryCardHtml(r, type){
+  const cls = type==="soldout" ? "soldout-card" : type==="sample" ? "sample-card" : "check-card";
+  const request = type==="soldout" ? `<br><span class="label">요청:</span> 셀메이트 품절처리 및 전채널 재고 0처리 부탁드립니다.` : "";
+  return `
+    <div class="mini-card ${cls}">
+      <span class="label">거래처명:</span> ${r.supplier || "-"}<br>
+      <span class="label">사입상품명:</span> ${r.buyName || "-"}<br>
+      <span class="label">상품명:</span> ${r.product || "-"}<br>
+      <span class="label">옵션명:</span> ${r.option || "-"}<br>
+      <span class="label">거래처 메모:</span> ${r.memo || "-"}${request}
+    </div>
+  `;
+}
 
-  renderSummaryTable(
-    "sampleSummaryTable",
-    ["샘플 포함 내용"],
-    sampleRows.map(r=>[
-      `거래처명: ${r.supplier || "-"}<br>` +
-      `사입상품명: ${r.buyName || "-"}<br>` +
-      `상품명: ${r.product || "-"}<br>` +
-      `옵션명: ${r.option || "-"}<br>` +
-      `샘플 내용: ${r.sampleContent || "-"}`
-    ]),
-    "sample"
-  );
+function renderSummaryCards(){
+  const limit=30;
+  const soldoutBox=document.getElementById("soldoutSummary");
+  const sampleBox=document.getElementById("sampleSummary");
+  const checkBox=document.getElementById("checkSummary");
 
-  if(document.getElementById("checkSummaryTable")){
-    renderSummaryTable(
-      "checkSummaryTable",
-      ["확인 필요/가능 내용"],
-      checkRows.map(r=>[
-        `거래처명: ${r.supplier || "-"}<br>` +
-        `사입상품명: ${r.buyName || "-"}<br>` +
-        `상품명: ${r.product || "-"}<br>` +
-        `옵션명: ${r.option || "-"}<br>` +
-        `거래처 메모: ${r.memo || "-"}`
-      ]),
-      "sample"
-    );
-  }
+  soldoutBox.innerHTML = soldoutRows.length
+    ? soldoutRows.slice(0,limit).map(r=>summaryCardHtml(r,"soldout")).join("")
+    : '<div class="small">해당 건이 없습니다.</div>';
 
-  renderTable("scheduleTable",["공급처","사입명","상품명","옵션","바코드(Q열)","주문수","입고수","미입고","일정키워드"],scheduleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.barcode,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo]),"memo");
-  renderTable("soldoutTable",["공급처","사입명","상품명","옵션","메모","요청사항"],soldoutRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.memo,r.request]),"soldout");
-  renderTable("sampleTable",["공급처","사입명","상품명","옵션","샘플 포함 내용","정리 내용"],sampleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.sampleContent,r.itemText]),"sample");
+  sampleBox.innerHTML = sampleRows.length
+    ? sampleRows.slice(0,limit).map(r=>summaryCardHtml(r,"sample")).join("")
+    : '<div class="small">해당 건이 없습니다.</div>';
+
+  checkBox.innerHTML = checkRows.length
+    ? checkRows.slice(0,limit).map(r=>summaryCardHtml(r,"check")).join("")
+    : '<div class="small">해당 건이 없습니다.</div>';
 }
 
 function renderScheduleInputs(){
   const box=document.getElementById("scheduleInputs");
-  box.innerHTML="";
-  if(!scheduleKeywords.length){
-    box.innerHTML='<div class="small">입고일정 키워드가 없습니다.</div>';
-    return;
-  }
-  scheduleKeywords.forEach(k=>{
+  const keys=[...new Set(scheduleRows.map(r=>r.memo).filter(Boolean))].sort();
+  if(!keys.length){box.innerHTML='<div class="small">입고일정 키워드가 없습니다.</div>';return;}
+  box.innerHTML=keys.map(k=>{
     const count=scheduleRows.filter(r=>r.memo===k).length;
-    const div=document.createElement("div");
-    div.className="schedule-item";
-    div.innerHTML=`<label>${k}</label><input type="date" data-key="${k}" /><div class="count">${count}건</div>`;
-    box.appendChild(div);
-  });
+    return `<div class="schedule-item"><label>${k}</label><input type="date" data-key="${k}"><div class="small">${count}건</div></div>`;
+  }).join("");
 }
 
-function renderSummaryTable(id,headers,rows,type){
-  const target=document.getElementById(id);
-  if(!rows.length){
-    target.innerHTML='<div class="small" style="padding:16px;">해당 건이 없습니다.</div>';
-    return;
-  }
-
-  const total=rows.length;
-  const preview=rows.slice(0,SUMMARY_LIMIT);
-
-  let html=`<div class="small" style="padding:10px 12px;">화면 미리보기 ${preview.length}건 / 전체 ${total}건</div>`;
-  html+="<table><thead><tr>";
-  headers.forEach(h=>html+=`<th>${h}</th>`);
-  html+="</tr></thead><tbody>";
-
-  preview.forEach(row=>{
-    html+="<tr>";
-    row.forEach(v=>{
-      let cls=(type==="soldout"?"soldout":type==="sample"?"sample":"") + " summary-text";
-      html+=`<td class="${cls}">${v??""}</td>`;
-    });
-    html+="</tr>";
-  });
-
-  html+="</tbody></table>";
-  target.innerHTML=html;
-}
-
-function renderTable(id,headers,rows,type){
-  const target=document.getElementById(id);
-  const total=rows.length;
+function rowPreview(title, rows, cls){
   const preview=rows.slice(0,PREVIEW_LIMIT);
-
-  let html=`<div class="small" style="padding:10px 12px;">화면 미리보기 ${preview.length}건 / 전체 ${total}건</div>`;
-  html+="<table><thead><tr>";
-  headers.forEach(h=>html+=`<th>${h}</th>`);
-  html+="</tr></thead><tbody>";
-
-  preview.forEach(row=>{
-    html+="<tr>";
-    row.forEach(v=>{
-      let cls=type==="soldout"?"soldout":type==="sample"?"sample":type==="memo"?"memo":"";
-      html+=`<td class="${cls}">${v??""}</td>`;
-    });
-    html+="</tr>";
+  let html=`<tr><th colspan="6">${title} — 화면 ${preview.length}건 / 전체 ${rows.length}건</th></tr>`;
+  html += `<tr><th>거래처명</th><th>사입상품명</th><th>상품명</th><th>옵션명</th><th>거래처 메모</th><th>바코드</th></tr>`;
+  preview.forEach(r=>{
+    html += `<tr class="${cls}"><td>${r.supplier}</td><td>${r.buyName}</td><td class="text">${r.product}</td><td>${r.option}</td><td class="text">${r.memo}</td><td>${r.barcode}</td></tr>`;
   });
-
-  html+="</tbody></table>";
-  target.innerHTML=html;
+  return html;
 }
 
-function showTab(name){
-  ["schedule","soldout","sample"].forEach(t=>{
-    document.getElementById("tab-"+t).classList.toggle("hidden",t!==name);
-  });
-  document.querySelectorAll(".tab").forEach(btn=>btn.classList.remove("active"));
-  event.target.classList.add("active");
+function renderPreview(){
+  let html='<table>';
+  html+=rowPreview("입고일정",scheduleRows,"memo");
+  html+=rowPreview("품절/종료 요청",soldoutRows,"warn");
+  html+=rowPreview("샘플 포함",sampleRows,"sample");
+  html+=rowPreview("확인 필요/가능",checkRows,"sample");
+  html+='</table>';
+  document.getElementById("previewTable").innerHTML=html;
 }
 
 function dateMap(){
   const map={};
-  document.querySelectorAll("#scheduleInputs input[type=date]").forEach(inp=>{
-    if(inp.value) map[inp.dataset.key]=inp.value;
+  document.querySelectorAll("#scheduleInputs input[type=date]").forEach(i=>{
+    if(i.value) map[i.dataset.key]=i.value;
   });
   return map;
 }
 
-function styleSheet(ws, headerCols){
-  const range=XLSX.utils.decode_range(ws["!ref"]);
-  for(let R=range.s.r;R<=range.e.r;R++){
-    for(let C=range.s.c;C<=range.e.c;C++){
-      const addr=XLSX.utils.encode_cell({r:R,c:C});
-      if(!ws[addr]) continue;
-      ws[addr].s=ws[addr].s||{};
-      ws[addr].s.alignment={horizontal:"center",vertical:"center",wrapText:true};
-      ws[addr].s.font={sz:10};
-      ws[addr].s.border={
-        top:{style:"thin",color:{rgb:"E5E7EB"}},
-        bottom:{style:"thin",color:{rgb:"E5E7EB"}},
-        left:{style:"thin",color:{rgb:"E5E7EB"}},
-        right:{style:"thin",color:{rgb:"E5E7EB"}}
-      };
-      if(R===0){
-        ws[addr].s.fill={patternType:"solid",fgColor:{rgb:"E6F5EC"}};
-        ws[addr].s.font={bold:true,color:{rgb:"173D2B"},sz:11};
-      }
-    }
-  }
-  ws["!cols"]=headerCols.map(w=>({wch:w}));
-  ws["!autofilter"]={ref:ws["!ref"]};
-}
-
-function excelDateSerial(dateStr){
-  // dateStr: yyyy-mm-dd
-  if(!dateStr) return "";
-  const parts=String(dateStr).split("-");
-  if(parts.length!==3) return "";
-  const y=Number(parts[0]);
-  const m=Number(parts[1]);
-  const d=Number(parts[2]);
-  if(!y || !m || !d) return "";
-  const utc=Date.UTC(y,m-1,d);
-  // Excel 1900 date system
-  return Math.floor(utc / 86400000) + 25569;
-}
-
-
-
-function asciiBytes(str){
-  const arr=[];
-  for(let i=0;i<str.length;i++) arr.push(str.charCodeAt(i)&255);
-  return arr;
-}
-
-function csvEscapeAscii(v){
-  return String(v ?? "").replace(/"/g,'""');
-}
-
-function downloadCellmateFile(){
+function downloadCellmateCsv(){
   const map=dateMap();
+  const targets=scheduleRows.filter(r=>map[r.memo] && r.barcode);
+  if(!targets.length){alert("날짜 입력된 일정 또는 Q열 바코드가 없습니다.");return;}
 
-  const targetRows=scheduleRows
-    .filter(r=>map[r.memo])
-    .filter(r=>!isSample(r) && !isReturn(r) && !isSoldout(r))
-    .filter(r=>txt(r.barcode));
+  const rows=[["입고예정번호","상품명","옵션내용","바코드번호","입고예정일","입고예정수량","삭제여부"]];
+  targets.forEach(r=>rows.push(["","","",r.barcode,map[r.memo],"",""]));
 
-  if(!targetRows.length){
-    alert("입고일을 입력한 일정 키워드가 없거나, Q열 바코드가 없습니다.");
-    return;
-  }
-
-  // 셀메이트 원본 CSV와 동일하게 CP949 헤더 바이트를 사용
-  const bytes=[192,212,176,237,191,185,193,164,185,248,200,163,44,34,187,243,199,176,184,237,34,44,34,191,201,188,199,179,187,191,235,34,44,34,185,217,196,218,181,229,185,248,200,163,34,44,34,192,212,176,237,191,185,193,164,192,207,34,44,34,192,212,176,237,191,185,193,164,188,246,183,174,34,44,34,187,232,193,166,191,169,186,206,34,13,10];
-
-  targetRows.forEach(r=>{
-    const line=[
-      "", "", "", csvEscapeAscii(r.barcode), csvEscapeAscii(map[r.memo]), "", ""
-    ].map(v=>`"${v}"`).join(",") + "\r\n";
-
-    bytes.push(...asciiBytes(line));
-  });
-
-  const blob = new Blob([new Uint8Array(bytes)], {type:"text/csv;charset=windows-949;"});
+  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="셀메이트_입고예정일_입력.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
-function downloadSummaryFile(){
-  const wb=XLSX.utils.book_new();
+function downloadSummaryCsv(){
+  const rows=[["구분","거래처명","사입상품명","상품명","옵션명","주문수","입고수","미입고","거래처 메모","바코드"]];
+  scheduleRows.forEach(r=>rows.push(["입고일정",r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.barcode]));
+  soldoutRows.forEach(r=>rows.push(["품절/종료",r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.barcode]));
+  sampleRows.forEach(r=>rows.push(["샘플",r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.barcode]));
+  checkRows.forEach(r=>rows.push(["확인",r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.barcode]));
 
-  const scheduleHeader=["공급처","사입명","상품명","옵션","바코드(Q열)","주문수","입고수","미입고","일정키워드","정리내용"];
-  const scheduleData=scheduleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.barcode,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.itemText]);
-  const ws1=XLSX.utils.aoa_to_sheet([scheduleHeader,...scheduleData]);
-  styleSheet(ws1,[18,22,34,24,18,10,10,10,14,80]);
-  XLSX.utils.book_append_sheet(wb,ws1,"입고일정");
-
-  const soldoutHeader=["공급처","사입명","상품명","옵션","메모","요청사항","정리내용"];
-  const soldoutData=soldoutRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.memo,r.request,r.itemText]);
-  const ws2=XLSX.utils.aoa_to_sheet([soldoutHeader,...soldoutData]);
-  styleSheet(ws2,[18,22,34,24,20,42,80]);
-  XLSX.utils.book_append_sheet(wb,ws2,"품절요청");
-
-  const sampleHeader=["공급처","사입명","상품명","옵션","샘플 포함 내용","정리내용"];
-  const sampleData=sampleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.sampleContent,r.itemText]);
-  const ws3=XLSX.utils.aoa_to_sheet([sampleHeader,...sampleData]);
-  styleSheet(ws3,[18,24,34,24,60,80]);
-  XLSX.utils.book_append_sheet(wb,ws3,"샘플");
-
-  XLSX.writeFile(wb,"동대문_주문취합_정리결과.xlsx");
+  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="동대문_주문취합_정리결과.csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 document.getElementById("fileInput").addEventListener("change",e=>{
   const file=e.target.files[0];
   if(!file)return;
-
+  setStatus("파일 업로드 중입니다...");
   const reader=new FileReader();
   reader.onload=evt=>{
-    workbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});
-    const select=document.getElementById("sheetSelect");
-    select.innerHTML="";
-    workbook.SheetNames.forEach((name,idx)=>{
-      select.add(new Option(name,name));
-      if(idx===0)select.value=name;
-    });
+    try{
+      workbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true});
+      const select=document.getElementById("sheetSelect");
+      select.innerHTML="";
+      workbook.SheetNames.forEach((name,idx)=>{
+        select.add(new Option(name,name));
+        if(idx===0)select.value=name;
+      });
+      setStatus("파일 업로드 완료. 주문취합 정리 실행을 눌러주세요.");
+    }catch(err){
+      console.error(err);
+      alert("파일을 읽는 중 오류가 발생했습니다: "+err.message);
+      setStatus("파일 읽기 오류");
+    }
   };
   reader.readAsArrayBuffer(file);
 });
