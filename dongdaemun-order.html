@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>포레스트핏 동대문 주문취합</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+<style>
+*{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
+.wrap{max-width:1280px;margin:0 auto;padding:46px 28px 80px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}
+.logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
+.badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750;box-shadow:0 8px 24px rgba(31,42,36,.06)}
+h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 12px;font-weight:900}
+.desc{font-size:15px;color:#6d776f;line-height:1.65;margin-bottom:24px;font-weight:600}
+.card{background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:22px;margin-bottom:18px;box-shadow:0 18px 45px rgba(38,49,43,.08)}
+label{display:block;font-size:16px;font-weight:850;margin-bottom:10px;color:#173d2b}
+input,select,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
+button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer;transition:.18s ease}
+button:hover{filter:brightness(.96);transform:translateY(-1px)}
+button.secondary{background:#7b8b82}
+button.mini{width:auto;padding:8px 12px;border-radius:10px;font-size:13px;margin:0 6px 8px 0}
+.small{font-size:13px;color:#7c867f;line-height:1.6}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{width:auto;padding:10px 14px;border:1px solid #d8dfdb;background:#fff;color:#486052;border-radius:999px;font-weight:850;cursor:pointer}
+.tab.active{background:#244734;color:#fff;border-color:#244734}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.kpi{background:#fff;border:1px solid #e5ebe8;border-radius:18px;padding:16px}
+.kpi b{display:block;font-size:26px;color:#173d2b;margin-bottom:4px}
+.kpi span{font-size:13px;color:#7c867f;font-weight:750}
+.table-wrap{max-height:560px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
+th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
+td.memo{color:#7a4a00;background:#fff8dc;font-weight:700}
+td.soldout{color:#d60000;background:#fff2f2;font-weight:850}
+td.sample{background:#edf7ff;color:#25516b;font-weight:750}
+.schedule-box{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.schedule-item{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:14px}
+.schedule-item .count{font-size:12px;color:#7c867f;font-weight:750;margin-top:4px}
+.hidden{display:none}
+@media(max-width:900px){.kpis,.schedule-box{grid-template-columns:1fr}.wrap{padding:32px 18px}.table-wrap{max-height:520px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">FORESTFIT</div>
+    <div class="badge">동대문 주문취합</div>
+  </div>
+
+  <h1>동대문 주문취합</h1>
+  <div class="desc">
+    동대문 주문내역 파일 1개를 업로드하면 샘플, 품절, 입고일정 건을 자동으로 분류합니다.<br>
+    일정 키워드별 실제 입고일을 입력하면 셀메이트 입고일 입력용 엑셀 파일을 생성합니다.
+  </div>
+
+  <div class="card">
+    <label>1. 동대문 주문내역 파일 업로드</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+    <label>시트 선택</label>
+    <select id="sheetSelect"></select>
+    <button onclick="processFile()">주문취합 정리 실행</button>
+    <div class="small">
+      기준 열: A 공급처 / D 사입명 / E 상품명 / F 옵션 / H 주문수 / J 입고수 / N 메모<br>
+      제외 기준: 상품명에 샘플·반품 포함, 메모 품절/종료 건은 입고일정에서 제외
+    </div>
+  </div>
+
+  <div class="card">
+    <label>2. 요약</label>
+    <div class="kpis">
+      <div class="kpi"><b id="totalCnt">0</b><span>전체 유효 행</span></div>
+      <div class="kpi"><b id="scheduleCnt">0</b><span>입고일정 대상</span></div>
+      <div class="kpi"><b id="soldoutCnt">0</b><span>품절/종료 요청</span></div>
+      <div class="kpi"><b id="sampleCnt">0</b><span>샘플 포함</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>3. 일정 키워드별 실제 입고일 입력</label>
+    <div id="scheduleInputs" class="schedule-box"></div>
+    <div class="small">예: 수밤 → 2026-06-18 / 목밤 → 2026-06-19 / 다음주중 → 2026-06-25</div>
+    <br>
+    <button onclick="downloadCellmateFile()">셀메이트 입고일 입력 파일 만들기</button>
+    <button class="secondary" onclick="downloadSummaryFile()">정리 결과 전체 다운로드</button>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('schedule')">입고일정</button>
+      <button class="tab" onclick="showTab('soldout')">품절 요청</button>
+      <button class="tab" onclick="showTab('sample')">샘플</button>
+    </div>
+
+    <div id="tab-schedule">
+      <div class="table-wrap" id="scheduleTable"></div>
+    </div>
+    <div id="tab-soldout" class="hidden">
+      <div class="table-wrap" id="soldoutTable"></div>
+    </div>
+    <div id="tab-sample" class="hidden">
+      <div class="table-wrap" id="sampleTable"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let workbook=null;
+let scheduleRows=[];
+let soldoutRows=[];
+let sampleRows=[];
+let allRows=[];
+let scheduleKeywords=[];
+
+const soldoutWords=["깔품","품절","판매종료","종료"];
+
+function txt(v){return v==null?"":String(v).trim();}
+function norm(v){return txt(v).replace(/\u00A0/g," ").replace(/\s+/g," ").trim();}
+function includesAny(text, words){const s=txt(text); return words.some(w=>s.includes(w));}
+function isSample(row){return txt(row.product).includes("샘플") || txt(row.buyName).includes("샘플") || txt(row.memo).includes("샘플");}
+function isReturn(row){return txt(row.product).includes("반품") || txt(row.buyName).includes("반품");}
+function isSoldout(row){return includesAny(row.memo, soldoutWords);}
+function isScheduleMemo(memo){
+  const m=txt(memo);
+  if(!m)return false;
+  if(isSoldout({memo:m}))return false;
+  if(["매입중","차감요청"].some(x=>m.includes(x)))return false;
+  return true;
+}
+function buildItemText(row){
+  return [
+    row.supplier ? `공급처: ${row.supplier}` : "",
+    row.buyName ? `사입명: ${row.buyName}` : "",
+    row.product ? `상품명: ${row.product}` : "",
+    row.option ? `옵션: ${row.option}` : ""
+  ].filter(Boolean).join(" / ");
+}
+
+function getRows(){
+  const sheetName=document.getElementById("sheetSelect").value;
+  return XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
+}
+
+function processFile(){
+  if(!workbook){alert("파일을 업로드해주세요.");return;}
+
+  const rows=getRows();
+  allRows=[]; scheduleRows=[]; soldoutRows=[]; sampleRows=[];
+
+  let curSupplier="", curBuyName="", curProduct="";
+  let startRow=0;
+
+  // 헤더 '공급처' 찾기
+  for(let i=0;i<Math.min(rows.length,20);i++){
+    if(txt(rows[i][0]).includes("공급처") && txt(rows[i][4]).includes("상품명")){
+      startRow=i+1;
+      break;
+    }
+  }
+
+  for(let i=startRow;i<rows.length;i++){
+    const r=rows[i]||[];
+    if(r.every(v=>txt(v)==="")) continue;
+
+    if(txt(r[0])) curSupplier=txt(r[0]);
+    if(txt(r[3])) curBuyName=txt(r[3]);
+    if(txt(r[4])) curProduct=txt(r[4]);
+
+    const row={
+      no:i+1,
+      supplier:curSupplier,
+      buyName:curBuyName,
+      product:curProduct,
+      option:txt(r[5]),
+      cost:txt(r[6]),
+      orderQty:Number(txt(r[7]).replace(/,/g,""))||0,
+      shippedQty:Number(txt(r[8]).replace(/,/g,""))||0,
+      receivedQty:Number(txt(r[9]).replace(/,/g,""))||0,
+      returnQty:Number(txt(r[11]).replace(/,/g,""))||0,
+      note:txt(r[12]),
+      memo:txt(r[13]),
+      raw:r
+    };
+
+    if(!row.supplier && !row.buyName && !row.product && !row.option && !row.memo) continue;
+    row.itemText=buildItemText(row);
+    allRows.push(row);
+
+    if(isSample(row)){
+      sampleRows.push({
+        supplier:row.supplier,
+        buyName:row.buyName,
+        product:row.product,
+        option:row.option,
+        sampleContent:row.memo || row.option || row.note,
+        itemText:row.itemText
+      });
+      continue;
+    }
+
+    if(isReturn(row)) continue;
+
+    if(isSoldout(row)){
+      soldoutRows.push({
+        supplier:row.supplier,
+        buyName:row.buyName,
+        product:row.product,
+        option:row.option,
+        memo:row.memo,
+        request:"셀메이트 품절처리 및 전채널 재고 0으로 만들어주세요.",
+        itemText:row.itemText
+      });
+      continue;
+    }
+
+    if(isScheduleMemo(row.memo)){
+      scheduleRows.push({
+        supplier:row.supplier,
+        buyName:row.buyName,
+        product:row.product,
+        option:row.option,
+        orderQty:row.orderQty,
+        receivedQty:row.receivedQty,
+        unreceivedQty:Math.max(row.orderQty-row.receivedQty,0),
+        memo:row.memo,
+        itemText:row.itemText
+      });
+    }
+  }
+
+  scheduleKeywords=[...new Set(scheduleRows.map(r=>r.memo).filter(Boolean))].sort();
+  renderAll();
+}
+
+function renderAll(){
+  document.getElementById("totalCnt").textContent=allRows.length;
+  document.getElementById("scheduleCnt").textContent=scheduleRows.length;
+  document.getElementById("soldoutCnt").textContent=soldoutRows.length;
+  document.getElementById("sampleCnt").textContent=sampleRows.length;
+  renderScheduleInputs();
+  renderTable("scheduleTable",["공급처","사입명","상품명","옵션","주문수","입고수","미입고","일정키워드"],scheduleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo]),"memo");
+  renderTable("soldoutTable",["공급처","사입명","상품명","옵션","메모","요청사항"],soldoutRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.memo,r.request]),"soldout");
+  renderTable("sampleTable",["공급처","사입명","상품명","옵션","샘플 포함 내용","정리 내용"],sampleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.sampleContent,r.itemText]),"sample");
+}
+
+function renderScheduleInputs(){
+  const box=document.getElementById("scheduleInputs");
+  box.innerHTML="";
+  if(!scheduleKeywords.length){
+    box.innerHTML='<div class="small">입고일정 키워드가 없습니다.</div>';
+    return;
+  }
+  scheduleKeywords.forEach(k=>{
+    const count=scheduleRows.filter(r=>r.memo===k).length;
+    const div=document.createElement("div");
+    div.className="schedule-item";
+    div.innerHTML=`<label>${k}</label><input type="date" data-key="${k}" /><div class="count">${count}건</div>`;
+    box.appendChild(div);
+  });
+}
+
+function renderTable(id,headers,rows,type){
+  const target=document.getElementById(id);
+  let html="<table><thead><tr>";
+  headers.forEach(h=>html+=`<th>${h}</th>`);
+  html+="</tr></thead><tbody>";
+  rows.forEach(row=>{
+    html+="<tr>";
+    row.forEach(v=>{
+      let cls=type==="soldout"?"soldout":type==="sample"?"sample":type==="memo"?"memo":"";
+      html+=`<td class="${cls}">${v??""}</td>`;
+    });
+    html+="</tr>";
+  });
+  html+="</tbody></table>";
+  target.innerHTML=html;
+}
+
+function showTab(name){
+  ["schedule","soldout","sample"].forEach(t=>{
+    document.getElementById("tab-"+t).classList.toggle("hidden",t!==name);
+  });
+  document.querySelectorAll(".tab").forEach(btn=>btn.classList.remove("active"));
+  event.target.classList.add("active");
+}
+
+function dateMap(){
+  const map={};
+  document.querySelectorAll("#scheduleInputs input[type=date]").forEach(inp=>{
+    if(inp.value) map[inp.dataset.key]=inp.value;
+  });
+  return map;
+}
+
+function styleSheet(ws, headerCols){
+  const range=XLSX.utils.decode_range(ws["!ref"]);
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const addr=XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr]) continue;
+      ws[addr].s=ws[addr].s||{};
+      ws[addr].s.alignment={horizontal:"center",vertical:"center",wrapText:true};
+      ws[addr].s.font={sz:10};
+      ws[addr].s.border={
+        top:{style:"thin",color:{rgb:"E5E7EB"}},
+        bottom:{style:"thin",color:{rgb:"E5E7EB"}},
+        left:{style:"thin",color:{rgb:"E5E7EB"}},
+        right:{style:"thin",color:{rgb:"E5E7EB"}}
+      };
+      if(R===0){
+        ws[addr].s.fill={patternType:"solid",fgColor:{rgb:"E6F5EC"}};
+        ws[addr].s.font={bold:true,color:{rgb:"173D2B"},sz:11};
+      }
+    }
+  }
+  ws["!cols"]=headerCols.map(w=>({wch:w}));
+  ws["!autofilter"]={ref:ws["!ref"]};
+}
+
+function downloadCellmateFile(){
+  const map=dateMap();
+  const rows=scheduleRows
+    .filter(r=>map[r.memo])
+    .map(r=>[
+      r.supplier,
+      r.buyName,
+      r.product,
+      r.option,
+      r.orderQty,
+      r.receivedQty,
+      r.unreceivedQty,
+      r.memo,
+      map[r.memo],
+      r.itemText
+    ]);
+
+  if(!rows.length){
+    alert("입고일을 입력한 일정 키워드가 없습니다.");
+    return;
+  }
+
+  const header=["공급처","사입명","상품명","옵션","주문수","입고수","미입고","일정키워드","셀메이트 입력 입고일","정리내용"];
+  const ws=XLSX.utils.aoa_to_sheet([header,...rows]);
+  styleSheet(ws,[18,22,34,24,10,10,10,14,18,80]);
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"셀메이트입고일입력");
+  XLSX.writeFile(wb,"동대문_셀메이트_입고일_입력.xlsx");
+}
+
+function downloadSummaryFile(){
+  const wb=XLSX.utils.book_new();
+
+  const scheduleHeader=["공급처","사입명","상품명","옵션","주문수","입고수","미입고","일정키워드","정리내용"];
+  const scheduleData=scheduleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.orderQty,r.receivedQty,r.unreceivedQty,r.memo,r.itemText]);
+  const ws1=XLSX.utils.aoa_to_sheet([scheduleHeader,...scheduleData]);
+  styleSheet(ws1,[18,22,34,24,10,10,10,14,80]);
+  XLSX.utils.book_append_sheet(wb,ws1,"입고일정");
+
+  const soldoutHeader=["공급처","사입명","상품명","옵션","메모","요청사항","정리내용"];
+  const soldoutData=soldoutRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.memo,r.request,r.itemText]);
+  const ws2=XLSX.utils.aoa_to_sheet([soldoutHeader,...soldoutData]);
+  styleSheet(ws2,[18,22,34,24,20,42,80]);
+  XLSX.utils.book_append_sheet(wb,ws2,"품절요청");
+
+  const sampleHeader=["공급처","사입명","상품명","옵션","샘플 포함 내용","정리내용"];
+  const sampleData=sampleRows.map(r=>[r.supplier,r.buyName,r.product,r.option,r.sampleContent,r.itemText]);
+  const ws3=XLSX.utils.aoa_to_sheet([sampleHeader,...sampleData]);
+  styleSheet(ws3,[18,24,34,24,60,80]);
+  XLSX.utils.book_append_sheet(wb,ws3,"샘플");
+
+  XLSX.writeFile(wb,"동대문_주문취합_정리결과.xlsx");
+}
+
+document.getElementById("fileInput").addEventListener("change",e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    workbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});
+    const select=document.getElementById("sheetSelect");
+    select.innerHTML="";
+    workbook.SheetNames.forEach((name,idx)=>{
+      select.add(new Option(name,name));
+      if(idx===0)select.value=name;
+    });
+  };
+  reader.readAsArrayBuffer(file);
+});
+</script>
+</body>
+</html>
