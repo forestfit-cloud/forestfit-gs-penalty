@@ -293,20 +293,41 @@ function dateMap(){
   return map;
 }
 
+function asciiBytes(str){
+  const arr=[];
+  for(let i=0;i<str.length;i++) arr.push(str.charCodeAt(i)&255);
+  return arr;
+}
+
 function downloadCellmateCsv(){
   const map=dateMap();
   const targets=scheduleRows.filter(r=>map[r.memo] && r.barcode);
-  if(!targets.length){alert("날짜 입력된 일정 또는 Q열 바코드가 없습니다.");return;}
 
-  const rows=[["입고예정번호","상품명","옵션내용","바코드번호","입고예정일","입고예정수량","삭제여부"]];
-  targets.forEach(r=>rows.push(["","","",r.barcode,map[r.memo],"",""]));
+  if(!targets.length){
+    alert("날짜 입력된 일정 또는 Q열 바코드가 없습니다.");
+    return;
+  }
 
-  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  // 셀메이트 원본 CSV 양식 1행을 CP949 그대로 사용
+  // 2행부터 데이터만 입력
+  const bytes=[192,212,176,237,191,185,193,164,185,248,200,163,44,34,187,243,199,176,184,237,34,44,34,191,201,188,199,179,187,191,235,34,44,34,185,217,196,218,181,229,185,248,200,163,34,44,34,192,212,176,237,191,185,193,164,192,207,34,44,34,192,212,176,237,191,185,193,164,188,246,183,174,34,44,34,187,232,193,166,191,169,186,206,34,13,10];
+
+  targets.forEach(r=>{
+    const barcode=String(r.barcode ?? "").replace(/"/g,'""');
+    const date=String(map[r.memo] ?? "").replace(/"/g,'""');
+
+    // 7열 고정: 입고예정번호,상품명,옵션내용,바코드번호,입고예정일,입고예정수량,삭제여부
+    const line=`,"","","${barcode}","${date}",,\r\n`;
+    bytes.push(...asciiBytes(line));
+  });
+
+  const blob=new Blob([new Uint8Array(bytes)],{type:"text/csv;charset=windows-949;"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="셀메이트_입고예정일_입력.csv";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function downloadSummaryCsv(){
