@@ -109,7 +109,7 @@ td.text{text-align:left;white-space:normal;line-height:1.45}
 
   <div class="card">
     <label>4. 입고예정일 업체 연락 요망</label>
-    <div class="small" style="margin-bottom:10px;">모레/주초/주중/주말/다음주/차주/확인필요/입고예정/진행예정/빈칸 등 날짜 확정이 어려운 건입니다.</div>
+    <div class="small" style="margin-bottom:10px;">모레/주초/주중/주말/다음주/차주/확인필요/입고예정/진행예정/빈칸 등 날짜 확인이 필요한 건입니다. 확인 후 입고일을 입력하면 셀메이트 CSV에 함께 반영됩니다.</div>
     <div id="contactRequiredBox" class="schedule-box"></div>
   </div>
 
@@ -349,12 +349,14 @@ function renderContactRequired(){
     return `
       <div class="schedule-item">
         <label>${label}</label>
+        <input type="date" data-key="${key}">
         <div class="small">${items.length}건</div>
         <div class="schedule-list">${list}</div>
       </div>
     `;
   }).join("");
 }
+
 
 function scheduleGroupKey(row){
   const supplier = row.supplier || "거래처 미기재";
@@ -430,11 +432,12 @@ function renderPreview(){
 
 function dateMap(){
   const map={};
-  document.querySelectorAll("#scheduleInputs input[type=date]").forEach(i=>{
+  document.querySelectorAll("#scheduleInputs input[type=date], #contactRequiredBox input[type=date]").forEach(i=>{
     if(i.value) map[i.dataset.key]=i.value;
   });
   return map;
 }
+
 
 function asciiBytes(str){
   const arr=[];
@@ -445,7 +448,7 @@ function asciiBytes(str){
 function downloadCellmateCsv(){
   const map=dateMap();
 
-  const targets=scheduleInputRows
+  const targets=[...scheduleInputRows, ...contactRows]
     .filter(r=>Number(r.unshippedQty||0)>0)
     .filter(r=>map[scheduleGroupKey(r)])
     .filter(r=>r.barcode);
@@ -457,15 +460,7 @@ function downloadCellmateCsv(){
 
   const rows=[["입고예정번호","상품명","옵션내용","바코드번호","입고예정일","입고예정수량","삭제여부"]];
   targets.forEach(r=>{
-    rows.push([
-      "",
-      "",
-      "",
-      r.barcode,
-      map[scheduleGroupKey(r)],
-      "",
-      ""
-    ]);
+    rows.push(["","","",r.barcode,map[scheduleGroupKey(r)],"",""]);
   });
 
   const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
@@ -477,6 +472,7 @@ function downloadCellmateCsv(){
   a.click();
   document.body.removeChild(a);
 }
+
 
 function downloadSummaryCsv(){
   const rows=[["구분","거래처명","사입상품명","상품명","옵션명","주문수","입고수","미입고","거래처 메모","바코드"]];
