@@ -99,9 +99,9 @@ td.text{text-align:left;white-space:normal;line-height:1.45}
   </div>
 
   <div class="card">
-    <label>3. 거래처별 실제 입고일 입력</label>
+    <label>3. 거래처/메모별 실제 입고일 입력</label>
     <div id="scheduleInputs" class="schedule-box"></div>
-    <div class="small">H열 주문수량 - I열 출고수량이 1 이상인 건을 거래처별로 묶어 실제 입고일을 입력합니다.</div>
+    <div class="small">H열 주문수량 - I열 출고수량이 1 이상인 건을 거래처와 메모별로 묶어 실제 입고일을 입력합니다.</div>
     <br>
     <button onclick="downloadCellmateCsv()">셀메이트 입고일 CSV 만들기</button>
     <button class="secondary" onclick="downloadSummaryCsv()">전체 정리 CSV 다운로드</button>
@@ -274,20 +274,36 @@ function renderSummaryCards(){
     : '<div class="small">해당 건이 없습니다.</div>';
 }
 
+
+function scheduleGroupKey(row){
+  const supplier = row.supplier || "거래처 미기재";
+  const memo = row.memo || "메모 없음";
+  return supplier + "||" + memo;
+}
+
+function scheduleGroupLabel(key){
+  const parts = String(key).split("||");
+  const supplier = parts[0] || "거래처 미기재";
+  const memo = parts[1] || "메모 없음";
+  return supplier + " / " + memo;
+}
+
 function renderScheduleInputs(){
   const box=document.getElementById("scheduleInputs");
 
-  // H열 주문수량 - I열 출고수량이 1 이상인 건을 거래처별로 묶어서 날짜 입력
+  // H열 주문수량 - I열 출고수량이 1 이상인 건을 거래처+메모별로 묶어서 날짜 입력
   const inputRows=scheduleInputRows.filter(r=>Number(r.unshippedQty||0)>0);
-  const suppliers=[...new Set(inputRows.map(r=>r.supplier || "거래처 미기재"))].sort();
+  const keys=[...new Set(inputRows.map(r=>scheduleGroupKey(r)))].sort();
 
-  if(!suppliers.length){
+  if(!keys.length){
     box.innerHTML='<div class="small">일정 입력 대상이 없습니다.</div>';
     return;
   }
 
-  box.innerHTML=suppliers.map(supplier=>{
-    const items=inputRows.filter(r=>(r.supplier || "거래처 미기재")===supplier);
+  box.innerHTML=keys.map(key=>{
+    const items=inputRows.filter(r=>scheduleGroupKey(r)===key);
+    const label=scheduleGroupLabel(key);
+
     const list=items.map((r,idx)=>`
       <div class="schedule-row">
         <div class="main-line">${idx+1}. ${r.buyName || "-"} / ${r.option || "-"}</div>
@@ -298,8 +314,8 @@ function renderScheduleInputs(){
 
     return `
       <div class="schedule-item">
-        <label>${supplier}</label>
-        <input type="date" data-key="${supplier}">
+        <label>${label}</label>
+        <input type="date" data-key="${key}">
         <div class="small">${items.length}건</div>
         <div class="schedule-list">${list}</div>
       </div>
@@ -346,11 +362,11 @@ function downloadCellmateCsv(){
 
   const targets=scheduleInputRows
     .filter(r=>Number(r.unshippedQty||0)>0)
-    .filter(r=>map[r.supplier || "거래처 미기재"])
+    .filter(r=>map[scheduleGroupKey(r)])
     .filter(r=>r.barcode);
 
   if(!targets.length){
-    alert("입고일을 입력한 거래처가 없거나 Q열 바코드가 없습니다.");
+    alert("입고일을 입력한 거래처/메모 그룹이 없거나 Q열 바코드가 없습니다.");
     return;
   }
 
@@ -361,7 +377,7 @@ function downloadCellmateCsv(){
       "",
       "",
       r.barcode,
-      map[r.supplier || "거래처 미기재"],
+      map[scheduleGroupKey(r)],
       "",
       ""
     ]);
