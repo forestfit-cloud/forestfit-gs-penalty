@@ -1,291 +1,50 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>포레스트핏 리자드 재고장 매칭</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<meta charset="UTF-8">
+<title>재고장</title>
+
 <style>
-*{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
-body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
-.wrap{max-width:1180px;margin:0 auto;padding:42px 24px 72px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
-.logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
-.badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750}
-h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 10px;font-weight:900}
-.desc{font-size:15px;color:#6d776f;line-height:1.6;margin-bottom:22px;font-weight:600}
-.card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 35px rgba(38,49,43,.07)}
-label{display:block;font-size:16px;font-weight:850;margin-bottom:9px;color:#173d2b}
-input,select,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
-button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer}
-button.secondary{background:#7b8b82}
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.small{font-size:13px;color:#7c867f;line-height:1.55}
-.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none}
-.summary{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px}
-.summary b{font-size:26px;color:#244734}
-.table-wrap{max-height:420px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
-th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
-.ok{background:#eefaf3;color:#177245;font-weight:800}
-.warn{background:#fff8dc;color:#6b3d00;font-weight:800}
-.bad{background:#fff2f2;color:#8a2f2f;font-weight:800}
-@media(max-width:900px){.grid2,.grid4{grid-template-columns:1fr}}
+body{
+  font-family:Pretendard,sans-serif;
+  background:#f7f3eb;
+  padding:40px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+.card{
+  display:block;
+  text-decoration:none;
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  color:#173d2b;
+}
+
+.card h2{
+  margin:0 0 10px;
+}
 </style>
+
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="logo">FORESTFIT</div>
-    <div class="badge">리자드 재고장 매칭</div>
-  </div>
 
-  <h1>리자드 재고장 매칭</h1>
-  <div class="desc">
-    리자드 전체 재고표와 재고장 파일을 업로드하면, 재고장 파일의 <b>D열 사입명</b>과 <b>F열 사이즈</b>를 기준으로 <b>G열</b>에 재고 수량을 자동 입력합니다.<br>
-    재고장 파일은 <b>기존 색상·글씨체·병합·테두리 양식을 유지</b>하고 G열 값만 변경합니다.
-  </div>
+<h1>재고장</h1>
 
-  <div class="card">
-    <label>1. 파일 업로드</label>
-    <div class="grid2">
-      <div>
-        <label>리자드 전체 재고표 베이스 파일</label>
-        <input type="file" id="baseFile" accept=".xlsx,.xls,.csv">
-        <div class="small">
-          기준: 첫 번째 탭만 사용 / B열 사입명 + C열 사이즈 → D열 재고<br>
-          추가 기준: M열 사입명 + N열 사이즈 → O열 재고
-        </div>
-      </div>
-      <div>
-        <label>재고장 파일</label>
-        <input type="file" id="stockFile" accept=".xlsx,.xls">
-        <select id="stockSheet"></select>
-        <div class="small">
-          기준: D열 사입명 / F열 사이즈 / G열에 재고 입력<br>
-          D열 병합 셀은 위에 적힌 사입명으로 자동 인식합니다.
-        </div>
-      </div>
-    </div>
-    <button onclick="processMatch()">리자드 재고 매칭 실행</button>
-    <div id="status" class="status"></div>
-  </div>
+<div class="grid">
 
-  <div class="card">
-    <label>2. 요약</label>
-    <div class="grid4">
-      <div class="summary"><b id="totalCnt">0</b><div class="small">처리 대상</div></div>
-      <div class="summary"><b id="matchedCnt">0</b><div class="small">매칭 완료</div></div>
-      <div class="summary"><b id="unmatchedCnt">0</b><div class="small">매칭안됨</div></div>
-      <div class="summary"><b id="lookupCnt">0</b><div class="small">재고표 키</div></div>
-    </div>
-  </div>
+  <a class="card" href="lizard-stock-match.html">
+    <h2>🦎 리자드</h2>
+    <p>재고장 자동 입력</p>
+  </a>
 
-  <div class="card">
-    <label>3. 결과 미리보기</label>
-    <button onclick="downloadModified()">양식 유지 재고장 다운로드</button>
-    <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
-    <div class="small" style="margin:8px 0 12px;">다운로드 파일은 재고장 원본 양식을 유지하고 G열 재고만 입력됩니다.</div>
-    <div class="table-wrap" id="resultTable"></div>
-  </div>
 </div>
 
-<script>
-let baseWb=null;
-let stockWbExcel=null;
-let stockFileBuffer=null;
-let resultRows=[];
-let modifiedSheetName="";
-let lookupMap=null;
-
-function txt(v){
-  if(v==null)return "";
-  if(typeof v==="object" && v.text)return String(v.text).trim();
-  if(typeof v==="object" && v.richText)return v.richText.map(x=>x.text||"").join("").trim();
-  if(typeof v==="object" && v.result!=null)return String(v.result).trim();
-  return String(v).trim();
-}
-function num(v){
-  const s=txt(v).replace(/,/g,"");
-  // 재고표에서 빈칸/하이픈은 재고 없음으로 보고 0 입력
-  if(s==="-" || s==="") return 0;
-  const n=Number(s);
-  return Number.isFinite(n)?n:0;
-}
-function setStatus(msg){const el=document.getElementById("status");el.style.display="block";el.textContent=msg;}
-function escapeCsv(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
-
-function normName(v){
-  let s=txt(v).toUpperCase();
-  s=s.replace(/\s+/g,"");
-  s=s.replace(/^S\.A\./,"");
-  s=s.replace(/^\d+\./,"");
-  return s;
-}
-function normSize(v){
-  let s=txt(v).toUpperCase().replace(/\s+/g,"");
-  if(s==="F1")return "S";
-  if(s==="F2")return "M";
-  if(s==="F3")return "L";
-  if(s==="F")return "FREE";
-  return s;
-}
-function key(name,size){return normName(name)+"||"+normSize(size);}
-
-document.getElementById("baseFile").addEventListener("change",e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    baseWb=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,raw:false});
-    setStatus(`${file.name} 업로드 완료: 베이스 파일은 첫 번째 탭(${baseWb.SheetNames[0]})만 사용합니다.`);
-  };
-  reader.readAsArrayBuffer(file);
-});
-
-document.getElementById("stockFile").addEventListener("change",async e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-
-  stockFileBuffer=await file.arrayBuffer();
-  stockWbExcel=new ExcelJS.Workbook();
-  await stockWbExcel.xlsx.load(stockFileBuffer);
-
-  const sel=document.getElementById("stockSheet");
-  sel.innerHTML="";
-  stockWbExcel.worksheets.forEach((ws,i)=>{
-    sel.add(new Option(ws.name,ws.name));
-    if(i===0) sel.value=ws.name;
-  });
-  setStatus(`${file.name} 업로드 완료`);
-});
-
-function sheetAoA(wb, sheetName){
-  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
-}
-
-function buildLookup(){
-  const sheetName=baseWb.SheetNames[0];
-  const rows=sheetAoA(baseWb,sheetName);
-  const map=new Map();
-
-  for(let i=1;i<rows.length;i++){
-    const r=rows[i]||[];
-
-    // B열 사입명 + C열 사이즈 -> D열 재고
-    const name1=txt(r[1]);
-    const size1=txt(r[2]);
-    const qty1=num(r[3]);
-    if(name1 && size1) map.set(key(name1,size1),qty1);
-
-    // M열 사입명 + N열 사이즈 -> O열 재고
-    const name2=txt(r[12]);
-    const size2=txt(r[13]);
-    const qty2=num(r[14]);
-    if(name2 && size2) map.set(key(name2,size2),qty2);
-
-    // 보조: A열 사입명 + C열 사이즈
-    const name0=txt(r[0]);
-    if(name0 && size1) map.set(key(name0,size1),qty1);
-  }
-  return map;
-}
-
-function processMatch(){
-  if(!baseWb){alert("리자드 전체 재고표 베이스 파일을 업로드해주세요.");return;}
-  if(!stockWbExcel){alert("재고장 파일을 업로드해주세요.");return;}
-
-  lookupMap=buildLookup();
-  modifiedSheetName=document.getElementById("stockSheet").value || stockWbExcel.worksheets[0].name;
-  const ws=stockWbExcel.getWorksheet(modifiedSheetName);
-
-  resultRows=[];
-  let currentName="";
-
-  ws.eachRow({includeEmpty:false}, (row, rowNumber)=>{
-    if(rowNumber===1)return;
-
-    const dCell=row.getCell(4); // D
-    const fCell=row.getCell(6); // F
-    const gCell=row.getCell(7); // G
-
-    const dVal=txt(dCell.value);
-    if(dVal) currentName=dVal;
-
-    const name=currentName;
-    const size=txt(fCell.value);
-
-    if(!name || !size)return;
-
-    const k=key(name,size);
-    const has=lookupMap.has(k);
-    const val=has ? lookupMap.get(k) : "매칭안됨";
-
-    // G열 값만 수정. 기존 G열 스타일은 그대로 유지.
-    // 매칭 성공 + 재고 0 또는 빈칸 = 0 입력 / 매칭 실패 = 매칭안됨 입력
-    gCell.value=val;
-
-    resultRows.push({
-      rowNo:rowNumber,
-      name,
-      size,
-      stock:val,
-      status:has ? "매칭완료" : "매칭안됨"
-    });
-  });
-
-  renderResult(lookupMap.size);
-  setStatus(`완료: 매칭 ${resultRows.filter(r=>r.status==="매칭완료").length}건 / 매칭안됨 ${resultRows.filter(r=>r.status==="매칭안됨").length}건`);
-}
-
-function renderResult(lookupSize){
-  const total=resultRows.length;
-  const matched=resultRows.filter(r=>r.status==="매칭완료").length;
-  const unmatched=total-matched;
-
-  document.getElementById("totalCnt").textContent=total;
-  document.getElementById("matchedCnt").textContent=matched;
-  document.getElementById("unmatchedCnt").textContent=unmatched;
-  document.getElementById("lookupCnt").textContent=lookupSize;
-
-  let html="<table><thead><tr>";
-  ["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"].forEach(h=>html+=`<th>${h}</th>`);
-  html+="</tr></thead><tbody>";
-  resultRows.slice(0,300).forEach(r=>{
-    const cls=r.status==="매칭완료"?"ok":"warn";
-    html+=`<tr><td class="${cls}">${r.status}</td><td>${r.rowNo}</td><td>${r.name}</td><td>${r.size}</td><td>${r.stock}</td></tr>`;
-  });
-  html+="</tbody></table>";
-  document.getElementById("resultTable").innerHTML=html;
-}
-
-async function downloadModified(){
-  if(!stockWbExcel || !resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
-
-  const buffer=await stockWbExcel.xlsx.writeBuffer();
-  const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="리자드_재고장_G열입력_양식유지.xlsx";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-function downloadResultCsv(){
-  if(!resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
-  const rows=[["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"]];
-  resultRows.forEach(r=>rows.push([r.status,r.rowNo,r.name,r.size,r.stock]));
-  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="리자드_재고장_매칭결과.csv";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-}
-</script>
 </body>
 </html>
