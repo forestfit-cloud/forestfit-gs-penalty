@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>포레스트핏 케이디지 재고장 매칭</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<style>
+*{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
+body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
+.wrap{max-width:1180px;margin:0 auto;padding:42px 24px 72px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
+.badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750}
+h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 10px;font-weight:900}
+.desc{font-size:15px;color:#6d776f;line-height:1.6;margin-bottom:22px;font-weight:600}
+.card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 35px rgba(38,49,43,.07)}
+label{display:block;font-size:16px;font-weight:850;margin-bottom:9px;color:#173d2b}
+input,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
+button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer}
+button.secondary{background:#7b8b82}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.small{font-size:13px;color:#7c867f;line-height:1.55}
+.notice{background:#fff8dc;border:1px solid #efd894;color:#6b3d00;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;line-height:1.6;margin-top:8px}
+.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none}
+.summary{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px}
+.summary b{font-size:26px;color:#244734}
+.table-wrap{max-height:420px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
+th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
+.ok{background:#eefaf3;color:#177245;font-weight:800}
+.warn{background:#fff8dc;color:#6b3d00;font-weight:800}
+@media(max-width:900px){.grid2,.grid4{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">FORESTFIT</div>
+    <div class="badge">케이디지 재고장 매칭</div>
+  </div>
+
+  <h1>케이디지 재고장 매칭</h1>
+  <div class="desc">
+    케이디지 베이스 파일과 재고장 파일을 업로드하면, 재고장 파일의 <b>D열 사입명</b>과 <b>F열 사이즈</b>를 기준으로 <b>G열</b>에 재고 수량을 자동 입력합니다.<br>
+    재고장 파일은 기존 <b>색상·글씨체·병합·테두리 양식</b>을 유지하고 G열 값만 변경합니다.
+  </div>
+
+  <div class="card">
+    <label>1. 파일 업로드</label>
+    <div class="grid2">
+      <div>
+        <label>케이디지 베이스 파일</label>
+        <input type="file" id="baseFile" accept=".xlsx,.xls,.csv">
+        <div class="small">
+          사용 시트: 여성복(사계), 남성복(사계), 여성복(여름), 남성복(여름)<br>
+          기준: B열 품번 / D열 S / E열 M / F열 L / G열 XL / H열 2XL / I열 3XL<br>
+          재고장 사입명이 7로 시작하면 여성복(사계) 시트만 조회 / 품번·기장 + 사이즈 열 기준
+        </div>
+        <div class="notice">
+          베이스 파일에 위 4개 시트 외 다른 탭이 있으면 삭제 후 첨부해주세요.<br>
+          시트명이 다르면 해당 시트는 자동으로 제외됩니다.
+        </div>
+      </div>
+      <div>
+        <label>케이디지 재고장 파일</label>
+        <input type="file" id="stockFile" accept=".xlsx,.xls">
+        <div class="small">
+          기준: D열 사입명 / F열 사이즈 / G열에 재고 입력<br>
+          D열 병합 셀은 위에 적힌 사입명으로 자동 인식합니다.
+        </div>
+      </div>
+    </div>
+    <button onclick="processMatch()">케이디지 재고 매칭 실행</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <label>2. 요약</label>
+    <div class="grid4">
+      <div class="summary"><b id="totalCnt">0</b><div class="small">처리 대상</div></div>
+      <div class="summary"><b id="matchedCnt">0</b><div class="small">매칭 완료</div></div>
+      <div class="summary"><b id="unmatchedCnt">0</b><div class="small">매칭안됨</div></div>
+      <div class="summary"><b id="lookupCnt">0</b><div class="small">재고표 키</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>3. 결과 미리보기</label>
+    <button onclick="downloadModified()">양식 유지 재고장 다운로드</button>
+    <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
+    <div class="small" style="margin:8px 0 12px;">다운로드 파일은 재고장 원본 양식을 유지하고 G열 재고만 입력됩니다.</div>
+    <div class="table-wrap" id="resultTable"></div>
+  </div>
+</div>
+
+<script>
+let baseWb=null;
+let stockWbExcel=null;
+let resultRows=[];
+let stockFileBuffer=null;
+
+const allowedSheets=["여성복(사계)","남성복(사계)","여성복(여름)","남성복(여름)"];
+const sizeCols={
+  "S":4,   // D
+  "M":5,   // E
+  "L":6,   // F
+  "XL":7,  // G
+  "2XL":8, // H
+  "3XL":9  // I
+};
+
+function txt(v){
+  if(v==null)return "";
+  if(typeof v==="object" && v.text)return String(v.text).trim();
+  if(typeof v==="object" && v.richText)return v.richText.map(x=>x.text||"").join("").trim();
+  if(typeof v==="object" && v.result!=null)return String(v.result).trim();
+  return String(v).trim();
+}
+function num(v){
+  const s=txt(v).replace(/,/g,"");
+  if(s==="-" || s==="") return 0;
+  const n=Number(s);
+  return Number.isFinite(n)?n:0;
+}
+function setStatus(msg){const el=document.getElementById("status");el.style.display="block";el.textContent=msg;}
+function escapeCsv(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
+
+function parseItem(v){
+  let s=txt(v).toUpperCase();
+  s=s.replace(/\s+/g,"");
+  s=s.replace(/^S\.A\./,"");
+  s=s.replace(/^\d+\./,"");
+
+  let length="기본";
+
+  // 괄호 기장 인식: 7327(숏), 7327(롱)
+  const korLen=s.match(/\((숏|롱|기본)\)/);
+  if(korLen){
+    length=korLen[1];
+    s=s.replace(/\((숏|롱|기본)\)/g,"");
+  }
+
+  // 숫자 앞 문자는 제거: FJ-7327 -> 7327
+  s=s.replace(/^[^0-9]+/,"");
+
+  // 케이디지 기장 접미사
+  if(s.endsWith("SH")){
+    length="숏";
+    s=s.slice(0,-2);
+  }else if(s.endsWith("LO")){
+    length="롱";
+    s=s.slice(0,-2);
+  }
+
+  // 품번 자체는 절대 7327-1 -> 7327 로 줄이지 않음
+  // 케이디지는 한 행이 품번/기장이고 사이즈는 열 기준이기 때문
+  return {code:s, length};
+}
+
+function normName(v){
+  const item=parseItem(v);
+  return item.code+"||"+item.length;
+}
+
+function normSize(v){
+  let s=txt(v).toUpperCase().replace(/\s+/g,"");
+  if(s==="F1")return "S";
+  if(s==="F2")return "M";
+  if(s==="F3")return "L";
+  if(s==="F")return "FREE";
+  return s;
+}
+
+function key(name,size){
+  const item=parseItem(name);
+  return item.code+"||"+item.length+"||"+normSize(size);
+}
+
+document.getElementById("baseFile").addEventListener("change",e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    baseWb=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,raw:false});
+    const found=baseWb.SheetNames.filter(n=>allowedSheets.includes(n));
+    setStatus(`${file.name} 업로드 완료 / 사용 가능 시트 ${found.length}개: ${found.join(", ") || "없음"}`);
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+document.getElementById("stockFile").addEventListener("change",async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  stockFileBuffer=await file.arrayBuffer();
+  stockWbExcel=new ExcelJS.Workbook();
+  await stockWbExcel.xlsx.load(stockFileBuffer);
+  setStatus(`${file.name} 업로드 완료`);
+});
+
+function sheetAoA(wb, sheetName){
+  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
+}
+
+function buildLookup(){
+  const allMap=new Map();
+  const sheetMaps={};
+
+  allowedSheets.forEach(sheetName=>{
+    const sheetMap=new Map();
+
+    if(!baseWb.Sheets[sheetName]){
+      sheetMaps[sheetName]=sheetMap;
+      return;
+    }
+
+    const rows=sheetAoA(baseWb,sheetName);
+
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]||[];
+      const item=txt(r[1]); // B열 품번/기장
+      if(!item) continue;
+
+      // 케이디지는 한 행에 품번/기장이 있고, 사이즈는 D~I 열로 가로 정렬
+      Object.entries(sizeCols).forEach(([size,colNum])=>{
+        const qty=num(r[colNum-1]); // D~I, 0-index
+        const k=key(item,size);
+        sheetMap.set(k,qty);
+
+        // 전체 map은 먼저 읽힌 시트 값 우선 유지
+        if(!allMap.has(k)) allMap.set(k,qty);
+      });
+    }
+
+    sheetMaps[sheetName]=sheetMap;
+  });
+
+  return {allMap, sheetMaps};
+}
+
+function processMatch(){
+  if(!baseWb){alert("케이디지 베이스 파일을 업로드해주세요.");return;}
+  if(!stockWbExcel){alert("케이디지 재고장 파일을 업로드해주세요.");return;}
+
+  const lookupObj=buildLookup();
+  const lookup=lookupObj.allMap;
+  const womenAllSeasonMap=lookupObj.sheetMaps["여성복(사계)"] || new Map();
+  if(lookup.size===0){
+    alert("사용 가능한 시트를 찾지 못했습니다. 여성복(사계), 남성복(사계), 여성복(여름), 남성복(여름) 시트명을 확인해주세요.");
+    return;
+  }
+
+  const ws=stockWbExcel.worksheets[0];
+  resultRows=[];
+  let currentName="";
+
+  ws.eachRow({includeEmpty:false}, (row, rowNumber)=>{
+    if(rowNumber===1)return;
+
+    const dCell=row.getCell(4); // D
+    const fCell=row.getCell(6); // F
+    const gCell=row.getCell(7); // G
+
+    const dVal=txt(dCell.value);
+    if(dVal) currentName=dVal;
+
+    const name=currentName;
+    const size=txt(fCell.value);
+
+    if(!name || !size) return;
+
+    const k=key(name,size);
+    const item=parseItem(name);
+
+    // 사입명이 7로 시작하면 여성복(사계) 탭만 조회
+    // 단, 7327-1을 7327로 줄이는 식의 메인코드 매칭은 하지 않음
+    const useWomenAllSeason=/^7/.test(item.code);
+
+    let has=false;
+    let val="매칭안됨";
+    let matchedBy="";
+
+    if(useWomenAllSeason){
+      if(womenAllSeasonMap.has(k)){
+        has=true;
+        val=womenAllSeasonMap.get(k);
+        matchedBy="여성복사계";
+      }
+    }else if(lookup.has(k)){
+      has=true;
+      val=lookup.get(k);
+      matchedBy="전체";
+    }
+
+    gCell.value=val;
+
+    resultRows.push({
+      rowNo:rowNumber,
+      name,
+      size,
+      stock:val,
+      status:has ? (matchedBy==="여성복사계" ? "매칭완료(여성복사계)" : "매칭완료") : "매칭안됨"
+    });
+  });
+
+  renderResult(lookup.size);
+  setStatus(`완료: 매칭 ${resultRows.filter(r=>r.status==="매칭완료").length}건 / 매칭안됨 ${resultRows.filter(r=>r.status==="매칭안됨").length}건`);
+}
+
+function renderResult(lookupSize){
+  const total=resultRows.length;
+  const matched=resultRows.filter(r=>r.status==="매칭완료").length;
+  const unmatched=total-matched;
+
+  document.getElementById("totalCnt").textContent=total;
+  document.getElementById("matchedCnt").textContent=matched;
+  document.getElementById("unmatchedCnt").textContent=unmatched;
+  document.getElementById("lookupCnt").textContent=lookupSize;
+
+  let html="<table><thead><tr>";
+  ["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"].forEach(h=>html+=`<th>${h}</th>`);
+  html+="</tr></thead><tbody>";
+  resultRows.slice(0,300).forEach(r=>{
+    const cls=r.status==="매칭완료"?"ok":"warn";
+    html+=`<tr><td class="${cls}">${r.status}</td><td>${r.rowNo}</td><td>${r.name}</td><td>${r.size}</td><td>${r.stock}</td></tr>`;
+  });
+  html+="</tbody></table>";
+  document.getElementById("resultTable").innerHTML=html;
+}
+
+async function downloadModified(){
+  if(!stockWbExcel || !resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
+
+  const buffer=await stockWbExcel.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="케이디지_재고장_G열입력_양식유지.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function downloadResultCsv(){
+  if(!resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
+  const rows=[["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"]];
+  resultRows.forEach(r=>rows.push([r.status,r.rowNo,r.name,r.size,r.stock]));
+  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="케이디지_재고장_매칭결과.csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
