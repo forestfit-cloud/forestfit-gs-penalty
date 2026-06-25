@@ -156,7 +156,13 @@ button.secondary:hover{
 <div class="guide">
 <b>결과 파일 다운로드 후 사용 방법</b><br><br>
 N열 수식이 삭제되었거나 정상적으로 적용되지 않은 경우, 아래 수식을 N2 셀에 입력한 후 마지막 행까지 채워서 사용해 주시기 바랍니다.<br><br>
-<code>=IF(J2="취소됨 or 출고됨","취소됨 or 출고됨",IF(M2="브리치 확인 불가","브리치 확인 불가",IF(J2&gt;M2,"출고 불가","")))</code>
+<code>='IF(J${rowNum}="취소됨 or 출고됨",
+"취소됨 or 출고됨",
+IF(M${rowNum}="브리치 확인 불가",
+"브리치 확인 불가",
+IF(AND(ISNUMBER(J${rowNum}),ISNUMBER(M${rowNum})),
+IF(J${rowNum}>M${rowNum},"출고 불가",""),
+"")))`</code>
 </div>
 
 <button class="secondary" onclick="downloadResult()">결과 엑셀 다운로드</button>
