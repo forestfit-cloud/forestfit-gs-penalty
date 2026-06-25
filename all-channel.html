@@ -155,14 +155,8 @@ button.secondary:hover{
 
 <div class="guide">
 <b>결과 파일 다운로드 후 사용 방법</b><br><br>
-N열 수식이 삭제되었거나 정상적으로 적용되지 않은 경우, 아래 수식을 N2 셀에 입력한 후 마지막 행까지 채워서 사용해 주시기 바랍니다.<br><br>
-<code>='IF(J${rowNum}="취소됨 or 출고됨",
-"취소됨 or 출고됨",
-IF(M${rowNum}="브리치 확인 불가",
-"브리치 확인 불가",
-IF(AND(ISNUMBER(J${rowNum}),ISNUMBER(M${rowNum})),
-IF(J${rowNum}>M${rowNum},"출고 불가",""),
-"")))`</code>
+N열 출고불가는 엑셀 수식이 아니라 사이트에서 직접 계산해 입력됩니다.<br><br>
+J열 변경입고예정일과 M열 출고준수일이 같은 날짜이면 공백으로 처리되고, J열 날짜가 M열보다 늦은 경우에만 <b>출고 불가</b>로 표시됩니다.
 </div>
 
 <button class="secondary" onclick="downloadResult()">결과 엑셀 다운로드</button>
@@ -292,6 +286,20 @@ function processFiles(){
     due=bd!==null ? bd : "브리치 확인 불가";
   }
 
+  // N열 출고불가 직접 계산
+  // 엑셀 수식 비교 오류 방지: J열과 M열을 날짜로 변환한 뒤 날짜값으로 비교
+  let shipBlock="";
+  const dueDate=toDate(due);
+  if(newInbound==="취소됨 or 출고됨"){
+    shipBlock="취소됨 or 출고됨";
+  }else if(due==="브리치 확인 불가"){
+    shipBlock="브리치 확인 불가";
+  }else if(newDate&&dueDate){
+    const jTime=new Date(newDate.getFullYear(),newDate.getMonth(),newDate.getDate()).getTime();
+    const mTime=new Date(dueDate.getFullYear(),dueDate.getMonth(),dueDate.getDate()).getTime();
+    shipBlock = jTime>mTime ? "출고 불가" : "";
+  }
+
   resultRows.push([
     r[SRC.ORDER_DATE]??"",
     r[SRC.DELAY]??"",
@@ -306,7 +314,7 @@ function processFiles(){
     delayDays,
     delayStatus,
     due,
-    "",
+    shipBlock,
     ""
   ]);
  }
@@ -366,14 +374,9 @@ function downloadResult(){
    }
   });
 
-  // N열 출고불가 수식 + 빨간 글씨
-  const rowNum=r+1;
+  // N열 출고불가: processFiles에서 직접 계산된 값을 유지하고 스타일만 적용
   const nAddr=XLSX.utils.encode_cell({r:r,c:13});
-  ws[nAddr]={
-   t:"s",
-   f:`IF(J${rowNum}="취소됨 or 출고됨","취소됨 or 출고됨",IF(M${rowNum}="브리치 확인 불가","브리치 확인 불가",IF(J${rowNum}>M${rowNum},"출고 불가","")))`,
-   v:""
-  };
+  if(!ws[nAddr]) ws[nAddr]={t:"s",v:""};
   ws[nAddr].s={
    alignment:{horizontal:"center",vertical:"center"},
    font:{color:{rgb:"D60000"},bold:true,sz:12}
