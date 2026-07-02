@@ -5,14 +5,12 @@
 <title>기프트허브 - 납기관리</title>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  
+
 <style>
 body{margin:0;font-family:Arial;background:#f5f6f8;}
 .header{background:#111;color:#fff;padding:14px;font-size:18px;}
-
 .container{padding:20px;}
 
-/* 공통 박스 */
 .box{
   background:#fff;
   padding:15px;
@@ -20,14 +18,12 @@ body{margin:0;font-family:Arial;background:#f5f6f8;}
   border-radius:8px;
 }
 
-/* 입력 */
 input{
   padding:8px;
   width:320px;
   margin-top:5px;
 }
 
-/* 버튼 */
 button{
   background:#111;
   color:#fff;
@@ -37,18 +33,19 @@ button{
   margin-right:6px;
 }
 
-/* 테이블 */
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
 }
+
 th,td{
   border:1px solid #ddd;
   padding:6px;
   font-size:12px;
   text-align:center;
 }
+
 th{background:#f0f0f0;}
 
 .red{color:red;font-weight:bold;}
@@ -59,92 +56,31 @@ th{background:#f0f0f0;}
 
 <body>
 
-<!-- ================= HEADER ================= -->
 <div class="header">📦 기프트허브 - 장기지연 납기관리</div>
-
-
-
-</div>
 
 <div class="container">
 
-<!-- ================= 1. 설명 ================= -->
-
-
-<!-- ================= 2. 입력 ================= -->
 <div class="box">
 
-
-<h3>📌 1. 셀메이트 파일 업로드</h3>
-
-<div class="small">
-
-📎 첨부 파일 다운로드 방법<br><br>
-
-셀메이트 접속<br>
-주문관리 메뉴 클릭<br>
-판매처분류에서 GS를 제외한 전 채널 선택<br>
-네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
-조회기간을 임의기간으로 설정<br>
-시작일 : 3개월 전<br>
-종료일 : 조회일 기준 평일 2~5일 전<br>
-확장필터에서 출고불가 필터 적용<br><br>
-
-6. 조회 후 [장기지연건] 양식으로 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부
-
-</div>
-
-<input type="file" id="cellFile">
-
-<br><br>
-
-<h3>📌 2. 브리치 파일 업로드</h3>
+<h3>📌 파일 업로드</h3>
 
 <div class="small">
+셀메이트 + 비플로우 파일 업로드 후 계산 실행
+</div>
 
-📎 첨부 파일 다운로드 방법<br><br>
+<input type="file" id="cellFile"><br><br>
+<input type="file" id="bfFile"><br><br>
 
-1. 비플로우 접속<br>
-2. 판매관리 메뉴 클릭<br>
-3. 주문조회 클릭<br>
-4. 주문상태를 아래 2가지로 선택<br>
-&nbsp;&nbsp;- 배송지연<br>
-&nbsp;&nbsp;- 배송준비<br><br>
-
-5. 조회기간<br>
-- 시작일 : 3개월 전<br>
-- 종료일 : 조회일 기준 평일 2~5일 전<br><br>
-
-6. 검색 버튼 클릭<br>
-7. 파일 다운로드<br>
-8. 다운로드한 파일을 이곳에 첨부
+<h3>📌 공휴일 입력</h3>
+<input type="text" id="holiday" placeholder="2026-08-17,2026-08-18">
 
 </div>
 
-<input type="file" id="bfFile">
-
-<br><br>
-
-<h3>📌 3. 공휴일 입력</h3>
-
-<div class="small">
-EX) 2026-08-17 (콤마 또는 줄바꿈 입력 가능)
-</div>
-
-<input type="text" id="holiday" placeholder="EX) 2026-08-17">
-
-</div>
-  
-<!-- ================= 3. 버튼 ================= -->
 <div class="box">
-
 <button onclick="run()">계산 실행</button>
-<button onclick="downloadExcel()">결과 파일 다운로드</button>
-
+<button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
-<!-- ================= 4. 결과 ================= -->
 <div class="box">
 
 <table id="tb">
@@ -172,49 +108,42 @@ EX) 2026-08-17 (콤마 또는 줄바꿈 입력 가능)
 
 </div>
 
-<!-- ================= 5. JS ================= -->
 <script>
 
-/* ---------------- 날짜 ---------------- */
+/* ================= 날짜 ================= */
 function excelDate(v){
   if(!v) return "";
-
-  if(typeof v==="string" && v.includes("-")){
-    return v.split("T")[0];
-  }
-
+  if(typeof v==="string" && v.includes("-")) return v.split("T")[0];
   if(typeof v==="number"){
     let d=new Date(Math.round((v-25569)*86400*1000));
     if(!isNaN(d)) return d.toISOString().split("T")[0];
   }
-
   let d=new Date(v);
   if(!isNaN(d)) return d.toISOString().split("T")[0];
-
   return "";
 }
 
-/* ---------------- 상품명 ---------------- */
-function getName(v){
-  let m=String(v).match(/\((.*?)\)/);
-  return m?m[1]:v;
+/* ================= 괄호 추출 ================= */
+function extractBracket(v){
+  if(!v) return "";
+  let m = v.match(/\(([^)]+)\)/);
+  return m ? m[1] : v;
 }
 
-/* ---------------- 옵션 ---------------- */
+/* ================= 옵션 ================= */
 function cleanOpt(v){
   return String(v||"")
-  .replace(/\s/g,'')
-  .replace(/\//g,',')
-  .replace(/_/g,'')
-  .replace(/기본옵션:/g,'')
-  .replace(/-/g,'')
-  .replace(/[A-Za-z]+\d+/g,'');
+    .replace(/\s/g,'')
+    .replace(/\//g,',')
+    .replace(/_/g,'')
+    .replace(/기본옵션:/g,'')
+    .replace(/-/g,'')
+    .replace(/[A-Za-z]+\d+/g,'');
 }
 
-/* ---------------- 영업일 ---------------- */
+/* ================= 영업일 ================= */
 function addBiz(date,days,holidays=[]){
   if(!date) return "";
-
   let d=new Date(date);
   let c=0;
 
@@ -222,7 +151,6 @@ function addBiz(date,days,holidays=[]){
     d.setDate(d.getDate()+1);
     let t=d.toISOString().split("T")[0];
     let day=d.getDay();
-
     if(day!==0 && day!==6 && !holidays.includes(t)){
       c++;
     }
@@ -230,35 +158,33 @@ function addBiz(date,days,holidays=[]){
   return d.toISOString().split("T")[0];
 }
 
-/* ---------------- 전역 ---------------- */
+/* ================= 전역 ================= */
 let result=[];
 let bfMap={};
 let holidays=[];
 
-/* ---------------- 실행 ---------------- */
+/* ================= 실행 ================= */
 function run(){
 
-  holidays=document.getElementById("holiday").value.split(",");
+  holidays = document.getElementById("holiday").value.split(",");
 
-  let cell=document.getElementById("cellFile").files[0];
-  let bf=document.getElementById("bfFile").files[0];
+  let cell = document.getElementById("cellFile").files[0];
+  let bf = document.getElementById("bfFile").files[0];
 
   if(!cell){
     alert("셀메이트 파일 필요");
     return;
   }
 
-  bfMap={};
+  bfMap = {};
 
   if(bf){
     read(bf,(b)=>{
       b.forEach((r,i)=>{
         if(i===0) return;
-
-        let key=r[1]+"_"+getName(r[10])+"_"+cleanOpt(r[11]);
-        bfMap[key]=excelDate(r[19]);
+        let key = r[1]+"_"+extractBracket(r[10])+"_"+cleanOpt(r[11]);
+        bfMap[key] = excelDate(r[19]);
       });
-
       loadCell(cell);
     });
   }else{
@@ -266,7 +192,7 @@ function run(){
   }
 }
 
-/* ---------------- 셀메이트 ---------------- */
+/* ================= 셀메이트 ================= */
 function loadCell(file){
 
   read(file,(data)=>{
@@ -277,26 +203,25 @@ function loadCell(file){
 
       if(i===0) return;
 
-      let orderDate=excelDate(r[0]);
-      let delay=r[1];
-      let channel=r[2];
-      let orderNo=r[3];
-      let supplier=r[4];
-      let productRaw=r[6];
-      let opt=r[7];
-      let stock=excelDate(r[8]);
+      let orderDate = excelDate(r[0]);
+      let delay = r[1];
+      let channel = r[2];
+      let orderNo = r[3];
+      let supplier = r[4];
+      let productRaw = r[5]; // F열
+      let opt = r[7];
+      let stock = excelDate(r[8]);
 
-      let product=getName(productRaw);
-      let option=cleanOpt(opt);
+      let gProduct = extractBracket(productRaw);
+      let option = cleanOpt(opt);
 
-      let key=orderNo+"_"+product+"_"+option;
+      let key = orderNo+"_"+gProduct+"_"+option;
+      let bfDate = bfMap[key] || "";
 
-      let bfDate=bfMap[key]||"";
-
-      let due="";
+      let due = "";
 
       if(channel.includes("퀸잇")){
-        due=addBiz(orderDate,21,holidays);
+        due = addBiz(orderDate,21,holidays);
       }
       else if(channel.includes("네이버")||channel.includes("롯데ON")){
         let d=new Date(orderDate);
@@ -304,17 +229,26 @@ function loadCell(file){
         due=d.toISOString().split("T")[0];
       }
       else if(channel.includes("하프클럽")){
-        due=addBiz(orderDate,15,holidays);
+        due = addBiz(orderDate,15,holidays);
       }
 
-      let blocked=(stock && due && new Date(stock)>new Date(due))
-      ?"출고불가":"";
+      let blocked = (stock && due && new Date(stock) > new Date(due))
+        ? "출고불가" : "";
 
       result.push([
-        orderDate,delay,channel,orderNo,
-        supplier,productRaw,product,
-        opt,bfDate,due,blocked,
-        "지연",""
+        orderDate,
+        delay,
+        channel,
+        orderNo,
+        supplier,
+        productRaw,
+        gProduct,
+        opt,
+        stock || "입고예정일 기입 요망",
+        due,
+        blocked,
+        "지연",
+        ""
       ]);
 
     });
@@ -323,7 +257,7 @@ function loadCell(file){
   });
 }
 
-/* ---------------- read ---------------- */
+/* ================= read ================= */
 function read(file,cb){
   let r=new FileReader();
   r.onload=function(e){
@@ -335,64 +269,45 @@ function read(file,cb){
   r.readAsArrayBuffer(file);
 }
 
-/* ---------------- render ---------------- */
+/* ================= render ================= */
 function render(){
 
-    let tb = document.querySelector("#tb tbody");
+  let tb=document.querySelector("#tb tbody");
+  tb.innerHTML="";
 
-    // ❌ 절대 document 전체 지우지 말 것
-    tb.innerHTML = "";
+  result.forEach(r=>{
 
-    result.forEach(r=>{
+    let tr=document.createElement("tr");
 
-        let tr=document.createElement("tr");
+    tr.innerHTML=r.map((v,i)=>{
 
-        tr.innerHTML=r.map((v,i)=>{
+      if(i===8 && !v){
+        return `<td class="red">입고예정일 기입 요망</td>`;
+      }
 
-            if(i===8 && !v){
-                return `<td class="red">입고예정일 기입 요망</td>`;
-            }
+      if(i===10 && v==="출고불가"){
+        return `<td class="red">${v}</td>`;
+      }
 
-            if(i===10 && v==="출고불가"){
-                return `<td class="red">${v}</td>`;
-            }
+      return `<td>${v||""}</td>`;
+    }).join("");
 
-            return `<td>${v||""}</td>`;
-        }).join("");
-
-        tb.appendChild(tr);
-    });
+    tb.appendChild(tr);
+  });
 }
 
-/* ---------------- download ---------------- */
-/* =========================
-📥 엑셀 다운로드 (헤더 스타일 포함)
-========================= */
+/* ================= 다운로드 ================= */
 function downloadExcel(){
 
-    let ws = XLSX.utils.aoa_to_sheet([
-        ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
-        ...result
-    ]);
+  let ws = XLSX.utils.aoa_to_sheet([
+    ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
+    ...result
+  ]);
 
-  function downloadExcel(){
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "result");
 
-    let ws = XLSX.utils.aoa_to_sheet([
-        ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
-        ...result
-    ]);
-
-    let wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "result");
-
-    XLSX.writeFile(wb, "gift_hub_result.xlsx");
-}
-    ];
-
-    let wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "result");
-
-    XLSX.writeFile(wb, "gift_hub_result.xlsx");
+  XLSX.writeFile(wb, "gift_hub_result.xlsx");
 }
 
 </script>
