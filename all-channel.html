@@ -370,14 +370,16 @@ function render(){
 ========================= */
 function downloadExcel(){
 
-    let headers = [
-        ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"]
-    ];
-
     let ws = XLSX.utils.aoa_to_sheet([
-        ...headers,
+        ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
         ...result
     ]);
+
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "result");
+
+    XLSX.writeFile(wb, "gift_hub_result.xlsx");
+}
 
     // =========================
     // 📌 1행 스타일 (회색 + bold)
