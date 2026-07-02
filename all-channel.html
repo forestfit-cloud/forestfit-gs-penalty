@@ -77,25 +77,6 @@ button.secondary:hover{
 기존 파일과 오늘 파일을 비교하여 입고예정일 변경 여부를 확인하고, 브리치 파일을 함께 업로드하면 비플로우 건의 출고준수일을 보정합니다.
 </div>
 
-<div class="grid3">
-<div class="card optional-card">
-<label><span class="tag optional-tag">선택 업로드</span><br>기존 셀메이트 파일</label>
-<input type="file" id="baseFile" accept=".xlsx,.xls,.csv" />
-<label>기존 파일 시트 선택</label>
-<select id="baseSheet"></select>
-<div class="small">
-<b>첨부 파일 다운로드 방법</b><br><br>
-1. 셀메이트 접속<br>
-2. <b>주문관리</b> 메뉴 클릭<br>
-3. <b>판매처분류</b>에서 <b>GS를 제외한 전 채널</b> 선택<br>
-&nbsp;&nbsp;- 네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
-4. 조회기간을 <b>임의기간</b>으로 설정<br>
-&nbsp;&nbsp;- 시작일 : 3개월 전<br>
-&nbsp;&nbsp;- 종료일 : 조회일 기준 평일 2일 전<br>
-5. <b>확장필터</b>에서 <b>출고불가</b> 필터 적용<br>
-6. 조회 후 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부
-</div>
 </div>
 
 <div class="card required-card">
@@ -171,7 +152,7 @@ J열 변경입고예정일과 M열 출고준수일이 같은 날짜이면 공백
 
 <script>
 let baseWorkbook=null,todayWorkbook=null,brichWorkbook=null,resultRows=[];
-const OUT_HEADERS=["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","변경입고예정일","지연일수","지연여부","출고준수일","출고불가","진행상황"];
+const OUT_HEADERS=["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","출고준수일","출고불가","진행상황"];
 
 const SRC={ORDER_DATE:0,DELAY:1,SELLER:2,ORDER_NO:3,SUPPLIER:4,BUY_NAME:5,PRODUCT:6,OPTION:7,OLD_INBOUND:8};
 const BR={ORDER_NO:1,PRODUCT:10,SHIP_DATE:19};
@@ -300,23 +281,19 @@ function processFiles(){
     shipBlock = jTime>mTime ? "출고 불가" : "";
   }
 
-  resultRows.push([
-    r[SRC.ORDER_DATE]??"",
-    r[SRC.DELAY]??"",
-    r[SRC.SELLER]??"",
-    r[SRC.ORDER_NO]??"",
-    r[SRC.SUPPLIER]??"",
-    r[SRC.BUY_NAME]??"",
-    r[SRC.PRODUCT]??"",
-    r[SRC.OPTION]??"",
-    oldInbound,
-    newInbound,
-    delayDays,
-    delayStatus,
-    due,
-    shipBlock,
-    ""
-  ]);
+resultRows.push([
+  r[SRC.ORDER_DATE]??"",
+  r[SRC.SELLER]??"",
+  r[SRC.ORDER_NO]??"",
+  r[SRC.SUPPLIER]??"",
+  r[SRC.BUY_NAME]??"",
+  r[SRC.PRODUCT]??"",
+  r[SRC.OPTION]??"",
+  oldInbound,
+  due,
+  shipBlock,
+  ""
+]);
  }
 
  renderTable(resultRows.slice(0,101));
