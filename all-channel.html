@@ -375,12 +375,6 @@ function downloadExcel(){
         ...result
     ]);
 
-    let wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "result");
-
-    XLSX.writeFile(wb, "gift_hub_result.xlsx");
-}
-
     // =========================
     // 📌 1행 스타일 (회색 + bold)
     // =========================
@@ -390,20 +384,20 @@ function downloadExcel(){
 
         let cell_address = XLSX.utils.encode_cell({r:0, c:C});
 
-        if(!ws[cell_address]) continue;
-
-        ws[cell_address].s = {
-            fill: {
-                fgColor: { rgb: "EDEDED" }
-            },
-            font: {
-                bold: true
-            },
-            alignment: {
-                horizontal: "center",
-                vertical: "center"
-            }
-        };
+        if(ws[cell_address]){
+            ws[cell_address].s = {
+                fill: {
+                    fgColor: { rgb: "EDEDED" }
+                },
+                font: {
+                    bold: true
+                },
+                alignment: {
+                    horizontal: "center",
+                    vertical: "center"
+                }
+            };
+        }
     }
 
     // 컬럼 폭
