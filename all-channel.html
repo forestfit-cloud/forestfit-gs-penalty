@@ -3,214 +3,199 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 장기지연건 입고/납기 자동 비교</title>
+<title>포레스트핏 입고/납기 자동 비교 (Stable)</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
-body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
-.wrap{max-width:1280px;margin:0 auto;padding:30px}
-h1{font-size:28px;margin:0 0 8px;color:#6B5310}
-.desc{color:#7A6640;margin-bottom:20px}
-
-.card{background:#FFFDF7;border:1px solid #E7D8A3;border-radius:14px;padding:20px;margin-bottom:16px}
-label{font-weight:700;display:block;margin-bottom:8px;color:#6B5310}
-
-input,select,textarea,button{
-width:100%;box-sizing:border-box;padding:10px;border-radius:8px;
-border:1px solid #465163;margin-bottom:12px
-}
-
-button{background:#C9A227;color:#6B5310;font-weight:700;border:0;cursor:pointer}
-button.secondary{background:#BFA45A;color:#fff}
-
-.table-wrap{overflow:auto;max-height:560px;border:1px solid #ddd}
+body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#fff9e8;color:#4a3a12}
+.wrap{max-width:1200px;margin:auto;padding:24px}
+h1{font-size:24px}
+.card{background:#fff;border:1px solid #e7d8a3;padding:16px;border-radius:12px;margin-bottom:14px}
+input,select,button{width:100%;padding:10px;margin-top:8px}
+button{background:#c9a227;border:0;color:#fff;font-weight:bold;cursor:pointer}
 table{border-collapse:collapse;width:100%;font-size:12px}
-th,td{border:1px solid #ddd;padding:6px;text-align:center;white-space:nowrap}
-th{background:#ddd;position:sticky;top:0}
+th,td{border:1px solid #ddd;padding:6px;text-align:center}
+th{background:#eee;position:sticky;top:0}
 </style>
 </head>
 
 <body>
 <div class="wrap">
 
-<h1>포레스트핏 장기지연건 입고/납기 자동 비교</h1>
+<h1>입고/납기 자동 비교 (Stable Version)</h1>
 
-<div class="desc">
-셀메이트 + 브리치 파일을 기반으로 입고/출고 상태를 자동 비교합니다.
-</div>
-
-<!-- TODAY -->
 <div class="card">
-<label>1. 셀메이트 파일 업로드</label>
-<input type="file" id="todayFile"/>
+<label>셀메이트 파일</label>
+<input type="file" id="todayFile">
 <select id="todaySheet"></select>
 </div>
 
-<!-- BRICH -->
 <div class="card">
-<label>2. 브리치 파일 업로드</label>
-<input type="file" id="brichFile"/>
+<label>브리치 파일</label>
+<input type="file" id="brichFile">
 <select id="brichSheet"></select>
 </div>
 
-<!-- HOLIDAY -->
 <div class="card">
-<label>공휴일</label>
-<textarea id="holidays" placeholder="2026-05-25"></textarea>
-</div>
-
-<div class="card">
-<button onclick="processFiles()">계산 실행</button>
-<button class="secondary" onclick="downloadResult()">엑셀 다운로드</button>
+<button onclick="run()">계산 실행</button>
 </div>
 
 <div class="card">
 <div id="summary"></div>
-<div class="table-wrap" id="tableWrap"></div>
+<div id="table"></div>
 </div>
 
 </div>
 
 <script>
-let todayWorkbook=null,brichWorkbook=null,resultRows=[];
+let todayWB=null, brichWB=null, result=[];
 
-/* 최종 컬럼 */
-const OUT_HEADERS=[
-"주문일자","판매처명","주문번호","공급처명",
-"사입상품명","판매처상품명","옵션",
-"입고예정일","출고준수일","출고불가","진행상황"
-];
+/* =========================
+   자동 컬럼 매핑 (핵심)
+========================= */
+function detectMap(rows){
+  const header = rows[0] || [];
 
-const SRC={
-ORDER_DATE:0,SELLER:2,ORDER_NO:3,SUPPLIER:4,
-BUY_NAME:5,PRODUCT:6,OPTION:7,OLD_INBOUND:8
-};
+  const find = (keys)=>{
+    for(let i=0;i<header.length;i++){
+      const h = String(header[i]||"").toLowerCase();
+      if(keys.some(k=>h.includes(k))) return i;
+    }
+    return -1;
+  };
 
-const BR={ORDER_NO:1,PRODUCT:10,SHIP_DATE:19};
-
-function txt(v){return v==null?"":String(v).trim()}
-function norm(v){return txt(v).replace(/\s+/g,"")}
-function srcKey(r){return norm(r[SRC.ORDER_NO])+"||"+norm(r[SRC.PRODUCT])+"||"+norm(r[SRC.OPTION])}
-
-function toDate(v){
-if(v instanceof Date) return v;
-let d=new Date(v);
-return isNaN(d)?null:d;
+  return {
+    orderNo: find(["주문번호","order"]),
+    product: find(["상품","product"]),
+    option: find(["옵션","option"]),
+    seller: find(["판매처","channel"]),
+    inbound: find(["입고","예정"])
+  };
 }
 
-function getRows(wb,sheet){
-return XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:false,defval:""});
+/* =========================
+   File Load (안정형)
+========================= */
+function loadFile(input, wbSetter, sheetId){
+  const file = input.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = e=>{
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data,{type:"array"});
+
+    wbSetter(wb);
+
+    const sel = document.getElementById(sheetId);
+    sel.innerHTML="";
+    wb.SheetNames.forEach(s=>sel.add(new Option(s,s)));
+    sel.value=wb.SheetNames[0];
+  };
+
+  reader.readAsArrayBuffer(file);
 }
 
-function fillSelect(wb,id){
-const s=document.getElementById(id);
-s.innerHTML="";
-wb.SheetNames.forEach(n=>s.add(new Option(n,n)));
-s.value=wb.SheetNames[0];
+/* =========================
+   Utils
+========================= */
+const norm = v => String(v||"").replace(/\s+/g,"");
+
+function key(r,m){
+  return norm(r[m.orderNo])+"||"+norm(r[m.product])+"||"+norm(r[m.option]);
 }
 
-function buildMap(rows){
-const map=new Map();
-for(let i=1;i<rows.length;i++){
-const r=rows[i]||[];
-if(!norm(r[SRC.ORDER_NO]))continue;
-map.set(srcKey(r),r[SRC.OLD_INBOUND]);
-}
-return map;
-}
+/* =========================
+   MAIN
+========================= */
+function run(){
 
-function buildBrich(rows){
-const map=new Map();
-for(let i=1;i<rows.length;i++){
-const r=rows[i]||[];
-const o=norm(r[BR.ORDER_NO]);
-if(!o)continue;
-map.set(o,r[BR.SHIP_DATE]);
-}
-return map;
-}
+  if(!todayWB){
+    alert("셀메이트 파일 업로드 필요");
+    return;
+  }
 
-function processFiles(){
-const todayRows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
-const brichRows=brichWorkbook?getRows(brichWorkbook,document.getElementById("brichSheet").value):[];
+  const todayRows = XLSX.utils.sheet_to_json(
+    todayWB.Sheets[document.getElementById("todaySheet").value],
+    {header:1,defval:""}
+  );
 
-const todayMap=buildMap(todayRows);
-const brichMap=buildBrich(brichRows);
+  const brichRows = brichWB ? XLSX.utils.sheet_to_json(
+    brichWB.Sheets[document.getElementById("brichSheet").value],
+    {header:1,defval:""}
+  ) : [];
 
-resultRows=[OUT_HEADERS];
+  const m = detectMap(todayRows);
 
-for(let i=1;i<todayRows.length;i++){
-const r=todayRows[i]||[];
-if(!norm(r[SRC.ORDER_NO]))continue;
+  if(m.orderNo===-1){
+    alert("컬럼 자동 인식 실패 (헤더 확인 필요)");
+    return;
+  }
 
-const key=srcKey(r);
-const newInbound=todayMap.get(key)||"취소됨 or 출고됨";
+  const map = new Map();
 
-const due=brichMap.get(norm(r[SRC.ORDER_NO]))||"";
+  for(let i=1;i<todayRows.length;i++){
+    const r=todayRows[i];
+    if(!r) continue;
+    map.set(key(r,m), r);
+  }
 
-let block="";
-if(newInbound==="취소됨 or 출고됨") block="취소됨 or 출고됨";
+  result = [["주문번호","상품","옵션","판매처","입고","상태"]];
 
-resultRows.push([
-r[SRC.ORDER_DATE],
-r[SRC.SELLER],
-r[SRC.ORDER_NO],
-r[SRC.SUPPLIER],
-r[SRC.BUY_NAME],
-r[SRC.PRODUCT],
-r[SRC.OPTION],
-r[SRC.OLD_INBOUND],
-due,
-block,
-""
-]);
-}
+  for(let i=1;i<todayRows.length;i++){
+    const r=todayRows[i];
 
-render();
+    const k = key(r,m);
+    const matched = map.get(k);
+
+    const status = matched ? "" : "미매칭";
+
+    result.push([
+      r[m.orderNo],
+      r[m.product],
+      r[m.option],
+      r[m.seller],
+      r[m.inbound],
+      status
+    ]);
+  }
+
+  render();
 }
 
+/* =========================
+   Render
+========================= */
 function render(){
-let html="<table><thead><tr>";
-resultRows[0].forEach(h=>html+=`<th>${h}</th>`);
-html+="</tr></thead><tbody>";
+  let h="<table><tr>";
+  result[0].forEach(x=>h+=`<th>${x}</th>`);
+  h+="</tr>";
 
-for(let i=1;i<resultRows.length;i++){
-html+="<tr>";
-resultRows[i].forEach(v=>html+=`<td>${v??""}</td>`);
-html+="</tr>";
+  for(let i=1;i<result.length;i++){
+    h+="<tr>";
+    result[i].forEach(x=>h+=`<td>${x||""}</td>`);
+    h+="</tr>";
+  }
+
+  h+="</table>";
+
+  document.getElementById("table").innerHTML=h;
+  document.getElementById("summary").innerText="총 "+(result.length-1)+"건";
 }
 
-html+="</tbody></table>";
-document.getElementById("tableWrap").innerHTML=html;
-document.getElementById("summary").innerText="총 "+(resultRows.length-1)+"건";
-}
-
-function downloadResult(){
-const ws=XLSX.utils.aoa_to_sheet(resultRows);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"결과");
-XLSX.writeFile(wb,"결과.xlsx");
-}
-
-document.getElementById("todayFile").addEventListener("change",e=>{
-const f=e.target.files[0];
-const r=new FileReader();
-r.onload=ev=>{
-todayWorkbook=XLSX.read(ev.target.result,{type:"array"});
-fillSelect(todayWorkbook,"todaySheet");
-};
-r.readAsArrayBuffer(f);
+/* =========================
+   EVENTS
+========================= */
+document.getElementById("todayFile")
+.addEventListener("change",e=>{
+  loadFile(e.target,v=>todayWB=v,"todaySheet");
 });
 
-document.getElementById("brichFile").addEventListener("change",e=>{
-const f=e.target.files[0];
-const r=new FileReader();
-r.onload=ev=>{
-brichWorkbook=XLSX.read(ev.target.result,{type:"array"});
-fillSelect(brichWorkbook,"brichSheet");
-};
-r.readAsArrayBuffer(f);
+document.getElementById("brichFile")
+.addEventListener("change",e=>{
+  loadFile(e.target,v=>brichWB=v,"brichSheet");
 });
 </script>
 
