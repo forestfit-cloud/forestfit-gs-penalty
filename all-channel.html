@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>기프트허브 - 납기관리</title>
+<title>기프트허브 - 장기지연 납기관리</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -11,13 +11,14 @@ body{margin:0;font-family:Arial;background:#f5f6f8;}
 .header{background:#111;color:#fff;padding:14px;font-size:18px;}
 .container{padding:20px;}
 .box{background:#fff;padding:15px;margin-bottom:12px;border-radius:8px;}
-input{padding:8px;width:300px;margin-top:5px;}
+input{padding:8px;width:320px;margin-top:5px;}
 button{background:#111;color:#fff;padding:10px;border:none;cursor:pointer;margin-right:6px;}
 table{width:100%;border-collapse:collapse;background:#fff;margin-top:10px;}
 th,td{border:1px solid #ddd;padding:6px;font-size:12px;text-align:center;}
 th{background:#f0f0f0;}
 .red{color:red;font-weight:bold;}
-.small{color:#777;font-size:12px;}
+.small{font-size:12px;color:#666;line-height:1.5;}
+h3{margin:0 0 8px 0;}
 </style>
 </head>
 
@@ -29,32 +30,79 @@ th{background:#f0f0f0;}
 
 <!-- ===================== 1 ===================== -->
 <div class="box">
-<h3>1. 셀메이트 파일 업로드</h3>
-<div class="small">EX) 셀메이트 장기지연 파일 업로드</div>
+<h3>📌 1. 셀메이트 파일 업로드</h3>
+
+<div class="small">
+📎 첨부 파일 다운로드 방법<br><br>
+
+셀메이트 접속<br>
+주문관리 메뉴 클릭<br>
+판매처분류에서 GS를 제외한 전 채널 선택<br>
+네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
+조회기간을 임의기간으로 설정<br>
+시작일 : 3개월 전<br>
+종료일 : 조회일 기준 평일 2~5일 전<br>
+확장필터에서 출고불가 필터 적용<br><br>
+
+6. 조회 후 [장기지연건] 양식으로 파일 다운로드<br>
+7. 다운로드한 파일을 이곳에 첨부
+</div>
+
+<br>
 <input type="file" id="cellFile">
 </div>
 
 <!-- ===================== 2 ===================== -->
 <div class="box">
-<h3>2. 브리치 파일 업로드</h3>
-<div class="small">EX) 비플로우 / 브리치 다운로드 파일</div>
+<h3>📌 2. 브리치 파일 업로드</h3>
+
+<div class="small">
+📎 첨부 파일 다운로드 방법<br><br>
+
+1. 비플로우 접속<br>
+2. 판매관리 메뉴 클릭<br>
+3. 주문조회 클릭<br>
+4. 주문상태 선택<br>
+&nbsp;&nbsp;- 배송지연<br>
+&nbsp;&nbsp;- 배송준비<br><br>
+
+5. 조회기간<br>
+- 시작일 : 3개월 전<br>
+- 종료일 : 조회일 기준 평일 2~5일 전<br><br>
+
+6. 검색 버튼 클릭<br>
+7. 파일 다운로드<br>
+8. 다운로드한 파일을 이곳에 첨부
+</div>
+
+<br>
 <input type="file" id="bfFile">
 </div>
 
 <!-- ===================== 3 ===================== -->
 <div class="box">
-<h3>3. 공휴일 입력</h3>
-<div class="small">EX) 2026-08-17 (줄바꿈 또는 콤마 가능)</div>
-<input type="text" id="holiday" placeholder="2026-08-17">
+<h3>📌 3. 공휴일 입력</h3>
+
+<div class="small">
+파일에서 주말 외 공휴일은 자동 인식되지 않으므로,<br>
+아래 형식으로 공휴일을 수기 입력해주시기 바랍니다.<br><br>
+
+예시)<br>
+2026-08-17<br><br>
+
+여러 날짜 입력 시 콤마(,)로 구분하거나 줄바꿈으로 입력 가능합니다.
 </div>
 
-<!-- 버튼 -->
+<input type="text" id="holiday" placeholder="EX) 2026-08-17">
+</div>
+
+<!-- ===================== 버튼 ===================== -->
 <div class="box">
 <button onclick="run()">계산 실행</button>
 <button onclick="downloadExcel()">결과 파일 다운로드</button>
 </div>
 
-<!-- 결과 -->
+<!-- ===================== 결과 ===================== -->
 <div class="box">
 <table id="tb">
 <thead>
@@ -73,7 +121,7 @@ th{background:#f0f0f0;}
 <script>
 
 /* =========================
-📅 날짜 변환
+날짜 변환
 ========================= */
 function excelDate(v){
     if(!v) return "";
@@ -84,9 +132,7 @@ function excelDate(v){
 
     if(typeof v==="number"){
         let d=new Date(Math.round((v-25569)*86400*1000));
-        if(!isNaN(d)){
-            return d.toISOString().split("T")[0];
-        }
+        if(!isNaN(d)) return d.toISOString().split("T")[0];
     }
 
     let d=new Date(v);
@@ -96,7 +142,7 @@ function excelDate(v){
 }
 
 /* =========================
-📦 괄호 상품명
+상품명 괄호
 ========================= */
 function getName(v){
     let m=String(v).match(/\((.*?)\)/);
@@ -104,7 +150,7 @@ function getName(v){
 }
 
 /* =========================
-🧹 옵션 정리
+옵션 정리
 ========================= */
 function cleanOpt(v){
     return String(v||"")
@@ -117,7 +163,7 @@ function cleanOpt(v){
 }
 
 /* =========================
-📅 영업일
+영업일
 ========================= */
 function addBiz(date,days,holidays=[]){
     if(!date) return "";
@@ -178,7 +224,7 @@ function run(){
 }
 
 /* =========================
-셀메이트
+셀 읽기
 ========================= */
 function loadCell(file){
 
@@ -236,7 +282,7 @@ function loadCell(file){
 }
 
 /* =========================
-파일 읽기
+read
 ========================= */
 function read(file,cb){
     let r=new FileReader();
