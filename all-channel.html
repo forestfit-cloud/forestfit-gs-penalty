@@ -2,342 +2,351 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>기프트허브 - 장기지연 납기관리</title>
+<title>기프트허브 - 납기관리</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f6f8;}
 .header{background:#111;color:#fff;padding:14px;font-size:18px;}
+
 .container{padding:20px;}
-.box{background:#fff;padding:15px;margin-bottom:12px;border-radius:8px;}
-input{padding:8px;width:320px;margin-top:5px;}
-button{background:#111;color:#fff;padding:10px;border:none;cursor:pointer;margin-right:6px;}
-table{width:100%;border-collapse:collapse;background:#fff;margin-top:10px;}
-th,td{border:1px solid #ddd;padding:6px;font-size:12px;text-align:center;}
+
+/* 공통 박스 */
+.box{
+  background:#fff;
+  padding:15px;
+  margin-bottom:12px;
+  border-radius:8px;
+}
+
+/* 입력 */
+input{
+  padding:8px;
+  width:320px;
+  margin-top:5px;
+}
+
+/* 버튼 */
+button{
+  background:#111;
+  color:#fff;
+  padding:10px;
+  border:none;
+  cursor:pointer;
+  margin-right:6px;
+}
+
+/* 테이블 */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th,td{
+  border:1px solid #ddd;
+  padding:6px;
+  font-size:12px;
+  text-align:center;
+}
 th{background:#f0f0f0;}
+
 .red{color:red;font-weight:bold;}
+
 .small{font-size:12px;color:#666;line-height:1.5;}
-h3{margin:0 0 8px 0;}
 </style>
 </head>
 
 <body>
 
-<div class="header">📦 기프트허브 - 장기지연 납기관리 시스템</div>
+<!-- ================= HEADER ================= -->
+<div class="header">📦 기프트허브 - 장기지연 납기관리</div>
 
 <div class="container">
 
-<!-- ===================== 1 ===================== -->
+<!-- ================= 1. 설명 ================= -->
 <div class="box">
+
+<h3>📌 사용 안내</h3>
+
+<div class="small">
+
+이 시스템은 셀메이트 + 브리치 파일을 기반으로<br>
+전체 채널 장기지연 및 출고 리스크를 자동 계산합니다.<br><br>
+
+업로드 순서:<br>
+1. 셀메이트 파일 업로드<br>
+2. 브리치 파일 업로드 (선택)<br>
+3. 공휴일 입력<br>
+4. 계산 실행<br><br>
+
+출력 기준:<br>
+- 괄호 상품명만 추출<br>
+- 채널별 출고준수일 자동 계산<br>
+- 입고 / 출고 비교로 출고불가 판정
+
+</div>
+</div>
+
+<!-- ================= 2. 입력 ================= -->
+<div class="box">
+
 <h3>📌 1. 셀메이트 파일 업로드</h3>
-
-<div class="small">
-📎 첨부 파일 다운로드 방법<br><br>
-
-셀메이트 접속<br>
-주문관리 메뉴 클릭<br>
-판매처분류에서 GS를 제외한 전 채널 선택<br>
-네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
-조회기간을 임의기간으로 설정<br>
-시작일 : 3개월 전<br>
-종료일 : 조회일 기준 평일 2~5일 전<br>
-확장필터에서 출고불가 필터 적용<br><br>
-
-6. 조회 후 [장기지연건] 양식으로 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부
-</div>
-
-<br>
+<div class="small">EX) 장기지연건 파일 업로드</div>
 <input type="file" id="cellFile">
-</div>
 
-<!-- ===================== 2 ===================== -->
-<div class="box">
+<br><br>
+
 <h3>📌 2. 브리치 파일 업로드</h3>
-
-<div class="small">
-📎 첨부 파일 다운로드 방법<br><br>
-
-1. 비플로우 접속<br>
-2. 판매관리 메뉴 클릭<br>
-3. 주문조회 클릭<br>
-4. 주문상태 선택<br>
-&nbsp;&nbsp;- 배송지연<br>
-&nbsp;&nbsp;- 배송준비<br><br>
-
-5. 조회기간<br>
-- 시작일 : 3개월 전<br>
-- 종료일 : 조회일 기준 평일 2~5일 전<br><br>
-
-6. 검색 버튼 클릭<br>
-7. 파일 다운로드<br>
-8. 다운로드한 파일을 이곳에 첨부
-</div>
-
-<br>
+<div class="small">EX) 비플로우 다운로드 파일</div>
 <input type="file" id="bfFile">
-</div>
 
-<!-- ===================== 3 ===================== -->
-<div class="box">
+<br><br>
+
 <h3>📌 3. 공휴일 입력</h3>
-
-<div class="small">
-파일에서 주말 외 공휴일은 자동 인식되지 않으므로,<br>
-아래 형식으로 공휴일을 수기 입력해주시기 바랍니다.<br><br>
-
-예시)<br>
-2026-08-17<br><br>
-
-여러 날짜 입력 시 콤마(,)로 구분하거나 줄바꿈으로 입력 가능합니다.
-</div>
-
+<div class="small">EX) 2026-08-17 (콤마 또는 줄바꿈)</div>
 <input type="text" id="holiday" placeholder="EX) 2026-08-17">
+
 </div>
 
-<!-- ===================== 버튼 ===================== -->
+<!-- ================= 3. 버튼 ================= -->
 <div class="box">
+
 <button onclick="run()">계산 실행</button>
 <button onclick="downloadExcel()">결과 파일 다운로드</button>
+
 </div>
 
-<!-- ===================== 결과 ===================== -->
+<!-- ================= 4. 결과 ================= -->
 <div class="box">
+
 <table id="tb">
 <thead>
 <tr>
-<th>주문일자</th><th>지연일</th><th>판매처</th><th>주문번호</th>
-<th>공급처</th><th>사입상품</th><th>상품</th><th>옵션</th>
-<th>입고</th><th>출고준수</th><th>불가</th><th>상태</th><th>처리</th>
+<th>주문일자</th>
+<th>지연일</th>
+<th>판매처</th>
+<th>주문번호</th>
+<th>공급처</th>
+<th>사입상품</th>
+<th>상품</th>
+<th>옵션</th>
+<th>입고</th>
+<th>출고준수</th>
+<th>불가</th>
+<th>상태</th>
+<th>처리</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
-</div>
 
 </div>
 
+</div>
+
+<!-- ================= 5. JS ================= -->
 <script>
 
-/* =========================
-날짜 변환
-========================= */
+/* ---------------- 날짜 ---------------- */
 function excelDate(v){
-    if(!v) return "";
+  if(!v) return "";
 
-    if(typeof v==="string" && v.includes("-")){
-        return v.split("T")[0];
-    }
+  if(typeof v==="string" && v.includes("-")){
+    return v.split("T")[0];
+  }
 
-    if(typeof v==="number"){
-        let d=new Date(Math.round((v-25569)*86400*1000));
-        if(!isNaN(d)) return d.toISOString().split("T")[0];
-    }
-
-    let d=new Date(v);
+  if(typeof v==="number"){
+    let d=new Date(Math.round((v-25569)*86400*1000));
     if(!isNaN(d)) return d.toISOString().split("T")[0];
+  }
 
-    return "";
+  let d=new Date(v);
+  if(!isNaN(d)) return d.toISOString().split("T")[0];
+
+  return "";
 }
 
-/* =========================
-상품명 괄호
-========================= */
+/* ---------------- 상품명 ---------------- */
 function getName(v){
-    let m=String(v).match(/\((.*?)\)/);
-    return m?m[1]:v;
+  let m=String(v).match(/\((.*?)\)/);
+  return m?m[1]:v;
 }
 
-/* =========================
-옵션 정리
-========================= */
+/* ---------------- 옵션 ---------------- */
 function cleanOpt(v){
-    return String(v||"")
-    .replace(/\s/g,'')
-    .replace(/\//g,',')
-    .replace(/_/g,'')
-    .replace(/기본옵션:/g,'')
-    .replace(/-/g,'')
-    .replace(/[A-Za-z]+\d+/g,'');
+  return String(v||"")
+  .replace(/\s/g,'')
+  .replace(/\//g,',')
+  .replace(/_/g,'')
+  .replace(/기본옵션:/g,'')
+  .replace(/-/g,'')
+  .replace(/[A-Za-z]+\d+/g,'');
 }
 
-/* =========================
-영업일
-========================= */
+/* ---------------- 영업일 ---------------- */
 function addBiz(date,days,holidays=[]){
-    if(!date) return "";
+  if(!date) return "";
 
-    let d=new Date(date);
-    let c=0;
+  let d=new Date(date);
+  let c=0;
 
-    while(c<days){
-        d.setDate(d.getDate()+1);
-        let t=d.toISOString().split("T")[0];
-        let day=d.getDay();
+  while(c<days){
+    d.setDate(d.getDate()+1);
+    let t=d.toISOString().split("T")[0];
+    let day=d.getDay();
 
-        if(day!==0 && day!==6 && !holidays.includes(t)){
-            c++;
-        }
+    if(day!==0 && day!==6 && !holidays.includes(t)){
+      c++;
     }
-    return d.toISOString().split("T")[0];
+  }
+  return d.toISOString().split("T")[0];
 }
 
-/* =========================
-전역
-========================= */
+/* ---------------- 전역 ---------------- */
 let result=[];
 let bfMap={};
 let holidays=[];
 
-/* =========================
-실행
-========================= */
+/* ---------------- 실행 ---------------- */
 function run(){
 
-    holidays=document.getElementById("holiday").value.split(",");
+  holidays=document.getElementById("holiday").value.split(",");
 
-    let cell=document.getElementById("cellFile").files[0];
-    let bf=document.getElementById("bfFile").files[0];
+  let cell=document.getElementById("cellFile").files[0];
+  let bf=document.getElementById("bfFile").files[0];
 
-    if(!cell){
-        alert("셀메이트 파일 필요");
-        return;
-    }
+  if(!cell){
+    alert("셀메이트 파일 필요");
+    return;
+  }
 
-    bfMap={};
+  bfMap={};
 
-    if(bf){
-        read(bf,(b)=>{
-            b.forEach((r,i)=>{
-                if(i===0) return;
+  if(bf){
+    read(bf,(b)=>{
+      b.forEach((r,i)=>{
+        if(i===0) return;
 
-                let key=r[1]+"_"+getName(r[10])+"_"+cleanOpt(r[11]);
-                bfMap[key]=excelDate(r[19]);
-            });
+        let key=r[1]+"_"+getName(r[10])+"_"+cleanOpt(r[11]);
+        bfMap[key]=excelDate(r[19]);
+      });
 
-            loadCell(cell);
-        });
-    }else{
-        loadCell(cell);
-    }
+      loadCell(cell);
+    });
+  }else{
+    loadCell(cell);
+  }
 }
 
-/* =========================
-셀 읽기
-========================= */
+/* ---------------- 셀메이트 ---------------- */
 function loadCell(file){
 
-    read(file,(data)=>{
+  read(file,(data)=>{
 
-        result=[];
+    result=[];
 
-        data.forEach((r,i)=>{
+    data.forEach((r,i)=>{
 
-            if(i===0) return;
+      if(i===0) return;
 
-            let orderDate=excelDate(r[0]);
-            let delay=r[1];
-            let channel=r[2];
-            let orderNo=r[3];
-            let supplier=r[4];
-            let productRaw=r[6];
-            let opt=r[7];
-            let stock=excelDate(r[8]);
+      let orderDate=excelDate(r[0]);
+      let delay=r[1];
+      let channel=r[2];
+      let orderNo=r[3];
+      let supplier=r[4];
+      let productRaw=r[6];
+      let opt=r[7];
+      let stock=excelDate(r[8]);
 
-            let product=getName(productRaw);
-            let option=cleanOpt(opt);
+      let product=getName(productRaw);
+      let option=cleanOpt(opt);
 
-            let key=orderNo+"_"+product+"_"+option;
+      let key=orderNo+"_"+product+"_"+option;
 
-            let bfDate=bfMap[key]||"";
+      let bfDate=bfMap[key]||"";
 
-            let due="";
+      let due="";
 
-            if(channel.includes("퀸잇")){
-                due=addBiz(orderDate,21,holidays);
-            }
-            else if(channel.includes("네이버")||channel.includes("롯데ON")){
-                let d=new Date(orderDate);
-                d.setMonth(d.getMonth()+1);
-                due=d.toISOString().split("T")[0];
-            }
-            else if(channel.includes("하프클럽")){
-                due=addBiz(orderDate,15,holidays);
-            }
+      if(channel.includes("퀸잇")){
+        due=addBiz(orderDate,21,holidays);
+      }
+      else if(channel.includes("네이버")||channel.includes("롯데ON")){
+        let d=new Date(orderDate);
+        d.setMonth(d.getMonth()+1);
+        due=d.toISOString().split("T")[0];
+      }
+      else if(channel.includes("하프클럽")){
+        due=addBiz(orderDate,15,holidays);
+      }
 
-            let blocked=(stock && due && new Date(stock)>new Date(due))
-            ?"출고불가":"";
+      let blocked=(stock && due && new Date(stock)>new Date(due))
+      ?"출고불가":"";
 
-            result.push([
-                orderDate,delay,channel,orderNo,
-                supplier,productRaw,product,
-                opt,bfDate,due,blocked,
-                "지연",""
-            ]);
-        });
+      result.push([
+        orderDate,delay,channel,orderNo,
+        supplier,productRaw,product,
+        opt,bfDate,due,blocked,
+        "지연",""
+      ]);
 
-        render();
     });
+
+    render();
+  });
 }
 
-/* =========================
-read
-========================= */
+/* ---------------- read ---------------- */
 function read(file,cb){
-    let r=new FileReader();
-    r.onload=function(e){
-        let d=new Uint8Array(e.target.result);
-        let wb=XLSX.read(d,{type:'array'});
-        let sheet=wb.Sheets[wb.SheetNames[0]];
-        cb(XLSX.utils.sheet_to_json(sheet,{header:1}));
-    };
-    r.readAsArrayBuffer(file);
+  let r=new FileReader();
+  r.onload=function(e){
+    let d=new Uint8Array(e.target.result);
+    let wb=XLSX.read(d,{type:'array'});
+    let sheet=wb.Sheets[wb.SheetNames[0]];
+    cb(XLSX.utils.sheet_to_json(sheet,{header:1}));
+  };
+  r.readAsArrayBuffer(file);
 }
 
-/* =========================
-렌더
-========================= */
+/* ---------------- render ---------------- */
 function render(){
 
-    let tb=document.querySelector("#tb tbody");
-    tb.innerHTML="";
+  let tb=document.querySelector("#tb tbody");
+  tb.innerHTML="";
 
-    result.forEach(r=>{
+  result.forEach(r=>{
 
-        let tr=document.createElement("tr");
+    let tr=document.createElement("tr");
 
-        tr.innerHTML=r.map((v,i)=>{
+    tr.innerHTML=r.map((v,i)=>{
 
-            if(i===8 && !v){
-                return `<td class="red">입고예정일 기입 요망</td>`;
-            }
+      if(i===8 && !v){
+        return `<td class="red">입고예정일 기입 요망</td>`;
+      }
 
-            if(i===10 && v==="출고불가"){
-                return `<td class="red">${v}</td>`;
-            }
+      if(i===10 && v==="출고불가"){
+        return `<td class="red">${v}</td>`;
+      }
 
-            return `<td>${v||""}</td>`;
-        }).join("");
+      return `<td>${v||""}</td>`;
+    }).join("");
 
-        tb.appendChild(tr);
-    });
+    tb.appendChild(tr);
+  });
 }
 
-/* =========================
-엑셀 다운로드
-========================= */
+/* ---------------- download ---------------- */
 function downloadExcel(){
 
-    let ws=XLSX.utils.aoa_to_sheet([
-        ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
-        ...result
-    ]);
+  let ws=XLSX.utils.aoa_to_sheet([
+    ["주문일자","지연일","판매처","주문번호","공급처","사입상품","상품","옵션","입고","출고","불가","상태","처리"],
+    ...result
+  ]);
 
-    let wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"result");
+  let wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"result");
 
-    XLSX.writeFile(wb,"gift_hub_result.xlsx");
+  XLSX.writeFile(wb,"gift_hub_result.xlsx");
 }
 
 </script>
