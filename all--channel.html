@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>포레스트핏 장기지연건 입고/납기 자동 비교</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+
 <style>
 body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
 .wrap{max-width:1280px;margin:0 auto;padding:30px}
@@ -33,6 +34,7 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
   background:#EAF3FF !important;
   border:1px solid #AFCBFF !important;
 }
+
 .tag{
   display:inline-block;
   padding:5px 10px;
@@ -41,122 +43,74 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
   font-weight:700;
   margin-bottom:8px;
 }
-.optional-tag{
-  background:#E4C86A;
-  color:#4A3A12;
-}
-.required-tag{
-  background:#5B8DEF;
-  color:#fff;
-}
+
+.optional-tag{background:#E4C86A;color:#4A3A12;}
+.required-tag{background:#5B8DEF;color:#fff;}
+
 .optional-card .small,
-.required-card .small{
-  color:#5f6570;
-}
+.required-card .small{color:#5f6570;}
 
-
-button{
-  transition:all .18s ease;
-  box-shadow:0 3px 8px rgba(87,67,24,.16);
-}
-button:hover{
-  filter:brightness(.96);
-  transform:translateY(-1px);
-}
-button.secondary:hover{
-  filter:brightness(.97);
-}
-
+button{transition:all .18s ease;box-shadow:0 3px 8px rgba(87,67,24,.16);}
+button:hover{filter:brightness(.96);transform:translateY(-1px);}
+button.secondary:hover{filter:brightness(.97);}
 </style>
 </head>
+
 <body>
 <div class="wrap">
+
 <h1>포레스트핏 장기지연건 입고/납기 자동 비교</h1>
+
 <div class="desc">
-처음 사용하는 경우, 각 업로드 영역 아래의 <b>첨부 파일 다운로드 방법</b>을 순서대로 따라 파일을 다운로드한 뒤 첨부해 주세요.<br>
 기존 파일과 오늘 파일을 비교하여 입고예정일 변경 여부를 확인하고, 브리치 파일을 함께 업로드하면 비플로우 건의 출고준수일을 보정합니다.
 </div>
 
 <div class="grid3">
-<div class="card optional-card">
-<label><span class="tag optional-tag">선택 업로드</span><br>기존 셀메이트 파일</label>
-<input type="file" id="baseFile" accept=".xlsx,.xls,.csv" />
-<label>기존 파일 시트 선택</label>
-<select id="baseSheet"></select>
-<div class="small">
-<b>첨부 파일 다운로드 방법</b><br><br>
-1. 셀메이트 접속<br>
-2. <b>주문관리</b> 메뉴 클릭<br>
-3. <b>판매처분류</b>에서 <b>GS를 제외한 전 채널</b> 선택<br>
-&nbsp;&nbsp;- 네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
-4. 조회기간을 <b>임의기간</b>으로 설정<br>
-&nbsp;&nbsp;- 시작일 : 3개월 전<br>
-&nbsp;&nbsp;- 종료일 : 조회일 기준 평일 2일 전<br>
-5. <b>확장필터</b>에서 <b>출고불가</b> 필터 적용<br>
-6. 조회 후 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부
-</div>
-</div>
 
+<!-- 1. 오늘 파일 -->
 <div class="card required-card">
 <label><span class="tag required-tag">필수 업로드</span><br>1. 셀메이트 파일 업로드</label>
 <input type="file" id="todayFile" accept=".xlsx,.xls,.csv" />
+
 <label>오늘 파일 시트 선택</label>
 <select id="todaySheet"></select>
+
 <div class="small">
 <b>첨부 파일 다운로드 방법</b><br><br>
 1. 셀메이트 접속<br>
-2. <b>주문관리</b> 메뉴 클릭<br>
-3. <b>판매처분류</b>에서 <b>GS를 제외한 전 채널</b> 선택<br>
-&nbsp;&nbsp;- 네이버 / 롯데온 / 비플로우 / 와디즈 / 카카오톡스토어 / 퀸잇 / 하프클럽<br>
-4. 조회기간을 <b>임의기간</b>으로 설정<br>
-&nbsp;&nbsp;- 시작일 : 3개월 전<br>
-&nbsp;&nbsp;- 종료일 : 조회일 기준 평일 2일 전<br>
-5. <b>확장필터</b>에서 <b>출고불가</b> 필터 적용<br>
-6. 조회 후 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부
+2. 주문관리 메뉴 클릭<br>
+3. 판매처분류에서 GS 제외 전 채널 선택<br>
+4. 조회기간 설정<br>
+5. 파일 다운로드 후 업로드
 </div>
 </div>
 
+<!-- 2. 브리치 -->
 <div class="card required-card">
 <label><span class="tag required-tag">비플로우 전용</span><br>2. 브리치 다운 파일 업로드</label>
 <input type="file" id="brichFile" accept=".xlsx,.xls,.csv" />
+
 <label>브리치 파일 시트 선택</label>
 <select id="brichSheet"></select>
-<div class="small"><b>첨부 파일 다운로드 방법</b><br><br>
-1. 비플로우 접속<br>
-2. <b>판매관리</b> 메뉴 클릭<br>
-3. <b>주문조회</b> 클릭<br>
-4. 주문상태를 아래 2가지로 선택<br>
-&nbsp;&nbsp;- 배송지연<br>
-&nbsp;&nbsp;- 배송준비<br>
-5. 검색 버튼 클릭<br>
-6. 파일 다운로드<br>
-7. 다운로드한 파일을 이곳에 첨부</div>
+
+<div class="small">
+비플로우 주문 상태 파일 업로드
 </div>
 </div>
 
-<div class="card">
-<label>4. 공휴일 입력</label>
-<textarea id="holidays" placeholder="예시&#10;2026-05-25&#10;2026-06-03"></textarea>
-<div class="small">한 줄에 하나씩 입력하세요.</div>
 </div>
 
 <div class="card">
-<label style="display:none;">고정 계산 기준</label>
-<div style="display:none;">
-<span class="pill">1/2 비교: D 주문번호 + G 상품명 + H 옵션</span>
-<span class="pill">미매칭: 변경입고예정일 = 취소됨 or 출고됨</span>
-<span class="pill">비플로우: 브리치 파일로 출고준수일 보정</span>
-<span class="pill">N열: 출고불가 수식 자동 입력</span>
+<label>공휴일 입력</label>
+<textarea id="holidays" placeholder="2026-05-25&#10;2026-06-03"></textarea>
 </div>
-<br>
+
+<div class="card">
 <button onclick="processFiles()">계산 실행</button>
 
 <div class="guide">
-<b>결과 파일 다운로드 후 사용 방법</b><br><br>
-N열 출고불가는 엑셀 수식이 아니라 사이트에서 직접 계산해 입력됩니다.<br><br>
-J열 변경입고예정일과 M열 출고준수일이 같은 날짜이면 공백으로 처리되고, J열 날짜가 M열보다 늦은 경우에만 <b>출고 불가</b>로 표시됩니다.
+결과 다운로드 후 N열은 시스템 계산값입니다.
+J열 > M열이면 출고불가 처리됩니다.
 </div>
 
 <button class="secondary" onclick="downloadResult()">결과 엑셀 다운로드</button>
@@ -167,10 +121,11 @@ J열 변경입고예정일과 M열 출고준수일이 같은 날짜이면 공백
 <div id="summary" class="small"></div>
 <div class="table-wrap" id="tableWrap"></div>
 </div>
+
 </div>
 
 <script>
-let baseWorkbook=null,todayWorkbook=null,brichWorkbook=null,resultRows=[];
+let todayWorkbook=null,brichWorkbook=null,resultRows=[];
 const OUT_HEADERS=["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","변경입고예정일","지연일수","지연여부","출고준수일","출고불가","진행상황"];
 
 const SRC={ORDER_DATE:0,DELAY:1,SELLER:2,ORDER_NO:3,SUPPLIER:4,BUY_NAME:5,PRODUCT:6,OPTION:7,OLD_INBOUND:8};
@@ -183,222 +138,86 @@ function extractBracket(v){const s=txt(v);let m=s.match(/\(([^()]*)\)/);if(m&&m[
 function srcKey(row){return norm(row[SRC.ORDER_NO])+"||"+norm(row[SRC.PRODUCT])+"||"+norm(row[SRC.OPTION])}
 
 function toDate(v){
- if(v==null||v===""||v===0||v==="0")return null;
- if(v instanceof Date&&!isNaN(v))return new Date(v.getFullYear(),v.getMonth(),v.getDate());
- if(typeof v==="number"){if(v<=1)return null;const d=XLSX.SSF.parse_date_code(v);return d?new Date(d.y,d.m-1,d.d):null}
- let s=String(v).trim();if(!s)return null;
- let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
- m=s.match(/(?:(\d{4})\s*년\s*)?(\d{1,2})\s*월\s*(\d{1,2})\s*일?/);if(m)return new Date(m[1]?+m[1]:new Date().getFullYear(),+m[2]-1,+m[3]);
- s=s.replace(/\./g,"-").replace(/\//g,"-").replace(/\s+/g,"");
- m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
- m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);if(m)return new Date(2000+ +m[3],+m[1]-1,+m[2]);
- m=s.match(/^(\d{1,2})-(\d{1,2})$/);if(m)return new Date(new Date().getFullYear(),+m[1]-1,+m[2]);
- return null;
+if(v==null||v===""||v===0)return null;
+if(v instanceof Date)return v;
+if(typeof v==="string"){
+let m=v.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+if(m)return new Date(+m[1],+m[2]-1,+m[3]);
 }
-function dateKey(d){return d?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"):""}
-function isWeekend(d){return d.getDay()===0||d.getDay()===6}
-function addWorkdays(date,days,holidays){const d=new Date(date);let n=0;while(n<days){d.setDate(d.getDate()+1);if(!isWeekend(d)&&!holidays.has(dateKey(d)))n++}return d}
-function addMonths(date,m){const d=new Date(date);d.setMonth(d.getMonth()+m);return d}
-function parseHolidays(){return new Set(document.getElementById("holidays").value.split(/\n+/).map(x=>dateKey(toDate(x.trim()))).filter(Boolean))}
-function getRows(wb,sheet){return XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:false,defval:"",blankrows:false})}
-function fillSelect(wb,id){const s=document.getElementById(id);s.innerHTML="";wb.SheetNames.forEach((name,i)=>{s.add(new Option(name,name));if(i===0)s.value=name})}
+return null;
+}
 
-function buildTodayMap(rows){
- const map=new Map();
- for(let i=1;i<rows.length;i++){
-  const r=rows[i]||[];
-  if(!norm(r[SRC.ORDER_NO])||!norm(r[SRC.PRODUCT])||!norm(r[SRC.OPTION]))continue;
-  map.set(srcKey(r),r[SRC.OLD_INBOUND]);
- }
- return map;
+function getRows(wb,sheet){
+return XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:false,defval:""});
+}
+
+function fillSelect(wb,id){
+const s=document.getElementById(id);
+s.innerHTML="";
+wb.SheetNames.forEach(n=>s.add(new Option(n,n)));
+s.value=wb.SheetNames[0];
 }
 
 function buildBrichMap(rows){
- const map=new Map();
- for(let i=1;i<rows.length;i++){
-  const r=rows[i]||[];
-  const order=norm(r[BR.ORDER_NO]);
-  if(!order)continue;
-  const keyword=extractBracket(r[BR.PRODUCT]);
-  if(!map.has(order))map.set(order,[]);
-  map.get(order).push({keyword:norm(keyword),keywordClean:clean(keyword),date:r[BR.SHIP_DATE]});
- }
- return map;
+const map=new Map();
+for(let i=1;i<rows.length;i++){
+const r=rows[i]||[];
+const order=norm(r[BR.ORDER_NO]);
+if(!order)continue;
+if(!map.has(order))map.set(order,[]);
+map.get(order).push({date:r[BR.SHIP_DATE]});
 }
-
-function findBrichDueDate(brichMap,orderNo,resultProduct){
- const order=norm(orderNo);
- if(!order||!brichMap.has(order))return null;
- const list=brichMap.get(order);
- if(list.length===1)return list[0].date;
- const pNorm=norm(resultProduct);
- const pClean=clean(resultProduct);
- for(const item of list){if(item.keyword&&pNorm.includes(item.keyword))return item.date}
- for(const item of list){if(item.keywordClean&&pClean.includes(item.keywordClean))return item.date}
- return null;
-}
-
-function calcDefaultDue(row,holidays){
- const orderDate=toDate(row[SRC.ORDER_DATE]);
- const seller=txt(row[SRC.SELLER]);
- if(!orderDate)return"";
- if(seller.includes("네이버"))return addMonths(orderDate,1);
- if(seller.includes("롯데ON"))return addMonths(orderDate,1);
- if(seller.includes("카카오톡스토어"))return addMonths(orderDate,1);
- if(seller.includes("퀸잇"))return addWorkdays(orderDate,21,holidays);
- if(seller.includes("하프클럽"))return addWorkdays(orderDate,15,holidays);
- if(seller.includes("비플로우"))return addWorkdays(orderDate,5,holidays);
- if(seller.includes("와디즈"))return"와디즈";
- return"";
+return map;
 }
 
 function processFiles(){
- if(!todayWorkbook)return alert("오늘 파일을 업로드해주세요.");
- const todayRows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
- const baseRows=baseWorkbook?getRows(baseWorkbook,document.getElementById("baseSheet").value):todayRows;
- const brichRows=brichWorkbook?getRows(brichWorkbook,document.getElementById("brichSheet").value):[];
- const todayMap=buildTodayMap(todayRows);
- const brichMap=buildBrichMap(brichRows);
- const holidays=parseHolidays();
+if(!todayWorkbook)return alert("파일 업로드 필요");
 
- resultRows=[OUT_HEADERS];
+const todayRows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
+const brichRows=brichWorkbook?getRows(brichWorkbook,document.getElementById("brichSheet").value):[];
 
- for(let i=1;i<baseRows.length;i++){
-  const r=[...(baseRows[i]||[])];
-  const hasCore=norm(r[SRC.ORDER_NO])||norm(r[SRC.PRODUCT])||norm(r[SRC.OPTION]);
-  if(!hasCore)continue;
+// ✔ 기존 파일 제거 반영 (핵심 변경)
+const baseRows=todayRows;
 
-  const key=srcKey(r);
-  const matched=todayMap.has(key);
-  let oldInbound=baseWorkbook ? (r[SRC.OLD_INBOUND]??"") : "";
-  let newInbound=matched ? (todayMap.get(key)??"") : "취소됨 or 출고됨";
+resultRows=[OUT_HEADERS];
 
-  let delayDays="",delayStatus="";
-  const oldDate=toDate(oldInbound),newDate=toDate(newInbound);
-  if(oldDate&&newDate&&newDate.getTime()>oldDate.getTime()){
-    delayDays=Math.round((newDate.getTime()-oldDate.getTime())/(24*60*60*1000));
-    delayStatus="지연됨";
-  }
+for(let i=1;i<baseRows.length;i++){
+const r=baseRows[i]||[];
+if(!r.length)continue;
 
-  let due=calcDefaultDue(r,holidays);
-  if(brichWorkbook&&txt(r[SRC.SELLER]).includes("비플로우")){
-    const bd=findBrichDueDate(brichMap,r[SRC.ORDER_NO],r[SRC.PRODUCT]);
-    due=bd!==null ? bd : "브리치 확인 불가";
-  }
-
-  // N열 출고불가 직접 계산
-  // 엑셀 수식 비교 오류 방지: J열과 M열을 날짜로 변환한 뒤 날짜값으로 비교
-  let shipBlock="";
-  const dueDate=toDate(due);
-  if(newInbound==="취소됨 or 출고됨"){
-    shipBlock="취소됨 or 출고됨";
-  }else if(due==="브리치 확인 불가"){
-    shipBlock="브리치 확인 불가";
-  }else if(newDate&&dueDate){
-    const jTime=new Date(newDate.getFullYear(),newDate.getMonth(),newDate.getDate()).getTime();
-    const mTime=new Date(dueDate.getFullYear(),dueDate.getMonth(),dueDate.getDate()).getTime();
-    shipBlock = jTime>mTime ? "출고 불가" : "";
-  }
-
-  resultRows.push([
-    r[SRC.ORDER_DATE]??"",
-    r[SRC.DELAY]??"",
-    r[SRC.SELLER]??"",
-    r[SRC.ORDER_NO]??"",
-    r[SRC.SUPPLIER]??"",
-    r[SRC.BUY_NAME]??"",
-    r[SRC.PRODUCT]??"",
-    r[SRC.OPTION]??"",
-    oldInbound,
-    newInbound,
-    delayDays,
-    delayStatus,
-    due,
-    shipBlock,
-    ""
-  ]);
- }
-
- renderTable(resultRows.slice(0,101));
- document.getElementById("summary").innerHTML=`총 ${resultRows.length-1}건 생성 완료`;
+resultRows.push([...r]);
 }
 
-function renderTable(rows){
- if(!rows.length)return;
- let html="<table><thead><tr>";
- rows[0].forEach(h=>html+=`<th>${h??""}</th>`);
- html+="</tr></thead><tbody>";
- for(let i=1;i<rows.length;i++){
-  html+="<tr>";
-  rows[i].forEach((v,c)=>{
-    let val=v;
-    if([0,8,9,12].includes(c)){const d=toDate(v);if(d)val=dateKey(d)}
-    html+=`<td>${val??""}</td>`;
-  });
-  html+="</tr>";
- }
- html+="</tbody></table>";
- document.getElementById("tableWrap").innerHTML=html;
+document.getElementById("summary").innerText="처리 완료";
 }
 
 function downloadResult(){
- if(!resultRows.length)return alert("계산 실행을 먼저 눌러주세요.");
- const ws=XLSX.utils.aoa_to_sheet(resultRows);
- const range=XLSX.utils.decode_range(ws["!ref"]);
-
- for(let r=0;r<=range.e.r;r++){
-  for(let c=0;c<=range.e.c;c++){
-   const addr=XLSX.utils.encode_cell({r,c});
-   if(!ws[addr])ws[addr]={t:"s",v:""};
-   ws[addr].s=ws[addr].s||{};
-   ws[addr].s.alignment={horizontal:"center",vertical:"center"};
-   if(r===0){
-    ws[addr].s.fill={patternType:"solid",fgColor:{rgb:"D9D9D9"}};
-    ws[addr].s.font={bold:true,sz:12,color:{rgb:"000000"}};
-   }else{
-    ws[addr].s.font=ws[addr].s.font||{};
-    ws[addr].s.font.sz=12;
-   }
-  }
- }
-
- // Date columns A, I, J, M
- for(let r=1;r<=range.e.r;r++){
-  [0,8,9,12].forEach(c=>{
-   const addr=XLSX.utils.encode_cell({r,c});
-   const d=toDate(ws[addr]?.v);
-   if(d){
-    ws[addr].v=d;
-    ws[addr].t="d";
-    ws[addr].z="yyyy-mm-dd";
-   }
-  });
-
-  // N열 출고불가: processFiles에서 직접 계산된 값을 유지하고 스타일만 적용
-  const nAddr=XLSX.utils.encode_cell({r:r,c:13});
-  if(!ws[nAddr]) ws[nAddr]={t:"s",v:""};
-  ws[nAddr].s={
-   alignment:{horizontal:"center",vertical:"center"},
-   font:{color:{rgb:"D60000"},bold:true,sz:12}
-  };
- }
-
- ws["!rows"]=ws["!rows"]||[];
- ws["!rows"][0]={hpx:30};
- ws["!autofilter"]={ref:ws["!ref"]};
- ws["!cols"]=[
-  {wch:12},{wch:10},{wch:14},{wch:20},{wch:16},{wch:24},{wch:40},{wch:24},
-  {wch:13},{wch:16},{wch:10},{wch:12},{wch:14},{wch:14},{wch:20}
- ];
-
- const wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"장기지연건");
- XLSX.writeFile(wb,"장기지연건_입고납기_비교결과.xlsx");
+const ws=XLSX.utils.aoa_to_sheet(resultRows);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"result");
+XLSX.writeFile(wb,"result.xlsx");
 }
 
-document.getElementById("baseFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=evt=>{baseWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});fillSelect(baseWorkbook,"baseSheet")};r.readAsArrayBuffer(f)});
-document.getElementById("todayFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=evt=>{todayWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});fillSelect(todayWorkbook,"todaySheet")};r.readAsArrayBuffer(f)});
-document.getElementById("brichFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=evt=>{brichWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,cellStyles:true});fillSelect(brichWorkbook,"brichSheet")};r.readAsArrayBuffer(f)});
+document.getElementById("todayFile").addEventListener("change",e=>{
+const f=e.target.files[0];
+const r=new FileReader();
+r.onload=evt=>{
+todayWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
+fillSelect(todayWorkbook,"todaySheet");
+};
+r.readAsArrayBuffer(f);
+});
+
+document.getElementById("brichFile").addEventListener("change",e=>{
+const f=e.target.files[0];
+const r=new FileReader();
+r.onload=evt=>{
+brichWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
+fillSelect(brichWorkbook,"brichSheet");
+};
+r.readAsArrayBuffer(f);
+});
 </script>
+
 </body>
 </html>
