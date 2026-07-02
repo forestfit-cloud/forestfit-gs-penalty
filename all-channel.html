@@ -174,8 +174,17 @@ function processFiles(){
 if(!todayWorkbook)return alert("파일 업로드 필요");
 
 const todayRows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
-const brichRows=brichWorkbook?getRows(brichWorkbook,document.getElementById("brichSheet").value):[];
 
+todayRows.forEach(row => {
+  if(row[6]) {
+    const m = row[6].match(/\([^()]*\)/);
+    row[6] = m ? m[0] : "";
+  }
+});
+
+const brichRows=brichWorkbook
+  ? getRows(brichWorkbook,document.getElementById("brichSheet").value)
+  : [];
 // ✔ 기존 파일 제거 반영 (핵심 변경)
 const baseRows=todayRows;
 
