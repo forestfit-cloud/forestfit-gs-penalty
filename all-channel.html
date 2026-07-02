@@ -312,28 +312,30 @@ function read(file,cb){
 /* ---------------- render ---------------- */
 function render(){
 
-  let tb=document.querySelector("#tb tbody");
-  tb.innerHTML="";
+    let tb = document.querySelector("#tb tbody");
 
-  result.forEach(r=>{
+    // ❌ 절대 document 전체 지우지 말 것
+    tb.innerHTML = "";
 
-    let tr=document.createElement("tr");
+    result.forEach(r=>{
 
-    tr.innerHTML=r.map((v,i)=>{
+        let tr=document.createElement("tr");
 
-      if(i===8 && !v){
-        return `<td class="red">입고예정일 기입 요망</td>`;
-      }
+        tr.innerHTML=r.map((v,i)=>{
 
-      if(i===10 && v==="출고불가"){
-        return `<td class="red">${v}</td>`;
-      }
+            if(i===8 && !v){
+                return `<td class="red">입고예정일 기입 요망</td>`;
+            }
 
-      return `<td>${v||""}</td>`;
-    }).join("");
+            if(i===10 && v==="출고불가"){
+                return `<td class="red">${v}</td>`;
+            }
 
-    tb.appendChild(tr);
-  });
+            return `<td>${v||""}</td>`;
+        }).join("");
+
+        tb.appendChild(tr);
+    });
 }
 
 /* ---------------- download ---------------- */
