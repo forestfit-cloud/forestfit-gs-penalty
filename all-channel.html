@@ -10,12 +10,45 @@
 <style>
 body{font-family:Arial;background:#FFF9E8;margin:0;color:#4A3A12}
 .wrap{max-width:1200px;margin:auto;padding:30px}
+
 h1{color:#6B5310}
-.card{background:#FFFDF7;border:1px solid #E7D8A3;padding:18px;margin-bottom:15px;border-radius:12px}
+.desc{color:#7A6640;margin-bottom:20px}
+
+.card{
+  background:#FFFDF7;
+  border:1px solid #E7D8A3;
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:15px;
+}
+
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-input,textarea{width:100%;padding:10px;margin-top:6px}
-button{width:100%;padding:12px;margin-top:10px;background:#C9A227;border:none;cursor:pointer}
-.small{font-size:12px;color:#777}
+
+label{font-weight:bold;font-size:14px;color:#6B5310}
+
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  margin-bottom:12px;
+  border:1px solid #465163;
+  border-radius:8px;
+}
+
+button{
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:#C9A227;
+  font-weight:bold;
+  cursor:pointer;
+  width:100%;
+  margin-top:10px;
+}
+
+button:hover{opacity:0.9}
+
+.small{font-size:12px;color:#777;line-height:1.5}
 </style>
 </head>
 
@@ -25,36 +58,45 @@ button{width:100%;padding:12px;margin-top:10px;background:#C9A227;border:none;cu
 
 <h1>포레스트핏 장기지연 납기 비교 시스템 V1</h1>
 
+<div class="desc">
+셀메이트 / 브리치 파일을 비교하여 자동으로 납기 및 출고 상태를 정리합니다.
+</div>
+
 <div class="grid">
 
+<!-- 1 -->
 <div class="card">
-<label>1. 셀메이트 파일</label>
-<input type="file" id="file1">
+<label>1. 셀메이트 장기지연 파일</label>
+<input type="file" id="file1" />
 <div class="small">
-셀메이트 → 장기지연건 다운로드
+셀메이트 → 장기지연건 다운로드 파일 업로드
 </div>
 </div>
 
+<!-- 2 -->
 <div class="card">
-<label>2. 브리치 파일</label>
-<input type="file" id="file2">
+<label>2. 브리치 배송 파일</label>
+<input type="file" id="file2" />
 <div class="small">
-배송준비 / 배송지연 파일
+배송준비 / 배송지연 파일 업로드
 </div>
 </div>
 
 </div>
 
+<!-- 공휴일 -->
 <div class="card">
-<label>공휴일</label>
-<textarea id="holiday"></textarea>
+<label>공휴일 입력</label>
+<textarea id="holiday" placeholder="2026-01-01"></textarea>
 </div>
 
+<!-- 버튼 -->
 <div class="card">
 <button onclick="run()">계산 실행</button>
 <button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
+<!-- 상태 -->
 <div class="card">
 <div id="status"></div>
 </div>
@@ -75,17 +117,16 @@ document.getElementById("file2").onchange = async (e)=>{
   wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
 }
 
-/* =========================
-   핵심 계산
-========================= */
+/* ======================
+   계산
+====================== */
 function run(){
 
 if(!wb1){
-  alert("셀메이트 파일 없음");
+  alert("셀메이트 파일 필요");
   return;
 }
 
-/* 시트 자동 보정 */
 const sheet = wb1.SheetNames?.[0];
 if(!sheet){
   alert("시트 없음");
@@ -102,7 +143,7 @@ result = [];
 for(let i=1;i<data.length;i++){
   const r = data[i];
 
-  if(!r || r.length < 5) continue;
+  if(!r || r.length < 3) continue;
 
   result.push([
     r[0],
@@ -123,17 +164,16 @@ for(let i=1;i<data.length;i++){
 document.getElementById("status").innerText =
 "완료 : " + result.length + "건";
 
-console.log("RESULT CHECK:", result);
-
+console.log(result);
 }
 
-/* =========================
-   다운로드
-========================= */
+/* ======================
+   다운로드 (100% 안정 Blob 방식)
+====================== */
 function downloadExcel(){
 
 if(!result || result.length === 0){
-  alert("다운로드 데이터 없음 (계산 실행 먼저)");
+  alert("다운로드 데이터 없음");
   return;
 }
 
@@ -149,13 +189,22 @@ const ws = XLSX.utils.aoa_to_sheet([
 const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "result");
 
-ws['!autofilter'] = {
-  ref: XLSX.utils.encode_range(ws['!ref'])
-};
+const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
 
-ws['!cols'] = Array(12).fill({wch:18});
+const blob = new Blob([wbout], {
+  type:"application/octet-stream"
+});
 
-XLSX.writeFile(wb, "장기지연_결과.xlsx");
+const url = URL.createObjectURL(blob);
+
+const a = document.createElement("a");
+a.href = url;
+a.download = "장기지연_결과.xlsx";
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+
+URL.revokeObjectURL(url);
 
 }
 
