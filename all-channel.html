@@ -28,11 +28,11 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
 
 .optional-card{
   background:#FFF6D6 !important;
-  border:1px solid #E4C86A !important;
+  border:1px solid:#E4C86A !important;
 }
 .required-card{
   background:#EAF3FF !important;
-  border:1px solid #AFCBFF !important;
+  border:1px solid:#AFCBFF !important;
 }
 
 .tag{
@@ -46,9 +46,6 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
 
 .optional-tag{background:#E4C86A;color:#4A3A12;}
 .required-tag{background:#5B8DEF;color:#fff;}
-
-.optional-card .small,
-.required-card .small{color:#5f6570;}
 
 button{transition:all .18s ease;box-shadow:0 3px 8px rgba(87,67,24,.16);}
 button:hover{filter:brightness(.96);transform:translateY(-1px);}
@@ -126,25 +123,12 @@ J열 > M열이면 출고불가 처리됩니다.
 
 <script>
 let todayWorkbook=null,brichWorkbook=null,resultRows=[];
-const OUT_HEADERS=["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","변경입고예정일","지연일수","지연여부","출고준수일","출고불가","진행상황"];
 
-const SRC={ORDER_DATE:0,DELAY:1,SELLER:2,ORDER_NO:3,SUPPLIER:4,BUY_NAME:5,PRODUCT:6,OPTION:7,OLD_INBOUND:8};
-const BR={ORDER_NO:1,PRODUCT:10,SHIP_DATE:19};
-
-function txt(v){return v==null?"":String(v).trim()}
-function norm(v){return txt(v).replace(/\u00A0/g," ").replace(/\s+/g,"").replace(/，/g,",").trim()}
-function clean(v){return norm(v).replace(/[()\[\]{}]/g,"").replace(/[^가-힣a-zA-Z0-9]/g,"")}
-function extractBracket(v){const s=txt(v);let m=s.match(/\(([^()]*)\)/);if(m&&m[1])return m[1].trim();m=s.match(/\[([^\[\]]*)\]/);if(m&&m[1])return m[1].trim();return""}
-function srcKey(row){return norm(row[SRC.ORDER_NO])+"||"+norm(row[SRC.PRODUCT])+"||"+norm(row[SRC.OPTION])}
-
-function toDate(v){
-if(v==null||v===""||v===0)return null;
-if(v instanceof Date)return v;
-if(typeof v==="string"){
-let m=v.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
-if(m)return new Date(+m[1],+m[2]-1,+m[3]);
-}
-return null;
+/* G열 품번 추출 */
+function extractBracket(v){
+  const s = String(v||"");
+  const m = s.match(/\(([^()]*)\)/);
+  return m ? "(" + m[1] + ")" : "";
 }
 
 function getRows(wb,sheet){
@@ -158,55 +142,58 @@ wb.SheetNames.forEach(n=>s.add(new Option(n,n)));
 s.value=wb.SheetNames[0];
 }
 
-function buildBrichMap(rows){
-const map=new Map();
-for(let i=1;i<rows.length;i++){
-const r=rows[i]||[];
-const order=norm(r[BR.ORDER_NO]);
-if(!order)continue;
-if(!map.has(order))map.set(order,[]);
-map.get(order).push({date:r[BR.SHIP_DATE]});
-}
-return map;
-}
-
+/* =========================
+   핵심 처리
+========================= */
 function processFiles(){
 if(!todayWorkbook)return alert("파일 업로드 필요");
 
 const todayRows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
 
-todayRows.forEach(row => {
-  if(row[6]) {
-    const m = row[6].match(/\([^()]*\)/);
-    row[6] = m ? m[0] : "";
-  }
-});
+resultRows=[];
 
-const brichRows=brichWorkbook
-  ? getRows(brichWorkbook,document.getElementById("brichSheet").value)
-  : [];
-// ✔ 기존 파일 제거 반영 (핵심 변경)
-const baseRows=todayRows;
-
-resultRows=[OUT_HEADERS];
-
-for(let i=1;i<baseRows.length;i++){
-const r=baseRows[i]||[];
+/* 헤더 없이 데이터만 */
+for(let i=1;i<todayRows.length;i++){
+const r=todayRows[i]||[];
 if(!r.length)continue;
 
-resultRows.push([...r]);
+/* G열 변환 */
+const product = extractBracket(r[6]);
+
+resultRows.push([
+  r[0], // 주문일자
+  r[1], // 지연일
+  r[2], // 판매처명
+  r[3], // 주문번호
+  r[4], // 공급처명
+  r[5], // 사입상품명
+  product, // 판매처상품명 (변환)
+  r[7], // 옵션
+  r[8], // 입고예정일
+  r[12], // 출고준수일
+  r[13], // 출고불가
+  r[14]  // 진행상황
+]);
 }
 
 document.getElementById("summary").innerText="처리 완료";
 }
 
+/* =========================
+   다운로드
+========================= */
 function downloadResult(){
-const ws=XLSX.utils.aoa_to_sheet(resultRows);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"result");
-XLSX.writeFile(wb,"result.xlsx");
+
+  if(!resultRows.length) return alert("계산 실행을 먼저 눌러주세요.");
+
+  const ws = XLSX.utils.aoa_to_sheet(resultRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "장기지연건");
+
+  XLSX.writeFile(wb, "장기지연건_정리.xlsx");
 }
 
+/* 파일 로딩 */
 document.getElementById("todayFile").addEventListener("change",e=>{
 const f=e.target.files[0];
 const r=new FileReader();
