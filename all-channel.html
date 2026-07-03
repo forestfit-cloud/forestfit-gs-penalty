@@ -2,53 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>포레스트핏 장기지연 납기 비교 시스템 V1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
-body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
-.wrap{max-width:1200px;margin:0 auto;padding:30px}
-
-h1{font-size:26px;margin-bottom:10px;color:#6B5310}
-.desc{color:#7A6640;margin-bottom:20px}
-
-.card{
-  background:#FFFDF7;
-  border:1px solid #E7D8A3;
-  border-radius:12px;
-  padding:18px;
-  margin-bottom:15px;
-}
-
+body{font-family:Arial;background:#FFF9E8;margin:0;color:#4A3A12}
+.wrap{max-width:1200px;margin:auto;padding:30px}
+h1{color:#6B5310}
+.card{background:#FFFDF7;border:1px solid #E7D8A3;padding:18px;margin-bottom:15px;border-radius:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-
-label{font-weight:bold;font-size:14px;color:#6B5310}
-
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  margin-top:6px;
-  margin-bottom:12px;
-  border:1px solid #465163;
-  border-radius:8px;
-}
-
-button{
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#C9A227;
-  font-weight:bold;
-  cursor:pointer;
-  width:100%;
-  margin-top:10px;
-}
-
-button:hover{opacity:0.9}
-
-.small{font-size:12px;color:#777;line-height:1.5}
+input,textarea{width:100%;padding:10px;margin-top:6px}
+button{width:100%;padding:12px;margin-top:10px;background:#C9A227;border:none;cursor:pointer}
+.small{font-size:12px;color:#777}
 </style>
 </head>
 
@@ -58,49 +25,36 @@ button:hover{opacity:0.9}
 
 <h1>포레스트핏 장기지연 납기 비교 시스템 V1</h1>
 
-<div class="desc">
-셀메이트 / 브리치 파일을 비교하여 자동으로 납기 및 출고 상태를 정리합니다.
-</div>
-
 <div class="grid">
 
-<!-- 1번 -->
 <div class="card">
-<label>1. 셀메이트 장기지연 파일</label>
-<input type="file" id="file1" />
-
+<label>1. 셀메이트 파일</label>
+<input type="file" id="file1">
 <div class="small">
-1. 셀메이트 → 주문관리<br>
-2. 장기지연건 다운로드<br>
-3. 파일 업로드
+셀메이트 → 장기지연건 다운로드
 </div>
 </div>
 
-<!-- 2번 -->
 <div class="card">
-<label>2. 브리치 배송 파일</label>
-<input type="file" id="file2" />
-
+<label>2. 브리치 파일</label>
+<input type="file" id="file2">
 <div class="small">
-배송준비 / 배송지연 파일 업로드
+배송준비 / 배송지연 파일
 </div>
 </div>
 
 </div>
 
-<!-- 공휴일 (복구 완료) -->
 <div class="card">
-<label>공휴일 입력</label>
-<textarea id="holiday" placeholder="2026-01-01&#10;2026-01-02"></textarea>
+<label>공휴일</label>
+<textarea id="holiday"></textarea>
 </div>
 
-<!-- 실행 -->
 <div class="card">
 <button onclick="run()">계산 실행</button>
 <button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
-<!-- 상태 -->
 <div class="card">
 <div id="status"></div>
 </div>
@@ -121,46 +75,65 @@ document.getElementById("file2").onchange = async (e)=>{
   wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
 }
 
-/* 계산 */
+/* =========================
+   핵심 계산
+========================= */
 function run(){
 
-if(!wb1) return alert("셀메이트 파일 필요");
+if(!wb1){
+  alert("셀메이트 파일 없음");
+  return;
+}
 
-const sheet = wb1.SheetNames[0];
-const data = XLSX.utils.sheet_to_json(wb1.Sheets[sheet], {header:1});
+/* 시트 자동 보정 */
+const sheet = wb1.SheetNames?.[0];
+if(!sheet){
+  alert("시트 없음");
+  return;
+}
+
+const data = XLSX.utils.sheet_to_json(wb1.Sheets[sheet], {
+  header:1,
+  defval:""
+});
 
 result = [];
 
 for(let i=1;i<data.length;i++){
-const r = data[i];
-if(!r) continue;
+  const r = data[i];
 
-result.push([
-  r[0], // 주문일자
-  r[1], // 지연일
-  r[2], // 판매처명
-  r[3], // 주문번호
-  r[4], // 공급처명
-  r[5], // 사입상품명
-  r[6], // 판매처상품명
-  r[7], // 옵션
-  r[8], // 입고예정일
-  r[9] || "",
-  r[10] || "",
-  r[11] || ""
-]);
+  if(!r || r.length < 5) continue;
 
+  result.push([
+    r[0],
+    r[1],
+    r[2],
+    r[3],
+    r[4],
+    r[5],
+    r[6],
+    r[7],
+    r[8],
+    r[9] || "",
+    r[10] || "",
+    r[11] || ""
+  ]);
 }
 
 document.getElementById("status").innerText =
 "완료 : " + result.length + "건";
+
+console.log("RESULT CHECK:", result);
+
 }
 
-/* 다운로드 */
+/* =========================
+   다운로드
+========================= */
 function downloadExcel(){
 
-if(result.length === 0){
-  alert("결과 없음");
+if(!result || result.length === 0){
+  alert("다운로드 데이터 없음 (계산 실행 먼저)");
   return;
 }
 
@@ -176,13 +149,14 @@ const ws = XLSX.utils.aoa_to_sheet([
 const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "result");
 
-/* 필터 */
-ws['!autofilter'] = { ref: XLSX.utils.encode_range(ws['!ref']) };
+ws['!autofilter'] = {
+  ref: XLSX.utils.encode_range(ws['!ref'])
+};
 
-/* 컬럼 폭 */
 ws['!cols'] = Array(12).fill({wch:18});
 
 XLSX.writeFile(wb, "장기지연_결과.xlsx");
+
 }
 
 </script>
