@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>포레스트핏 납기 V2 FINAL STABLE</title>
+<title>포레스트핏 납기 V3 FINAL MASTER</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
@@ -10,7 +10,6 @@ body{font-family:Arial;background:#FFF9E8;margin:0}
 .wrap{max-width:1200px;margin:auto;padding:30px}
 .card{background:#fff;border:1px solid #ddd;padding:12px;margin-bottom:10px}
 button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
-h2{margin-bottom:15px}
 </style>
 </head>
 
@@ -18,7 +17,7 @@ h2{margin-bottom:15px}
 
 <div class="wrap">
 
-<h2>V2 FINAL STABLE ENGINE</h2>
+<h2>V3 FINAL MASTER ENGINE</h2>
 
 <div class="card">
 <input type="file" id="file1">
@@ -47,28 +46,27 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   날짜 완전 고정 변환
+   날짜 변환
 ========================= */
-function format(d){
+function toDate(v){
+  if(!v) return "";
+
+  if(typeof v === "number"){
+    return new Date((v - 25569) * 86400 * 1000);
+  }
+
+  const d = new Date(v);
+  return isNaN(d) ? "" : d;
+}
+
+function fmt(d){
   return d.getFullYear()+"-"+
   String(d.getMonth()+1).padStart(2,"0")+"-"+
   String(d.getDate()).padStart(2,"0");
 }
 
-function toDate(v){
-  if(!v) return "";
-
-  // Excel serial
-  if(typeof v === "number"){
-    return format(new Date(Math.round((v - 25569) * 86400 * 1000)));
-  }
-
-  const d = new Date(v);
-  return isNaN(d) ? "" : format(d);
-}
-
 /* =========================
-   옵션 정리 (핵심 안정화)
+   옵션 정리
 ========================= */
 function opt(v){
   return String(v||"")
@@ -76,26 +74,19 @@ function opt(v){
     .replace(/\//g,",")
     .replace(/_/g,"")
     .replace(/-/g,"")
-    .replace(/기본옵션:옵션/g,"")
-    .replace(/[A-Za-z]+\d+/g,"")
-    .trim();
+    .replace(/[A-Za-z]+\d+/g,"");
 }
 
-/* =========================
-   상품 괄호
-========================= */
 function bracket(v){
   const m = String(v||"").match(/\(([^()]*)\)/);
   return m ? m[1].replace(/\s/g,"") : "";
 }
 
 /* =========================
-   KEY (완전 고정)
+   KEY
 ========================= */
 function key(a,b,c){
-  return String(a).trim()+"|"+
-         String(b).trim()+"|"+
-         String(c).trim();
+  return a+"|"+b+"|"+c;
 }
 
 /* =========================
@@ -111,18 +102,11 @@ document.getElementById("file2").onchange=async(e)=>{
 
 function run(){
 
-const d1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {
-  header:1,
-  defval:""
-});
-
-const d2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]], {
-  header:1,
-  defval:""
-});
+const d1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {header:1, defval:""});
+const d2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]], {header:1, defval:""});
 
 /* =========================
-   BRICH MAP (절대 안정)
+   브리치 MAP
 ========================= */
 const map = new Map();
 
@@ -131,18 +115,18 @@ for(let i=1;i<d2.length;i++){
   if(!r) continue;
 
   const k = key(
-    r[1],                 // 주문번호
-    bracket(r[10]),      // 상품
-    opt(r[11])           // 옵션
+    r[1],
+    bracket(r[10]),
+    opt(r[11])
   );
 
-  map.set(k, r[19]); // 출고예정일
+  map.set(k, r[19]);
 }
 
 result = [];
 
 /* =========================
-   MAIN LOOP (절대 유지)
+   메인 (1번 파일 전체 유지)
 ========================= */
 for(let i=1;i<d1.length;i++){
 
@@ -155,32 +139,43 @@ for(let i=1;i<d1.length;i++){
   let j = "";
 
   /* =========================
-     비플로우만 브리치 매칭
+     1) 비플로우 → 브리치
   ========================= */
   if(seller === "비플로우"){
 
     const k = key(
-      r[3],             // 주문번호
-      bracket(r[6]),    // 상품
-      opt(r[7])        // 옵션
+      r[3],
+      bracket(r[6]),
+      opt(r[7])
     );
 
     j = map.get(k) || "";
   }
 
+  /* =========================
+     2) 나머지 채널 계산
+  ========================= */
+  else if(seller.includes("퀸잇")){
+    j = new Date(orderDate.setDate(orderDate.getDate()+21));
+  }
+
+  else if(seller.includes("하프클럽")){
+    j = new Date(orderDate.setDate(orderDate.getDate()+15));
+  }
+
+  else if(
+    seller.includes("네이버") ||
+    seller.includes("롯데ON")
+  ){
+    j = new Date(orderDate.setMonth(orderDate.getMonth()+1));
+  }
+
   result.push([
-    toDate(r[0]),
-    r[1] || "",
-    seller || "",
-    r[3] || "",
-    r[4] || "",
-    r[5] || "",
-    r[6] || "",
-    r[7] || "",
-    toDate(r[8]) || "",
-    j || "",
-    r[10] || "",
-    r[11] || ""
+    r[0], r[1], r[2], r[3],
+    r[4], r[5], r[6], r[7],
+    r[8],
+    j ? fmt(j) : "",
+    r[10], r[11]
   ]);
 }
 
@@ -190,16 +185,23 @@ document.getElementById("status").innerText =
 }
 
 /* =========================
-   DOWNLOAD (단순 export - 절대 스타일 건드리지 않음)
+   DOWNLOAD
 ========================= */
 function downloadExcel(){
 
-const ws = XLSX.utils.aoa_to_sheet(result);
-const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.aoa_to_sheet([
+[
+"주문일자","지연일","판매처","주문번호",
+"공급처","사입상품","판매상품","옵션",
+"입고예정일","출고준수일","출고불가","진행상황"
+],
+...result
+]);
 
+const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "result");
 
-XLSX.writeFile(wb, "V2_FINAL.xlsx");
+XLSX.writeFile(wb, "V3_FINAL.xlsx");
 }
 
 </script>
