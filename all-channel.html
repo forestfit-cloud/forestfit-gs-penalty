@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>FORESTFIT V37 FINAL ENGINE</title>
+<title>FORESTFIT V38 STABLE FIX ENGINE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -20,8 +20,8 @@ h2{margin-bottom:10px}
 
 <div class="wrap">
 
-<h2>FORESTFIT V37 FINAL ENGINE</h2>
-<div class="small">채널 통합 + 영업일 + 비플로우 매칭 + 날짜 안정화</div>
+<h2>FORESTFIT V38 STABLE ENGINE</h2>
+<div class="small">날짜 + 영업일 + 비플로우 완전 안정 버전</div>
 
 <div class="card">
 <input type="file" id="file1">
@@ -52,33 +52,32 @@ let result = [];
 let brichMap = new Map();
 
 /* =========================
-   기본 유틸 (무조건 문자열)
+   기본 유틸
 ========================= */
 function norm(v){
   return v === null || v === undefined ? "" : String(v).trim();
 }
 
-function format(d){
-  return d.getFullYear()+"-"+
-    String(d.getMonth()+1).padStart(2,"0")+"-"+
-    String(d.getDate()).padStart(2,"0");
-}
-
 /* =========================
-   날짜 안정 변환 (핵심)
+   날짜 변환 (핵심 수정)
 ========================= */
-function safeDate(v){
-  if(!v) return "";
+function excelDate(v){
+  if(!v) return null;
 
+  // Excel serial number
   if(typeof v === "number"){
-    const d = new Date((v - 25569) * 86400 * 1000);
-    return format(d);
+    return new Date(Math.round((v - 25569) * 86400 * 1000));
   }
 
   const d = new Date(v);
-  if(isNaN(d)) return "";
+  return isNaN(d) ? null : d;
+}
 
-  return format(d);
+/* YYYY-MM-DD */
+function fmt(d){
+  return d.getFullYear()+"-"+
+    String(d.getMonth()+1).padStart(2,"0")+"-"+
+    String(d.getDate()).padStart(2,"0");
 }
 
 /* =========================
@@ -87,16 +86,16 @@ function safeDate(v){
 function getHolidays(){
   return document.getElementById("holiday").value
     .split("\n")
-    .map(v => v.trim())
+    .map(v=>v.trim())
     .filter(Boolean);
 }
 
 /* =========================
-   영업일 계산
+   영업일 계산 (핵심)
 ========================= */
-function addBusinessDays(dateStr, days, holidays){
+function addBusinessDays(date, days, holidays){
 
-  let d = new Date(dateStr);
+  let d = new Date(date);
   let count = 0;
 
   while(count < days){
@@ -104,7 +103,7 @@ function addBusinessDays(dateStr, days, holidays){
     d.setDate(d.getDate() + 1);
 
     const day = d.getDay();
-    const ymd = format(d);
+    const ymd = fmt(d);
 
     if(day === 0 || day === 6) continue;
     if(holidays.includes(ymd)) continue;
@@ -116,15 +115,6 @@ function addBusinessDays(dateStr, days, holidays){
 }
 
 /* =========================
-   +1개월
-========================= */
-function addMonth(dateStr){
-  const d = new Date(dateStr);
-  d.setMonth(d.getMonth() + 1);
-  return d;
-}
-
-/* =========================
    브리치 MAP (비플로우)
 ========================= */
 function buildBrich(data){
@@ -132,57 +122,66 @@ function buildBrich(data){
   brichMap.clear();
 
   for(let i=1;i<data.length;i++){
-    const r = data[i];
+    const r=data[i];
     if(!r) continue;
 
     const orderNo = norm(r[1]);
-    const date = safeDate(r[19]);
+    const dateObj = excelDate(r[19]);
 
-    if(orderNo){
-      brichMap.set(orderNo, date);
+    if(orderNo && dateObj){
+      brichMap.set(orderNo, fmt(dateObj));
     }
   }
 }
 
 /* =========================
-   J 엔진 (통합)
+   괄호 추출
+========================= */
+function getBracket(v){
+  const m = String(v||"").match(/\(([^()]*)\)/);
+  return m ? m[1] : "";
+}
+
+/* =========================
+   J 계산 (핵심 수정)
 ========================= */
 function calcJ(r, holidays){
 
   const seller = norm(r[2]);
-  const orderDate = safeDate(r[0]);
+  const orderDateObj = excelDate(r[0]);
   const orderNo = norm(r[3]);
 
-  let resultDate = "";
+  let j = "";
 
-  // 비플로우
+  /* 비플로우 */
   if(seller === "비플로우"){
-    resultDate = brichMap.get(orderNo) || "";
+    j = brichMap.get(orderNo) || "";
   }
 
-  // 퀸잇 (21 영업일)
+  /* 퀸잇 (21 영업일) */
   else if(seller.includes("퀸잇")){
-    const d = addBusinessDays(orderDate, 21, holidays);
-    resultDate = format(d);
+    const d = addBusinessDays(orderDateObj, 21, holidays);
+    j = fmt(d);
   }
 
-  // 하프클럽 (15 영업일)
+  /* 하프클럽 (15 영업일) */
   else if(seller.includes("하프클럽")){
-    const d = addBusinessDays(orderDate, 15, holidays);
-    resultDate = format(d);
+    const d = addBusinessDays(orderDateObj, 15, holidays);
+    j = fmt(d);
   }
 
-  // 네이버 / 롯데ON (1개월)
+  /* 네이버 / 롯데ON (1개월) */
   else if(seller.includes("네이버") || seller.includes("롯데ON")){
-    const d = addMonth(orderDate);
-    resultDate = format(d);
+    const d = new Date(orderDateObj);
+    d.setMonth(d.getMonth() + 1);
+    j = fmt(d);
   }
 
   else{
-    resultDate = orderDate;
+    j = fmt(orderDateObj);
   }
 
-  return resultDate;
+  return j;
 }
 
 /* =========================
@@ -207,7 +206,7 @@ buildBrich(d2);
 
 result = [];
 
-// 헤더
+/* 헤더 */
 result.push([
 "A 주문일자","B 지연일","C 판매처명","D 주문번호",
 "E 공급처명","F 사입상품명","G 판매처상품명",
@@ -217,18 +216,17 @@ result.push([
 
 for(let i=1;i<d1.length;i++){
 
-  const r = d1[i];
+  const r=d1[i];
   if(!r) continue;
 
   const seller = norm(r[2]);
   const orderNo = norm(r[3]);
 
-  const A = safeDate(r[0]);
-  const I = safeDate(r[8]);
+  const A = excelDate(r[0]);
+  const I = excelDate(r[8]);
   const J = calcJ(r, holidays);
 
-  const g = (r[6] || "").toString().match(/\(([^()]*)\)/);
-  const G = g ? g[1] : "";
+  const g = getBracket(r[6]);
 
   let status = "";
 
@@ -239,15 +237,15 @@ for(let i=1;i<d1.length;i++){
   }
 
   result.push([
-    A,
+    A ? fmt(A) : "",
     r[1],
     r[2],
     r[3],
     r[4],
     r[5],
-    G,
+    g,
     r[7],
-    I,
+    I ? fmt(I) : "",
     J,
     "",
     "",
@@ -270,7 +268,7 @@ const wb = XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V37_FINAL_ENGINE.xlsx");
+XLSX.writeFile(wb,"V38_FINAL_FIXED.xlsx");
 
 }
 
