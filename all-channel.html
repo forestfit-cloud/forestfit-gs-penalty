@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 장기지연 납기 자동 시스템 V8</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V9</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -48,6 +48,16 @@ button{
 }
 
 .small{font-size:12px;color:#777}
+
+.debug{
+  font-size:12px;
+  background:#111;
+  color:#0f0;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+  white-space:pre-wrap;
+}
 </style>
 </head>
 
@@ -55,7 +65,7 @@ button{
 
 <div class="wrap">
 
-<h1>포레스트핏 장기지연 납기 자동 시스템 V8</h1>
+<h1>포레스트핏 장기지연 납기 자동 시스템 V9</h1>
 
 <div class="card">
 <label>1. 셀메이트 파일</label>
@@ -69,7 +79,7 @@ button{
 
 <div class="card">
 <label>공휴일 입력</label>
-<textarea id="holiday" placeholder="2026-01-01"></textarea>
+<textarea id="holiday"></textarea>
 </div>
 
 <div class="card">
@@ -79,6 +89,8 @@ button{
 
 <div class="card">
 <div id="status"></div>
+<div id="summary"></div>
+<div id="debug" class="debug"></div>
 </div>
 
 </div>
@@ -110,31 +122,29 @@ function isHoliday(d, holidays){
 }
 
 /* =========================
-   브리치 옵션 정리
+   옵션 정리
 ========================= */
 function cleanOption(v){
   if(!v) return "";
-
   return String(v)
-    .replace(/\s/g,"")        // 공백 제거
-    .replace(/\//g,",")       // / -> ,
-    .replace(/_/g,"")         // _ 삭제
+    .replace(/\s/g,"")
+    .replace(/\//g,",")
+    .replace(/_/g,"")
     .replace(/기본옵션:옵션/g,"")
-    .replace(/-/g,"")         // - 삭제
-    .replace(/[A-Za-z]+\d+/g,""); // 영어+숫자 삭제
+    .replace(/-/g,"")
+    .replace(/[A-Za-z]+\d+/g,"");
 }
 
 /* =========================
    괄호 추출
 ========================= */
 function extractBracket(v){
-  const s = String(v||"");
-  const m = s.match(/\(([^()]*)\)/);
+  const m = String(v||"").match(/\(([^()]*)\)/);
   return m ? m[1] : "";
 }
 
 /* =========================
-   브리치 MAP 생성
+   브리치 MAP
 ========================= */
 function buildBrichMap(rows){
 
@@ -144,20 +154,15 @@ function buildBrichMap(rows){
     const r = rows[i];
     if(!r) continue;
 
-    const orderNo = r[1];
-    const product = extractBracket(r[6]);
-    const option = cleanOption(r[11]);
-
-    const key = orderNo + "|" + product + "|" + option;
-
-    map.set(key, r[19]); // T열 출고예정일
+    const key = r[1] + "|" + extractBracket(r[6]) + "|" + cleanOption(r[11]);
+    map.set(key, r[19]);
   }
 
   return map;
 }
 
 /* =========================
-   파일 로딩
+   파일
 ========================= */
 document.getElementById("file1").onchange = async (e)=>{
   wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
@@ -168,31 +173,25 @@ document.getElementById("file2").onchange = async (e)=>{
 }
 
 /* =========================
-   핵심 실행
+   V9 RUN
 ========================= */
 function run(){
 
+console.clear();
+
 if(!wb1 || !wb2){
-  alert("파일 2개 모두 필요");
+  alert("파일 2개 필요");
   return;
 }
 
 const holidays = getHolidays();
 
-/* =========================
-   1번 파일
-========================= */
-const sheet1 = wb1.SheetNames[0];
-const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[sheet1], {
+const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {
   header:1,
   defval:""
 });
 
-/* =========================
-   2번 파일
-========================= */
-const sheet2 = wb2.SheetNames[0];
-const data2 = XLSX.utils.sheet_to_json(wb2.Sheets[sheet2], {
+const data2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]], {
   header:1,
   defval:""
 });
@@ -201,40 +200,50 @@ const brichMap = buildBrichMap(data2);
 
 result = [];
 
+let success = 0;
+let fail = 0;
+
+let debugLog = "";
+
 for(let i=1;i<data1.length;i++){
+
   const r = data1[i];
   if(!r) continue;
 
-/* ✔ 비플로우만 */
-if(r[2] !== "비플로우") continue;
+  if(r[2] !== "비플로우") continue;
 
-const orderNo = r[3];
-const product = extractBracket(r[10]);
-const option = cleanOption(r[7]);
+  const key = r[3] + "|" + extractBracket(r[10]) + "|" + cleanOption(r[7]);
 
-const key = orderNo + "|" + product + "|" + option;
+  let shipDate = brichMap.get(key);
 
-/* ✔ 브리치 값 */
-let shipDate = brichMap.get(key);
+  if(shipDate){
+    success++;
+    debugLog += "MATCH OK: " + key + "\n";
+  }else{
+    fail++;
+    shipDate = r[8];
+    debugLog += "NO MATCH: " + key + "\n";
+  }
 
-/* fallback */
-if(!shipDate){
-  shipDate = r[8];
+  result.push([
+    r[0], r[1], r[2], r[3],
+    r[4], r[5], r[6], r[7],
+    r[8],
+    shipDate,
+    r[10] || "",
+    r[11] || ""
+  ]);
 }
 
-result.push([
-  r[0], r[1], r[2], r[3],
-  r[4], r[5], r[6], r[7],
-  r[8],
-  shipDate,
-  r[10] || "",
-  r[11] || ""
-]);
-
-}
-
+/* 상태 */
 document.getElementById("status").innerText =
-"완료 : " + result.length + "건";
+"총 " + result.length + "건";
+
+document.getElementById("summary").innerText =
+"성공: " + success + " / 실패: " + fail;
+
+document.getElementById("debug").innerText =
+debugLog.slice(0, 2000);
 
 }
 
@@ -267,7 +276,7 @@ const url = URL.createObjectURL(blob);
 
 const a = document.createElement("a");
 a.href = url;
-a.download = "장기지연_결과_V8.xlsx";
+a.download = "장기지연_결과_V9.xlsx";
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
