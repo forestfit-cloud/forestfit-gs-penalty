@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 장기지연 납기 비교 시스템 V4</title>
+<title>포레스트핏 장기지연 납기 비교 시스템 V5</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -12,6 +12,18 @@ body{font-family:Arial;background:#FFF9E8;margin:0;color:#4A3A12}
 .wrap{max-width:1200px;margin:auto;padding:30px}
 
 h1{color:#6B5310}
+
+.desc{
+  color:#7A7A7A;
+  margin-bottom:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
 .card{
   background:#FFFDF7;
   border:1px solid #E7D8A3;
@@ -19,8 +31,6 @@ h1{color:#6B5310}
   padding:18px;
   margin-bottom:15px;
 }
-
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 
 input,textarea{
   width:100%;
@@ -42,6 +52,8 @@ button{
   margin-top:10px;
 }
 
+button:hover{opacity:0.9}
+
 .small{font-size:12px;color:#777}
 </style>
 </head>
@@ -50,35 +62,57 @@ button{
 
 <div class="wrap">
 
-<h1>포레스트핏 장기지연 납기 비교 시스템 V4</h1>
+<h1>포레스트핏 장기지연 납기 비교 시스템 V5</h1>
 
-<div class="card">
-<label>1. 셀메이트 파일</label>
-<input type="file" id="file1">
+<div class="desc">
+셀메이트 / 브리치 파일 + 공휴일 기준으로 판매처별 납기 자동 계산
 </div>
 
+<!-- 1번 -->
+<div class="card">
+<label>1. 셀메이트 장기지연 파일</label>
+<input type="file" id="file1">
+<div class="small">셀메이트 → 장기지연건 다운로드 파일</div>
+</div>
+
+<!-- 2번 -->
+<div class="card">
+<label>2. 브리치 파일</label>
+<input type="file" id="file2">
+<div class="small">배송준비 / 배송지연 파일</div>
+</div>
+
+<!-- 공휴일 -->
 <div class="card">
 <label>공휴일 입력</label>
-<textarea id="holiday"></textarea>
+<textarea id="holiday" placeholder="2026-01-01&#10;2026-01-02"></textarea>
 </div>
 
+<!-- 버튼 -->
 <div class="card">
 <button onclick="run()">계산 실행</button>
 <button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
+<!-- 결과 -->
 <div class="card">
 <div id="status"></div>
+</div>
+
+<div class="card">
+<div id="preview"></div>
 </div>
 
 </div>
 
 <script>
 
-let wb1;
+let wb1, wb2;
 let result = [];
 
-/* 공휴일 */
+/* ======================
+공휴일
+====================== */
 function getHolidays(){
   return document.getElementById("holiday").value
     .split("\n")
@@ -87,15 +121,14 @@ function getHolidays(){
 }
 
 function isWeekend(d){
-  const day = d.getDay();
-  return day === 0 || day === 6;
+  return d.getDay() === 0 || d.getDay() === 6;
 }
 
 function isHoliday(d, holidays){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return holidays.includes(`${y}-${m}-${day}`);
+  const dd = String(d.getDate()).padStart(2,"0");
+  return holidays.includes(`${y}-${m}-${dd}`);
 }
 
 function addWorkDays(date, days, holidays){
@@ -103,39 +136,48 @@ function addWorkDays(date, days, holidays){
   let count = 0;
 
   while(count < days){
-    cur.setDate(cur.getDate() + 1);
-
+    cur.setDate(cur.getDate()+1);
     if(!isWeekend(cur) && !isHoliday(cur, holidays)){
       count++;
     }
   }
-
   return cur;
 }
 
-function addMonth(date, months){
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
+function addMonth(date, m){
+  let d = new Date(date);
+  d.setMonth(d.getMonth()+m);
   return d;
 }
 
 /* ======================
-   계산 핵심
+파일 로딩
+====================== */
+document.getElementById("file1").onchange = async (e)=>{
+  wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
+}
+
+document.getElementById("file2").onchange = async (e)=>{
+  wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
+}
+
+/* ======================
+핵심 계산 (V5 = V4 + UI복구)
 ====================== */
 function run(){
 
 if(!wb1){
-  alert("파일 업로드 필요");
+  alert("셀메이트 파일 필요");
   return;
 }
+
+const holidays = getHolidays();
 
 const sheet = wb1.SheetNames[0];
 const data = XLSX.utils.sheet_to_json(wb1.Sheets[sheet], {
   header:1,
   defval:""
 });
-
-const holidays = getHolidays();
 
 result = [];
 
@@ -150,7 +192,6 @@ for(let i=1;i<data.length;i++){
 
   if(!orderDate) continue;
 
-  /* ✔ 판매처별 로직 */
   if(seller === "퀸잇"){
     shipDate = addWorkDays(orderDate, 21, holidays);
   }
@@ -165,15 +206,15 @@ for(let i=1;i<data.length;i++){
   }
 
   result.push([
-    r[0],  // 주문일자
-    r[1],  // 지연일
-    r[2],  // 판매처명
-    r[3],  // 주문번호
-    r[4],  // 공급처명
-    r[5],  // 사입상품명
-    r[6],  // 판매처상품명
-    r[7],  // 옵션
-    r[8],  // 입고예정일
+    r[0], // 주문일자
+    r[1], // 지연일
+    r[2], // 판매처명
+    r[3], // 주문번호
+    r[4], // 공급처명
+    r[5], // 사입상품명
+    r[6], // 판매처상품명
+    r[7], // 옵션
+    r[8], // 입고예정일
     shipDate ? formatDate(shipDate) : "",
     r[10] || "",
     r[11] || ""
@@ -183,17 +224,21 @@ for(let i=1;i<data.length;i++){
 document.getElementById("status").innerText =
 "완료 : " + result.length + "건";
 
+/* preview */
+document.getElementById("preview").innerHTML =
+"<pre>" + JSON.stringify(result.slice(0,5), null, 2) + "</pre>";
+
 }
 
 function formatDate(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
 }
 
 /* ======================
-   다운로드
+다운로드 (안정형)
 ====================== */
 function downloadExcel(){
 
@@ -216,15 +261,12 @@ XLSX.utils.book_append_sheet(wb, ws, "result");
 
 const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
 
-const blob = new Blob([wbout], {
-  type:"application/octet-stream"
-});
-
+const blob = new Blob([wbout], {type:"application/octet-stream"});
 const url = URL.createObjectURL(blob);
 
 const a = document.createElement("a");
 a.href = url;
-a.download = "장기지연_결과_V4.xlsx";
+a.download = "장기지연_결과_V5.xlsx";
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
