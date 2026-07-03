@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>포레스트핏 납기 시스템 V16 FIX</title>
+<title>포레스트핏 납기 V18 FINAL</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
 body{font-family:Arial;background:#FFF9E8;margin:0}
 .wrap{max-width:1200px;margin:auto;padding:30px}
 .card{background:#fff;border:1px solid #ddd;padding:12px;margin-bottom:10px}
-button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
+button{width:100%;padding:10px;background:#C9A227;border:0}
 </style>
 </head>
 
@@ -17,7 +17,7 @@ button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
 
 <div class="wrap">
 
-<h2>V16 납기 시스템 (FULL FIX)</h2>
+<h2>V18 FINAL SYSTEM</h2>
 
 <div class="card">
 <input type="file" id="file1">
@@ -28,7 +28,7 @@ button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
 </div>
 
 <div class="card">
-<textarea id="holiday" placeholder="공휴일"></textarea>
+<textarea id="holiday"></textarea>
 </div>
 
 <div class="card">
@@ -46,89 +46,50 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   날짜 변환 (엑셀 숫자 포함 FIX)
+   날짜 FIX
 ========================= */
-function toDate(v){
-  if(!v) return null;
+function fixDate(v){
+
+  if(!v) return "";
 
   if(typeof v === "number"){
-    return new Date(Math.round((v - 25569) * 86400 * 1000));
+    return format(new Date((v - 25569) * 86400 * 1000));
   }
 
   const d = new Date(v);
-  return isNaN(d) ? null : d;
+  return isNaN(d) ? "" : format(d);
 }
 
 function format(d){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${dd}`;
+  return d.getFullYear()+"-"+
+  String(d.getMonth()+1).padStart(2,"0")+"-"+
+  String(d.getDate()).padStart(2,"0");
 }
 
 /* =========================
-   공휴일
+   괄호 추출
 ========================= */
-function getHolidays(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean);
-}
-
-function isHoliday(d, list){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return list.includes(`${y}-${m}-${dd}`);
-}
-
-function isWeekend(d){
-  return d.getDay()===0 || d.getDay()===6;
+function bracket(v){
+  const m=String(v||"").match(/\(([^()]*)\)/);
+  return m?m[1]:"";
 }
 
 /* =========================
-   영업일 계산
+   옵션 정리 (핵심)
 ========================= */
-function addWorkDays(date, days, holidays){
-  let d = new Date(date);
-  let count = 0;
-
-  while(count < days){
-    d.setDate(d.getDate()+1);
-    if(!isWeekend(d) && !isHoliday(d, holidays)){
-      count++;
-    }
-  }
-  return d;
-}
-
-/* =========================
-   +1 month
-========================= */
-function addMonth(date){
-  let d = new Date(date);
-  d.setMonth(d.getMonth()+1);
-  return d;
-}
-
-/* =========================
-   브리치 KEY
-========================= */
-function cleanOption(v){
+function opt(v){
   return String(v||"")
-    .replace(/\s/g,"")
-    .replace(/\//g,",")
-    .replace(/_/g,"")
-    .replace(/-/g,"")
-    .replace(/[A-Za-z]+\d+/g,"");
+  .replace(/\s/g,"")
+  .replace(/\//g,",")
+  .replace(/_/g,"")
+  .replace(/기본옵션:옵션/g,"")
+  .replace(/-/g,"")
+  .replace(/[A-Za-z]+\d+/g,"");
 }
 
-function extractBracket(v){
-  const m = String(v||"").match(/\(([^()]*)\)/);
-  return m ? m[1] : "";
-}
-
+/* =========================
+   KEY
+========================= */
 function key(a,b,c){
   return a+"|"+b+"|"+c;
 }
@@ -136,79 +97,62 @@ function key(a,b,c){
 /* =========================
    RUN
 ========================= */
-document.getElementById("file1").onchange = async (e)=>{
-  wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
+document.getElementById("file1").onchange=async(e)=>{
+  wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
 }
 
-document.getElementById("file2").onchange = async (e)=>{
-  wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
+document.getElementById("file2").onchange=async(e)=>{
+  wb2=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
 }
 
 function run(){
 
-const holidays = getHolidays();
+const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1});
+const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1});
 
-const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {header:1});
-const data2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]], {header:1});
+const map=new Map();
 
 /* =========================
-   브리치 MAP
+   BRICH MAP (정답)
 ========================= */
-const map = new Map();
-
-for(let i=1;i<data2.length;i++){
-  const r = data2[i];
+for(let i=1;i<d2.length;i++){
+  const r=d2[i];
   if(!r) continue;
 
-  const k = key(r[1], extractBracket(r[6]), cleanOption(r[11]));
-  map.set(k, r[19]);
+  const k=key(
+    r[1],          // 주문번호
+    bracket(r[10]), // 상품명 괄호 (K열)
+    opt(r[11])      // 옵션 (L열)
+  );
+
+  map.set(k, r[19]); // T열
 }
 
-result = [];
+result=[];
 
-for(let i=1;i<data1.length;i++){
+for(let i=1;i<d1.length;i++){
 
-  const r = data1[i];
+  const r=d1[i];
   if(!r) continue;
 
-  const orderDate = toDate(r[0]);
-  const seller = r[2];
-
-  let j = "";
+  let j="";
 
   /* =========================
-     1) 비플로우
+     비플로우 ONLY
   ========================= */
-  if(seller === "비플로우"){
+  if(r[2]==="비플로우"){
 
-    const k = key(r[3], extractBracket(r[6]), cleanOption(r[7]));
-    j = map.get(k) || "";
+    const k=key(
+      r[3],        // 주문번호
+      bracket(r[6]), // G열
+      opt(r[7])     // H열
+    );
 
-  }
-
-  /* =========================
-     2) 퀸잇
-  ========================= */
-  else if(seller === "퀸잇"){
-    j = addWorkDays(orderDate,21,holidays);
-  }
-
-  /* =========================
-     3) 하프클럽
-  ========================= */
-  else if(seller === "하프클럽"){
-    j = addWorkDays(orderDate,15,holidays);
-  }
-
-  /* =========================
-     4) 네이버 / 롯데ON
-  ========================= */
-  else if(seller === "네이버 스마트스토어" || seller === "롯데ON"){
-    j = addMonth(orderDate);
+    j=map.get(k)||"";
   }
 
   result.push([
-    format(orderDate),
+    fixDate(r[0]),
     r[1],
     r[2],
     r[3],
@@ -216,15 +160,15 @@ for(let i=1;i<data1.length;i++){
     r[5],
     r[6],
     r[7],
-    r[8],
-    j ? format(j) : "",
+    fixDate(r[8]),
+    j?fixDate(j):"",
     r[10],
     r[11]
   ]);
 }
 
-document.getElementById("status").innerText =
-"완료 : " + result.length + "건";
+document.getElementById("status").innerText=
+"완료:"+result.length+"건";
 
 }
 
@@ -233,7 +177,7 @@ document.getElementById("status").innerText =
 ========================= */
 function downloadExcel(){
 
-const ws = XLSX.utils.aoa_to_sheet([
+const ws=XLSX.utils.aoa_to_sheet([
 [
 "주문일자","지연일","판매처","주문번호",
 "공급처","사입상품","판매상품","옵션",
@@ -242,10 +186,10 @@ const ws = XLSX.utils.aoa_to_sheet([
 ...result
 ]);
 
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb, ws, "result");
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb, "V16_FINAL.xlsx");
+XLSX.writeFile(wb,"V18_FINAL.xlsx");
 }
 
 </script>
