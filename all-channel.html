@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>포레스트핏 납기 V21 STABLE CORE</title>
+<title>포레스트핏 납기 V22 FIX FINAL</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
@@ -10,7 +10,6 @@ body{font-family:Arial;background:#FFF9E8;margin:0}
 .wrap{max-width:1200px;margin:auto;padding:30px}
 .card{background:#fff;border:1px solid #ddd;padding:12px;margin-bottom:10px}
 button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
-h2{margin-bottom:15px}
 </style>
 </head>
 
@@ -18,7 +17,7 @@ h2{margin-bottom:15px}
 
 <div class="wrap">
 
-<h2>V21 STABLE FIX CORE</h2>
+<h2>V22 FINAL FIX</h2>
 
 <div class="card">
 <input type="file" id="file1">
@@ -47,34 +46,25 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   날짜 안전 변환
+   날짜
 ========================= */
-function fixDate(v){
-  if(!v) return "";
-
-  if(typeof v === "number"){
-    return fmt(new Date((v - 25569) * 86400 * 1000));
-  }
-
-  const d = new Date(v);
-  return isNaN(d) ? "" : fmt(d);
-}
-
 function fmt(d){
   return d.getFullYear()+"-"+
   String(d.getMonth()+1).padStart(2,"0")+"-"+
   String(d.getDate()).padStart(2,"0");
 }
 
-/* =========================
-   안전 index getter
-========================= */
-function safe(row, idx){
-  return (row && row[idx]) ? row[idx] : "";
+function fixDate(v){
+  if(!v) return "";
+  if(typeof v==="number"){
+    return fmt(new Date((v-25569)*86400*1000));
+  }
+  const d=new Date(v);
+  return isNaN(d)?"":fmt(d);
 }
 
 /* =========================
-   옵션 정리
+   옵션
 ========================= */
 function opt(v){
   return String(v||"")
@@ -85,12 +75,16 @@ function opt(v){
     .replace(/[A-Za-z]+\d+/g,"");
 }
 
-/* =========================
-   괄호 추출
-========================= */
 function bracket(v){
   const m=String(v||"").match(/\(([^()]*)\)/);
   return m?m[1]:"";
+}
+
+/* =========================
+   KEY
+========================= */
+function key(a,b,c){
+  return a+"|"+b+"|"+c;
 }
 
 /* =========================
@@ -109,66 +103,68 @@ function run(){
 const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
 const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
 
+/* =========================
+   BRICH MAP
+========================= */
 const map=new Map();
 
-/* =========================
-   BRICH MAP (안전 index)
-========================= */
 for(let i=1;i<d2.length;i++){
   const r=d2[i];
   if(!r) continue;
 
-  const k =
-    safe(r,1) + "|" +              // 주문번호
-    bracket(safe(r,6)) + "|" +     // 상품
-    opt(safe(r,11));               // 옵션
+  const k=key(
+    r[1],
+    bracket(r[6]),
+    opt(r[11])
+  );
 
-  map.set(k, safe(r,19)); // T
+  map.set(k,r[19]);
 }
 
 result=[];
 
-/* =========================
-   MAIN LOOP (완전 안정형)
-========================= */
 for(let i=1;i<d1.length;i++){
 
   const r=d1[i];
   if(!r) continue;
 
-  const seller = safe(r,2);
-  const orderDate = fixDate(safe(r,0));
+  const seller=r[2];
+  const orderDate=fixDate(r[0]);
 
-  let j = "";
+  let j="";
 
-  if(seller === "비플로우"){
+  if(seller==="비플로우"){
 
-    const k =
-      safe(r,3) + "|" +
-      bracket(safe(r,5)) + "|" +
-      opt(safe(r,7));
+    const k=key(
+      r[3],
+      bracket(r[6]),
+      opt(r[7])
+    );
 
-    j = map.get(k) || "";
+    j=map.get(k)||"";
   }
 
+  /* =========================
+     ❗ 핵심: 원본 유지 + J만 추가
+  ========================= */
+
   result.push([
-    orderDate,
-    "",
-    seller,
-    safe(r,3),
-    "",
-    safe(r,5),
-    safe(r,6),
-    safe(r,7),
-    "",
-    j ? fixDate(j) : "",
-    "",
-    ""
+    r[0],   // A
+    r[1],   // B (원본 그대로 - 비어있어도 그대로)
+    r[2],   // C
+    r[3],   // D
+    r[4],   // E (원본 그대로)
+    r[5],   // F
+    r[6],   // G
+    r[7],   // H
+    r[8],   // I (원본 그대로)
+    j,      // J (계산값)
   ]);
+
 }
 
-document.getElementById("status").innerText =
-"완료: " + result.length + "건";
+document.getElementById("status").innerText=
+"완료:"+result.length+"건";
 
 }
 
@@ -181,7 +177,7 @@ const ws=XLSX.utils.aoa_to_sheet(result);
 const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V21_STABLE_FINAL.xlsx");
+XLSX.writeFile(wb,"V22_FINAL.xlsx");
 }
 
 </script>
