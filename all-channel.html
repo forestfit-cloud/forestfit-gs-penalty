@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 납기 자동 시스템 V12</title>
+<title>포레스트핏 납기 시스템 V13 (FIX)</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -22,15 +22,15 @@ button{width:100%;padding:12px;border:none;border-radius:8px;background:#C9A227;
 
 <div class="wrap">
 
-<h1>포레스트핏 납기 자동 시스템 V12</h1>
+<h1>포레스트핏 납기 시스템 V13 (FIX)</h1>
 
 <div class="card">
-<label>1. 셀메이트 파일</label>
+<label>1. 셀메이트</label>
 <input type="file" id="file1">
 </div>
 
 <div class="card">
-<label>2. 브리치 파일</label>
+<label>2. 브리치</label>
 <input type="file" id="file2">
 </div>
 
@@ -41,7 +41,7 @@ button{width:100%;padding:12px;border:none;border-radius:8px;background:#C9A227;
 
 <div class="card">
 <button onclick="run()">계산 실행</button>
-<button onclick="downloadExcel()">결과 다운로드</button>
+<button onclick="downloadExcel()">다운로드</button>
 </div>
 
 <div id="status"></div>
@@ -54,93 +54,81 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   공휴일
+   🔥 핵심: 날짜 강제 변환 FIX
 ========================= */
-function getHolidays(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean);
-}
-
-function isWeekend(d){
-  return d.getDay() === 0 || d.getDay() === 6;
-}
-
-function isHoliday(d, holidays){
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const dd = String(d.getDate()).padStart(2,"0");
-  return holidays.includes(`${y}-${m}-${dd}`);
-}
-
-/* =========================
-   영업일 계산
-========================= */
-function addWorkDays(date, days, holidays){
-  let cur = new Date(date);
-  let count = 0;
-
-  while(count < days){
-    cur.setDate(cur.getDate()+1);
-    if(!isWeekend(cur) && !isHoliday(cur, holidays)){
-      count++;
-    }
-  }
-  return cur;
-}
-
-/* =========================
-   +1 month
-========================= */
-function addMonth(date, m){
-  const d = new Date(date);
-  d.setMonth(d.getMonth()+m);
-  return d;
-}
-
-/* =========================
-   J열 핵심 로직
-========================= */
-function calcShipDate(date, seller, holidays){
-
-  if(!date) return "";
-
-  // 퀸잇
-  if(seller === "퀸잇"){
-    return addWorkDays(date, 21, holidays);
-  }
-
-  // 하프클럽
-  if(seller === "하프클럽"){
-    return addWorkDays(date, 15, holidays);
-  }
-
-  // 네이버 / 롯데ON
-  if(seller === "네이버 스마트스토어" || seller === "롯데ON"){
-    return addMonth(date, 1);
-  }
-
-  return date;
-}
-
-/* =========================
-   날짜 변환
-========================= */
-function excelDate(v){
+function fixDate(v){
 
   if(!v) return "";
 
-  if(v instanceof Date){
-    return v;
-  }
-
+  // Excel serial number
   if(typeof v === "number"){
-    return new Date((v - 25569) * 86400 * 1000);
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return format(d);
   }
 
+  // Date object
+  if(v instanceof Date){
+    return format(v);
+  }
+
+  // string
   const d = new Date(v);
-  return isNaN(d) ? v : d;
+  if(!isNaN(d)) return format(d);
+
+  return v;
+}
+
+function format(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+
+/* =========================
+   브리치 KEY FIX
+========================= */
+function extractBracket(v){
+  const m = String(v||"").match(/\(([^()]*)\)/);
+  return m ? m[1] : "";
+}
+
+function cleanOption(v){
+  return String(v||"")
+    .replace(/\s/g,"")
+    .replace(/\//g,",")
+    .replace(/_/g,"")
+    .replace(/-/g,"")
+    .replace(/[A-Za-z]+\d+/g,"");
+}
+
+function makeKey(order, product, option){
+  return String(order).trim() + "|" +
+         String(product).trim() + "|" +
+         String(option).trim();
+}
+
+/* =========================
+   BRICH MAP
+========================= */
+function buildMap(rows){
+
+  const map = new Map();
+
+  for(let i=1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r) continue;
+
+    const key = makeKey(
+      r[1],
+      extractBracket(r[6]),
+      cleanOption(r[11])
+    );
+
+    map.set(key, r[19]);
+  }
+
+  return map;
 }
 
 /* =========================
@@ -156,35 +144,53 @@ document.getElementById("file2").onchange = async (e)=>{
 
 function run(){
 
-if(!wb1){
+if(!wb1 || !wb2){
   alert("파일 필요");
   return;
 }
 
-const holidays = getHolidays();
-
-const data = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {
+const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {
   header:1,
   defval:""
 });
 
+const data2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]], {
+  header:1,
+  defval:""
+});
+
+const map = buildMap(data2);
+
 result = [];
 
-for(let i=1;i<data.length;i++){
+for(let i=1;i<data1.length;i++){
 
-  const r = data[i];
+  const r = data1[i];
   if(!r) continue;
 
-  const orderDate = excelDate(r[0]);
-  const seller = r[2];
+  const key = makeKey(
+    r[3],
+    extractBracket(r[10]),
+    cleanOption(r[7])
+  );
 
-  const shipDate = calcShipDate(orderDate, seller, holidays);
+  let ship = map.get(key);
+
+  if(!ship){
+    ship = r[8];
+  }
 
   result.push([
-    r[0], r[1], r[2], r[3],
-    r[4], r[5], r[6], r[7],
-    r[8],
-    shipDate,
+    fixDate(r[0]),   // A
+    r[1],
+    r[2],
+    r[3],
+    r[4],
+    r[5],
+    r[6],
+    r[7],
+    fixDate(r[8]),   // I
+    fixDate(ship),   // J
     r[10] || "",
     r[11] || ""
   ]);
@@ -196,7 +202,7 @@ document.getElementById("status").innerText =
 }
 
 /* =========================
-   다운로드
+   DOWNLOAD
 ========================= */
 function downloadExcel(){
 
@@ -212,7 +218,7 @@ const ws = XLSX.utils.aoa_to_sheet([
 const wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "result");
 
-XLSX.writeFile(wb, "납기계산_V12.xlsx");
+XLSX.writeFile(wb, "납기_V13_FIX.xlsx");
 }
 
 </script>
