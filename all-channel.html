@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>포레스트핏 납기 V20 AUTO HEADER</title>
+<title>포레스트핏 납기 V21 STABLE CORE</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
@@ -18,7 +18,7 @@ h2{margin-bottom:15px}
 
 <div class="wrap">
 
-<h2>V20 HEADER AUTO MAPPING</h2>
+<h2>V21 STABLE FIX CORE</h2>
 
 <div class="card">
 <input type="file" id="file1">
@@ -47,83 +47,35 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   날짜 변환
+   날짜 안전 변환
 ========================= */
 function fixDate(v){
   if(!v) return "";
 
   if(typeof v === "number"){
-    return format(new Date((v - 25569) * 86400 * 1000));
+    return fmt(new Date((v - 25569) * 86400 * 1000));
   }
 
   const d = new Date(v);
-  return isNaN(d) ? "" : format(d);
+  return isNaN(d) ? "" : fmt(d);
 }
 
-function format(d){
+function fmt(d){
   return d.getFullYear()+"-"+
   String(d.getMonth()+1).padStart(2,"0")+"-"+
   String(d.getDate()).padStart(2,"0");
 }
 
 /* =========================
-   공휴일
+   안전 index getter
 ========================= */
-function getHoliday(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean);
-}
-
-function isWeekend(d){
-  return d.getDay()===0 || d.getDay()===6;
-}
-
-function isHoliday(d,list){
-  const y=d.getFullYear();
-  const m=String(d.getMonth()+1).padStart(2,"0");
-  const dd=String(d.getDate()).padStart(2,"0");
-  return list.includes(`${y}-${m}-${dd}`);
+function safe(row, idx){
+  return (row && row[idx]) ? row[idx] : "";
 }
 
 /* =========================
-   영업일
+   옵션 정리
 ========================= */
-function addWorkDays(date,days,holidays){
-  let d=new Date(date);
-  let cnt=0;
-
-  while(cnt<days){
-    d.setDate(d.getDate()+1);
-    if(!isWeekend(d) && !isHoliday(d,holidays)){
-      cnt++;
-    }
-  }
-  return d;
-}
-
-/* =========================
-   1개월
-========================= */
-function addMonth(date){
-  const d=new Date(date);
-  d.setMonth(d.getMonth()+1);
-  return d;
-}
-
-/* =========================
-   KEY
-========================= */
-function key(a,b,c){
-  return a+"|"+b+"|"+c;
-}
-
-function bracket(v){
-  const m=String(v||"").match(/\(([^()]*)\)/);
-  return m?m[1]:"";
-}
-
 function opt(v){
   return String(v||"")
     .replace(/\s/g,"")
@@ -131,6 +83,14 @@ function opt(v){
     .replace(/_/g,"")
     .replace(/-/g,"")
     .replace(/[A-Za-z]+\d+/g,"");
+}
+
+/* =========================
+   괄호 추출
+========================= */
+function bracket(v){
+  const m=String(v||"").match(/\(([^()]*)\)/);
+  return m?m[1]:"";
 }
 
 /* =========================
@@ -146,87 +106,69 @@ document.getElementById("file2").onchange=async(e)=>{
 
 function run(){
 
-const data1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
-const data2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
+const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
+const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
 
-/* =========================
-   🔥 HEADER AUTO MAP (핵심)
-========================= */
-const h1=data1[0];
-const idx1={
-  date:h1.indexOf("주문일자"),
-  seller:h1.indexOf("판매처명"),
-  order:h1.indexOf("주문번호"),
-  product:h1.indexOf("사입상품명"),
-  option:h1.indexOf("옵션")
-};
-
-const h2=data2[0];
-const idx2={
-  order:h2.indexOf("주문번호"),
-  product:h2.indexOf("상품명"),
-  option:h2.indexOf("옵션"),
-  date:h2.indexOf("출고예정일")
-};
-
-/* =========================
-   BRICH MAP
-========================= */
 const map=new Map();
 
-for(let i=1;i<data2.length;i++){
-  const r=data2[i];
+/* =========================
+   BRICH MAP (안전 index)
+========================= */
+for(let i=1;i<d2.length;i++){
+  const r=d2[i];
   if(!r) continue;
 
-  const k=key(
-    r[idx2.order],
-    bracket(r[idx2.product]),
-    opt(r[idx2.option])
-  );
+  const k =
+    safe(r,1) + "|" +              // 주문번호
+    bracket(safe(r,6)) + "|" +     // 상품
+    opt(safe(r,11));               // 옵션
 
-  map.set(k,r[idx2.date]);
+  map.set(k, safe(r,19)); // T
 }
 
 result=[];
 
-for(let i=1;i<data1.length;i++){
+/* =========================
+   MAIN LOOP (완전 안정형)
+========================= */
+for(let i=1;i<d1.length;i++){
 
-  const r=data1[i];
+  const r=d1[i];
   if(!r) continue;
 
-  const seller=r[idx1.seller];
-  const date=fixDate(r[idx1.date]);
+  const seller = safe(r,2);
+  const orderDate = fixDate(safe(r,0));
 
-  let j="";
+  let j = "";
 
-  if(seller==="비플로우"){
-    const k=key(
-      r[idx1.order],
-      bracket(r[idx1.product]),
-      opt(r[idx1.option])
-    );
+  if(seller === "비플로우"){
 
-    j=map.get(k)||"";
+    const k =
+      safe(r,3) + "|" +
+      bracket(safe(r,5)) + "|" +
+      opt(safe(r,7));
+
+    j = map.get(k) || "";
   }
 
   result.push([
-    date,
+    orderDate,
     "",
     seller,
-    r[idx1.order],
+    safe(r,3),
     "",
-    r[idx1.product],
-    r[idx1.product],
-    r[idx1.option],
+    safe(r,5),
+    safe(r,6),
+    safe(r,7),
     "",
-    j?fixDate(j):"",
+    j ? fixDate(j) : "",
     "",
     ""
   ]);
 }
 
-document.getElementById("status").innerText=
-"완료:"+result.length+"건";
+document.getElementById("status").innerText =
+"완료: " + result.length + "건";
 
 }
 
@@ -239,7 +181,7 @@ const ws=XLSX.utils.aoa_to_sheet(result);
 const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V20_HEADER_AUTO.xlsx");
+XLSX.writeFile(wb,"V21_STABLE_FINAL.xlsx");
 }
 
 </script>
