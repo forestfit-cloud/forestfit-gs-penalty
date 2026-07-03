@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>FORESTFIT V42 FINAL ENGINE</title>
+<title>FORESTFIT V43 DATA SAFE ENGINE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -20,7 +20,8 @@ h2{margin-bottom:10px}
 
 <div class="wrap">
 
-<h2>FORESTFIT V42 FINAL ENGINE</h2>
+<h2>FORESTFIT V43 DATA SAFE ENGINE</h2>
+<div class="small">데이터 절대 유지 / 시트 자동 인식 / row 삭제 방지</div>
 
 <div class="card">
 <input type="file" id="file1">
@@ -31,7 +32,7 @@ h2{margin-bottom:10px}
 </div>
 
 <div class="card">
-<label>공휴일 입력 (YYYY-MM-DD 줄바꿈)</label>
+<label>공휴일 (YYYY-MM-DD)</label>
 <textarea id="holiday"></textarea>
 </div>
 
@@ -51,6 +52,26 @@ let result = [];
 let brichMap = new Map();
 
 /* =========================
+   SAFE SHEET PICKER (핵심)
+========================= */
+function getFirstSheet(wb){
+  const name = wb.SheetNames.find(n => wb.Sheets[n]);
+  return wb.Sheets[name];
+}
+
+/* =========================
+   RAW ARRAY 추출 (중요)
+   → sheet_to_json 제거
+========================= */
+function toArray(sheet){
+  return XLSX.utils.sheet_to_json(sheet, {
+    header:1,
+    defval:"",
+    raw:false
+  });
+}
+
+/* =========================
    기본 유틸
 ========================= */
 function norm(v){
@@ -64,13 +85,14 @@ function fmt(d){
 }
 
 /* =========================
-   Excel 날짜 변환
+   Excel 날짜 완전 고정
 ========================= */
 function toDate(v){
+
   if(!v) return null;
 
   if(typeof v === "number"){
-    return new Date((v - 25569) * 86400 * 1000);
+    return new Date(Math.round((v - 25569) * 86400 * 1000));
   }
 
   const d = new Date(v);
@@ -112,7 +134,7 @@ function addBusinessDays(date, days, holidays){
 }
 
 /* =========================
-   브리치 MAP (비플로우)
+   브리치 MAP
 ========================= */
 function buildBrich(data){
 
@@ -120,7 +142,7 @@ function buildBrich(data){
 
   for(let i=1;i<data.length;i++){
     const r=data[i];
-    if(!r) continue;
+    if(!r || r.length === 0) continue;
 
     const orderNo = norm(r[1]);
     const date = toDate(r[19]);
@@ -132,7 +154,7 @@ function buildBrich(data){
 }
 
 /* =========================
-   J 계산 (채널 통합)
+   J 계산
 ========================= */
 function calcJ(r, holidays){
 
@@ -140,27 +162,25 @@ function calcJ(r, holidays){
   const orderDate = toDate(r[0]);
   const orderNo = norm(r[3]);
 
+  if(!orderDate) return "";
+
   let j = "";
 
-  // 비플로우 (주문번호 매칭)
   if(seller === "비플로우"){
     j = brichMap.get(orderNo) || "";
   }
 
-  // 퀸잇 (21 영업일)
   else if(seller.includes("퀸잇")){
     j = fmt(addBusinessDays(orderDate, 21, holidays));
   }
 
-  // 하프클럽 (15 영업일)
   else if(seller.includes("하프클럽")){
     j = fmt(addBusinessDays(orderDate, 15, holidays));
   }
 
-  // 네이버 / 롯데ON (+1개월)
   else if(seller.includes("네이버") || seller.includes("롯데ON")){
     const d = new Date(orderDate);
-    d.setMonth(d.getMonth() + 1);
+    d.setMonth(d.getMonth()+1);
     j = fmt(d);
   }
 
@@ -172,29 +192,7 @@ function calcJ(r, holidays){
 }
 
 /* =========================
-   L 계산 (채널 조건)
-========================= */
-function calcL(channel, J, holidays){
-
-  if(channel === "카카오스타일"){
-    const d = addBusinessDays(J, 7, holidays);
-    return `지마켓 출고준수일 연장전 / 연장시[${fmt(d)}]`;
-  }
-
-  if(channel === "CJ몰"){
-    const d = addBusinessDays(J, 3, holidays);
-    return `${channel} 출고준수일 연장전 / 연장시[${fmt(d)}]`;
-  }
-
-  if(channel === "롯데I몰" || channel === "홈앤쇼핑"){
-    return `${channel} 출고예정일 연장 불가`;
-  }
-
-  return "";
-}
-
-/* =========================
-   실행
+   RUN
 ========================= */
 document.getElementById("file1").onchange=async(e)=>{
   wb1 = XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
@@ -206,8 +204,11 @@ document.getElementById("file2").onchange=async(e)=>{
 
 function run(){
 
-const d1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
-const d2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
+const sheet1 = getFirstSheet(wb1);
+const sheet2 = getFirstSheet(wb2);
+
+const d1 = toArray(sheet1);
+const d2 = toArray(sheet2);
 
 const holidays = getHolidays();
 
@@ -215,6 +216,7 @@ buildBrich(d2);
 
 result = [];
 
+/* 헤더 */
 result.push([
 "A 주문일자","B 지연일","C 판매처명","D 주문번호",
 "E 공급처명","F 사입상품명","G 판매처상품명",
@@ -222,21 +224,20 @@ result.push([
 "K 출고불가여부","L 진행상황","M 처리결과"
 ]);
 
+/* 데이터 */
 for(let i=1;i<d1.length;i++){
 
-  const r=d1[i];
-  if(!r) continue;
+  const r = d1[i];
+  if(!r || r.length === 0) continue;
 
   const seller = norm(r[2]);
   const orderNo = norm(r[3]);
 
-  const orderDate = toDate(r[0]);
-
+  const A = toDate(r[0]) ? fmt(toDate(r[0])) : "";
+  const I = toDate(r[8]) ? fmt(toDate(r[8])) : "";
   const J = calcJ(r, holidays);
 
-  const L = calcL(seller, J, holidays);
-
-  const g = String(r[6]||"").match(/\(([^()]*)\)/);
+  const g = (r[6]||"").match(/\(([^()]*)\)/);
   const G = g ? g[1] : "";
 
   let status = "";
@@ -248,7 +249,7 @@ for(let i=1;i<d1.length;i++){
   }
 
   result.push([
-    fmt(orderDate),
+    A,
     r[1],
     r[2],
     r[3],
@@ -256,10 +257,10 @@ for(let i=1;i<d1.length;i++){
     r[5],
     G,
     r[7],
-    fmt(toDate(r[8])),
+    I,
     J,
     "",
-    L,
+    "",
     status
   ]);
 }
@@ -270,7 +271,7 @@ document.getElementById("status").innerText =
 }
 
 /* =========================
-   다운로드
+   DOWNLOAD
 ========================= */
 function downloadExcel(){
 
@@ -279,7 +280,7 @@ const wb = XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V42_FINAL.xlsx");
+XLSX.writeFile(wb,"V43_DATA_SAFE.xlsx");
 
 }
 
