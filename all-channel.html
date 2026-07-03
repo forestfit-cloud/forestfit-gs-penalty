@@ -18,13 +18,32 @@ input,select,textarea,button{width:100%;box-sizing:border-box;padding:11px 12px;
 textarea{min-height:96px;resize:vertical}
 button{cursor:pointer;border:0;background:#C9A227;color:#6B5310;font-weight:bold}
 button.secondary{background:#BFA45A;color:#FFFFFF}
-.small{font-size:13px;color:#AEB8C6;line-height:1.5}
+.small{font-size:13px;color:#6B6B6B;line-height:1.5}
 .guide{margin:14px 0 12px;padding:14px;background:#FFF6D6;border:1px solid #E2C96B;border-radius:10px;color:#6B5310}
-
 .table-wrap{max-height:560px;overflow:auto;border:1px solid #394150;border-radius:12px;background:#fff;color:#222}
 table{border-collapse:collapse;width:100%;font-size:12px}
 th,td{border:1px solid #d9d9d9;padding:7px;white-space:nowrap;text-align:center;vertical-align:middle}
 th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
+
+.required-card{
+  background:#EAF3FF !important;
+  border:1px solid #AFCBFF !important;
+}
+
+.tag{
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.required-tag{background:#5B8DEF;color:#fff;}
+
+button{transition:all .18s ease;box-shadow:0 3px 8px rgba(87,67,24,.16);}
+button:hover{filter:brightness(.96);transform:translateY(-1px);}
+button.secondary:hover{filter:brightness(.97);}
 </style>
 </head>
 
@@ -39,41 +58,58 @@ th{background:#d9d9d9;font-weight:bold;position:sticky;top:0;z-index:1}
 
 <div class="grid3">
 
-<div class="card">
-<label>1. 셀메이트 파일</label>
-<input type="file" id="todayFile" />
+<!-- 1번 -->
+<div class="card required-card">
+<label><span class="tag required-tag">필수 업로드</span><br>1. 셀메이트 파일 업로드</label>
+<input type="file" id="todayFile" accept=".xlsx,.xls,.csv" />
+
+<label>오늘 파일 시트 선택</label>
 <select id="todaySheet"></select>
 
 <div class="small">
-1. 셀메이트 → 주문관리<br>
-2. GS 제외 전체 선택<br>
-3. 파일 다운로드
+<b>첨부 파일 다운로드 방법</b><br><br>
+1. 셀메이트 접속<br>
+2. 주문관리 메뉴 클릭<br>
+3. 판매처분류에서 GS 제외 전 채널 선택<br>
+4. 조회기간 설정<br>
+5. 파일 다운로드 후 업로드
 </div>
 </div>
 
-<div class="card">
-<label>2. 브리치 파일</label>
-<input type="file" id="brichFile" />
+<!-- 2번 -->
+<div class="card required-card">
+<label><span class="tag required-tag">비플로우 전용</span><br>2. 브리치 다운 파일 업로드</label>
+<input type="file" id="brichFile" accept=".xlsx,.xls,.csv" />
+
+<label>브리치 파일 시트 선택</label>
 <select id="brichSheet"></select>
 
 <div class="small">
-비플로우 상태 파일
+비플로우 주문 상태 파일 업로드
 </div>
 </div>
 
+</div>
+
+<!-- 공휴일 입력 (복구) -->
+<div class="card">
+<label>공휴일 입력</label>
+<textarea id="holidays" placeholder="2026-05-25&#10;2026-06-03"></textarea>
 </div>
 
 <div class="card">
 <button onclick="processFiles()">계산 실행</button>
-<button class="secondary" onclick="downloadResult()">엑셀 다운로드</button>
 
 <div class="guide">
-결과는 자동 정렬되어 출력됩니다.
+결과 다운로드 후 자동 정렬되어 출력됩니다.
 </div>
+
+<button class="secondary" onclick="downloadResult()">결과 엑셀 다운로드</button>
 </div>
 
 <div class="card">
-<div id="summary"></div>
+<div id="summary" class="small"></div>
+<div class="table-wrap" id="tableWrap"></div>
 </div>
 
 </div>
@@ -100,113 +136,113 @@ function fillSelect(wb,id){
 }
 
 /* =========================
-   데이터 처리
+   처리
 ========================= */
 function processFiles(){
-  if(!todayWorkbook)return alert("파일 업로드 필요");
+if(!todayWorkbook)return alert("파일 업로드 필요");
 
-  const rows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
+const rows=getRows(todayWorkbook,document.getElementById("todaySheet").value);
 
-  resultRows=[];
+resultRows=[];
 
-  for(let i=1;i<rows.length;i++){
-    const r=rows[i]||[];
-    if(!r.length)continue;
+for(let i=1;i<rows.length;i++){
+const r=rows[i]||[];
+if(!r.length)continue;
 
-    resultRows.push([
-      r[0], // 주문일자
-      r[1], // 지연일
-      r[2], // 판매처명
-      r[3], // 주문번호
-      r[4], // 공급처명
-      r[5], // 사입상품명
-      extractBracket(r[6]), // 판매처상품명
-      r[7], // 옵션
-      r[8], // 입고예정일
-      r[12], // 출고준수일
-      r[13], // 출고불가
-      r[14]  // 진행상황
-    ]);
-  }
+resultRows.push([
+  r[0],
+  r[1],
+  r[2],
+  r[3],
+  r[4],
+  r[5],
+  extractBracket(r[6]),
+  r[7],
+  r[8],
+  r[12],
+  r[13],
+  r[14]
+]);
+}
 
-  document.getElementById("summary").innerText="처리 완료";
+document.getElementById("summary").innerText="처리 완료";
 }
 
 /* =========================
-   다운로드 (스타일 포함)
+   다운로드 (스타일 + 날짜 + 필터)
 ========================= */
 function downloadResult(){
 
-  if(!resultRows.length) return alert("계산 실행을 먼저 눌러주세요.");
+if(!resultRows.length) return alert("계산 실행을 먼저 눌러주세요.");
 
-  const ws = XLSX.utils.aoa_to_sheet(resultRows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "장기지연건");
+const ws = XLSX.utils.aoa_to_sheet(resultRows);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, "장기지연건");
 
-  const range = XLSX.utils.decode_range(ws['!ref']);
+const range = XLSX.utils.decode_range(ws['!ref']);
 
-  /* 헤더 스타일 */
-  for(let C=0;C<=range.e.c;C++){
-    const addr=XLSX.utils.encode_cell({r:0,c:C});
+/* 헤더 스타일 */
+for(let C=0; C<=range.e.c; C++){
+  const addr = XLSX.utils.encode_cell({r:0,c:C});
+  if(!ws[addr]) continue;
+
+  ws[addr].s={
+    font:{bold:true,sz:12},
+    alignment:{horizontal:"center"},
+    fill:{patternType:"solid",fgColor:{rgb:"D9D9D9"}}
+  };
+}
+
+/* 전체 셀 색상 */
+for(let R=1; R<=range.e.r; R++){
+  for(let C=0; C<=range.e.c; C++){
+    const addr = XLSX.utils.encode_cell({r:R,c:C});
     if(!ws[addr]) continue;
 
     ws[addr].s={
-      font:{bold:true,sz:12},
-      alignment:{horizontal:"center"},
-      fill:{patternType:"solid",fgColor:{rgb:"D9D9D9"}}
+      fill:{patternType:"solid",fgColor:{rgb:"F2F2F2"}},
+      alignment:{horizontal:"center",vertical:"middle"}
     };
   }
 
-  /* 전체 셀 연회색 + 날짜 */
-  for(let R=1;R<=range.e.r;R++){
-    for(let C=0;C<=range.e.c;C++){
-      const addr=XLSX.utils.encode_cell({r:R,c:C});
-      if(!ws[addr]) continue;
+  /* 날짜 (A, I, J) */
+  const a=XLSX.utils.encode_cell({r:R,c:0});
+  const i=XLSX.utils.encode_cell({r:R,c:8});
+  const j=XLSX.utils.encode_cell({r:R,c:9});
 
-      ws[addr].s={
-        fill:{patternType:"solid",fgColor:{rgb:"F2F2F2"}},
-        alignment:{horizontal:"center",vertical:"middle"}
-      };
-    }
+  if(ws[a]) ws[a].z="yyyy-mm-dd";
+  if(ws[i]) ws[i].z="yyyy-mm-dd";
+  if(ws[j]) ws[j].z="yyyy-mm-dd";
+}
 
-    /* 날짜 A, I, J */
-    const a=XLSX.utils.encode_cell({r:R,c:0});
-    const i=XLSX.utils.encode_cell({r:R,c:8});
-    const j=XLSX.utils.encode_cell({r:R,c:9});
+/* 컬럼 폭 */
+ws['!cols']=Array(range.e.c+1).fill({wch:25});
 
-    if(ws[a]) ws[a].z="yyyy-mm-dd";
-    if(ws[i]) ws[i].z="yyyy-mm-dd";
-    if(ws[j]) ws[j].z="yyyy-mm-dd";
-  }
+/* 필터 */
+ws['!autofilter']={ref:XLSX.utils.encode_range(range)};
 
-  /* 컬럼 폭 */
-  ws['!cols']=Array(range.e.c+1).fill({wch:25});
-
-  /* 필터 */
-  ws['!autofilter']={ref:XLSX.utils.encode_range(range)};
-
-  XLSX.writeFile(wb,"장기지연건_정리.xlsx");
+XLSX.writeFile(wb,"장기지연건_정리.xlsx");
 }
 
 /* 파일 로딩 */
 document.getElementById("todayFile").addEventListener("change",e=>{
-  const f=e.target.files[0];
-  const r=new FileReader();
-  r.onload=evt=>{
-    todayWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
-    fillSelect(todayWorkbook,"todaySheet");
-  };
-  r.readAsArrayBuffer(f);
+const f=e.target.files[0];
+const r=new FileReader();
+r.onload=evt=>{
+todayWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
+fillSelect(todayWorkbook,"todaySheet");
+};
+r.readAsArrayBuffer(f);
 });
 
 document.getElementById("brichFile").addEventListener("change",e=>{
-  const f=e.target.files[0];
-  const r=new FileReader();
-  r.onload=evt=>{
-    brichWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
-    fillSelect(brichWorkbook,"brichSheet");
-  };
-  r.readAsArrayBuffer(f);
+const f=e.target.files[0];
+const r=new FileReader();
+r.onload=evt=>{
+brichWorkbook=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
+fillSelect(brichWorkbook,"brichSheet");
+};
+r.readAsArrayBuffer(f);
 });
 </script>
 
