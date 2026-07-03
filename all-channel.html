@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 장기지연 납기 자동 시스템 V10</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V11</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -48,7 +48,7 @@ button{
 
 <div class="wrap">
 
-<h1>포레스트핏 장기지연 납기 자동 시스템 V10</h1>
+<h1>포레스트핏 장기지연 납기 자동 시스템 V11</h1>
 
 <div class="card">
 <label>1. 셀메이트 파일</label>
@@ -80,15 +80,18 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   🔥 날짜 변환 (핵심 수정)
+   🔥 날짜 변환 (완전 통합)
 ========================= */
 function excelDate(v){
+
   if(!v) return "";
 
   // 이미 Date
-  if(v instanceof Date) return formatDate(v);
+  if(v instanceof Date){
+    return formatDate(v);
+  }
 
-  // 숫자 (엑셀 시리얼)
+  // 엑셀 숫자 날짜
   if(typeof v === "number"){
     const d = new Date((v - 25569) * 86400 * 1000);
     return formatDate(d);
@@ -96,7 +99,9 @@ function excelDate(v){
 
   // 문자열
   const d = new Date(v);
-  if(!isNaN(d)) return formatDate(d);
+  if(!isNaN(d)){
+    return formatDate(d);
+  }
 
   return v;
 }
@@ -147,7 +152,7 @@ function buildBrichMap(rows){
 }
 
 /* =========================
-   파일
+   실행
 ========================= */
 document.getElementById("file1").onchange = async (e)=>{
   wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
@@ -157,9 +162,6 @@ document.getElementById("file2").onchange = async (e)=>{
   wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
 }
 
-/* =========================
-   핵심 실행
-========================= */
 function run(){
 
 if(!wb1 || !wb2){
@@ -181,7 +183,6 @@ const brichMap = buildBrichMap(data2);
 
 result = [];
 
-/* ✔ 전체 유지 (비플로우 제거 삭제) */
 for(let i=1;i<data1.length;i++){
 
   const r = data1[i];
@@ -196,7 +197,7 @@ for(let i=1;i<data1.length;i++){
   }
 
   result.push([
-    excelDate(r[0]),   // ✔ A열 날짜 수정
+    excelDate(r[0]),   // ✔ A열
     r[1],
     r[2],
     r[3],
@@ -204,8 +205,8 @@ for(let i=1;i<data1.length;i++){
     r[5],
     r[6],
     r[7],
-    excelDate(r[8]),   // ✔ I열 날짜 수정
-    shipDate,
+    excelDate(r[8]),   // ✔ I열
+    excelDate(shipDate), // ✔ J열 (핵심 수정)
     r[10] || "",
     r[11] || ""
   ]);
@@ -245,7 +246,7 @@ const url = URL.createObjectURL(blob);
 
 const a = document.createElement("a");
 a.href = url;
-a.download = "장기지연_결과_V10.xlsx";
+a.download = "장기지연_결과_V11.xlsx";
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
