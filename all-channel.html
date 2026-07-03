@@ -2,18 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>장기지연 납기 자동 비교</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>포레스트핏 장기지연 납기 비교 시스템 V1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
-body{
-  font-family:Arial;
-  background:#FFF9E8;
-  margin:0;
-  color:#4A3A12;
-}
+body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
 .wrap{max-width:1200px;margin:0 auto;padding:30px}
 
 h1{font-size:26px;margin-bottom:10px;color:#6B5310}
@@ -61,26 +56,31 @@ button:hover{opacity:0.9}
 
 <div class="wrap">
 
-<h1>포레스트핏 장기지연 납기 비교 시스템</h1>
+<h1>포레스트핏 장기지연 납기 비교 시스템 V1</h1>
 
 <div class="desc">
-셀메이트 + 브리치 파일을 비교하여 납기 및 출고 상태를 자동 정리합니다.
+셀메이트 / 브리치 파일을 비교하여 자동으로 납기 및 출고 상태를 정리합니다.
 </div>
 
-<!-- 업로드 -->
 <div class="grid">
 
+<!-- 1번 -->
 <div class="card">
 <label>1. 셀메이트 장기지연 파일</label>
 <input type="file" id="file1" />
+
 <div class="small">
-셀메이트 → 주문관리 → 장기지연건 다운로드 파일 업로드
+1. 셀메이트 → 주문관리<br>
+2. 장기지연건 다운로드<br>
+3. 파일 업로드
 </div>
 </div>
 
+<!-- 2번 -->
 <div class="card">
 <label>2. 브리치 배송 파일</label>
 <input type="file" id="file2" />
+
 <div class="small">
 배송준비 / 배송지연 파일 업로드
 </div>
@@ -88,10 +88,10 @@ button:hover{opacity:0.9}
 
 </div>
 
-<!-- 공휴일 -->
+<!-- 공휴일 (복구 완료) -->
 <div class="card">
 <label>공휴일 입력</label>
-<textarea id="holiday" placeholder="2026-01-01"></textarea>
+<textarea id="holiday" placeholder="2026-01-01&#10;2026-01-02"></textarea>
 </div>
 
 <!-- 실행 -->
@@ -100,7 +100,7 @@ button:hover{opacity:0.9}
 <button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
-<!-- 결과 -->
+<!-- 상태 -->
 <div class="card">
 <div id="status"></div>
 </div>
@@ -109,12 +109,10 @@ button:hover{opacity:0.9}
 
 <script>
 
-let result = [];
 let wb1, wb2;
+let result = [];
 
-/* ======================
-   파일 읽기
-====================== */
+/* 파일 로딩 */
 document.getElementById("file1").onchange = async (e)=>{
   wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
 }
@@ -123,12 +121,10 @@ document.getElementById("file2").onchange = async (e)=>{
   wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});
 }
 
-/* ======================
-   계산
-====================== */
+/* 계산 */
 function run(){
 
-if(!wb1) return alert("셀메이트 파일 업로드 필요");
+if(!wb1) return alert("셀메이트 파일 필요");
 
 const sheet = wb1.SheetNames[0];
 const data = XLSX.utils.sheet_to_json(wb1.Sheets[sheet], {header:1});
@@ -137,7 +133,6 @@ result = [];
 
 for(let i=1;i<data.length;i++){
 const r = data[i];
-
 if(!r) continue;
 
 result.push([
@@ -150,20 +145,18 @@ result.push([
   r[6], // 판매처상품명
   r[7], // 옵션
   r[8], // 입고예정일
-  r[9] || "", // 출고준수일
-  r[10] || "", // 출고불가
-  r[11] || ""  // 진행상황
+  r[9] || "",
+  r[10] || "",
+  r[11] || ""
 ]);
 
 }
 
 document.getElementById("status").innerText =
-"계산 완료 : " + result.length + "건";
+"완료 : " + result.length + "건";
 }
 
-/* ======================
-   다운로드
-====================== */
+/* 다운로드 */
 function downloadExcel(){
 
 if(result.length === 0){
@@ -186,7 +179,7 @@ XLSX.utils.book_append_sheet(wb, ws, "result");
 /* 필터 */
 ws['!autofilter'] = { ref: XLSX.utils.encode_range(ws['!ref']) };
 
-/* 컬럼 넓이 */
+/* 컬럼 폭 */
 ws['!cols'] = Array(12).fill({wch:18});
 
 XLSX.writeFile(wb, "장기지연_결과.xlsx");
