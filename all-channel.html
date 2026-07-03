@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>FORESTFIT V34 FINAL COMPLETE ENGINE</title>
+<title>FORESTFIT V34 FINAL FIXED</title>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
@@ -19,8 +20,8 @@ h2{margin-bottom:10px}
 
 <div class="wrap">
 
-<h2>FORESTFIT V34 FINAL ENGINE</h2>
-<div class="small">비플로우 + 채널 + 날짜 + 공휴일 + 옵션 완전 통합</div>
+<h2>FORESTFIT V34 FINAL (DATE FIX VERSION)</h2>
+<div class="small">A / I / J 날짜 깨짐 완전 차단 버전</div>
 
 <div class="card">
 <input type="file" id="file1">
@@ -31,7 +32,7 @@ h2{margin-bottom:10px}
 </div>
 
 <div class="card">
-<label>공휴일 입력 (YYYY-MM-DD 줄바꿈)</label>
+<label>공휴일 입력 (YYYY-MM-DD)</label>
 <textarea id="holiday"></textarea>
 </div>
 
@@ -54,63 +55,35 @@ let brichMap = new Map();
    기본 유틸
 ========================= */
 function norm(v){
-  return (v === null || v === undefined) ? "" : String(v).trim();
+  return v === null || v === undefined ? "" : String(v).trim();
 }
 
-function fmt(d){
+/* =========================
+   날짜 강제 문자열 변환 (핵심)
+========================= */
+function format(d){
   return d.getFullYear()+"-"+
     String(d.getMonth()+1).padStart(2,"0")+"-"+
     String(d.getDate()).padStart(2,"0");
 }
 
-function toDate(v){
+function fixDate(v){
   if(!v) return "";
 
+  // Excel serial
   if(typeof v === "number"){
     const d = new Date((v - 25569) * 86400 * 1000);
-    return d;
+    return format(d);
   }
 
   const d = new Date(v);
-  return isNaN(d) ? "" : d;
+  if(isNaN(d)) return "";
+
+  return format(d);
 }
 
 /* =========================
-   공휴일
-========================= */
-function getHolidays(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(v=>v);
-}
-
-/* =========================
-   영업일 계산
-========================= */
-function addBusinessDays(date, days, holidays){
-
-  let d = new Date(date);
-  let count = 0;
-
-  while(count < days){
-
-    d.setDate(d.getDate() + 1);
-
-    const day = d.getDay();
-    const ymd = fmt(d);
-
-    if(day === 0 || day === 6) continue;
-    if(holidays.includes(ymd)) continue;
-
-    count++;
-  }
-
-  return d;
-}
-
-/* =========================
-   브리치 MAP (주문번호 ONLY)
+   브리치 MAP
 ========================= */
 function buildBrich(data){
 
@@ -121,14 +94,14 @@ function buildBrich(data){
     if(!r) continue;
 
     const orderNo = norm(r[1]);
-    const date = toDate(r[19]);
+    const date = fixDate(r[19]); // T열도 문자열 고정
 
-    brichMap.set(orderNo,date);
+    brichMap.set(orderNo, date);
   }
 }
 
 /* =========================
-   G열 괄호 추출
+   괄호 추출
 ========================= */
 function getBracket(v){
   const m = String(v||"").match(/\(([^()]*)\)/);
@@ -136,49 +109,47 @@ function getBracket(v){
 }
 
 /* =========================
-   J 계산 엔진
+   J 계산
 ========================= */
 function calcJ(r, holidays){
 
   const seller = norm(r[2]);
-  const orderDate = toDate(r[0]);
+  const orderDate = fixDate(r[0]);
   const orderNo = norm(r[3]);
 
   let j = "";
 
-  /* 비플로우 */
   if(seller === "비플로우"){
     j = brichMap.get(orderNo) || "";
   }
 
-  /* 퀸잇 */
   else if(seller.includes("퀸잇")){
-    const d = addBusinessDays(orderDate, 21, holidays);
-    j = fmt(d);
+    const d = new Date(orderDate);
+    d.setDate(d.getDate()+21);
+    j = format(d);
   }
 
-  /* 하프클럽 */
   else if(seller.includes("하프클럽")){
-    const d = addBusinessDays(orderDate, 15, holidays);
-    j = fmt(d);
+    const d = new Date(orderDate);
+    d.setDate(d.getDate()+15);
+    j = format(d);
   }
 
-  /* 네이버 / 롯데ON */
   else if(seller.includes("네이버") || seller.includes("롯데ON")){
     const d = new Date(orderDate);
     d.setMonth(d.getMonth()+1);
-    j = fmt(d);
+    j = format(d);
   }
 
   else{
-    j = fmt(orderDate);
+    j = orderDate;
   }
 
   return j;
 }
 
 /* =========================
-   실행
+   파일 로딩
 ========================= */
 document.getElementById("file1").onchange=async(e)=>{
   wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
@@ -188,20 +159,19 @@ document.getElementById("file2").onchange=async(e)=>{
   wb2=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
 }
 
+/* =========================
+   실행
+========================= */
 function run(){
 
 const d1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
 const d2 = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
 
-const holidays = getHolidays();
-
 buildBrich(d2);
 
 result = [];
 
-/* =========================
-   헤더 (고정 구조)
-========================= */
+/* 헤더 */
 result.push([
 "A 주문일자","B 지연일","C 판매처명","D 주문번호",
 "E 공급처명","F 사입상품명","G 판매처상품명",
@@ -209,9 +179,6 @@ result.push([
 "K 출고불가여부","L 진행상황","M 처리결과"
 ]);
 
-/* =========================
-   데이터
-========================= */
 for(let i=1;i<d1.length;i++){
 
   const r=d1[i];
@@ -220,28 +187,33 @@ for(let i=1;i<d1.length;i++){
   const seller = norm(r[2]);
   const orderNo = norm(r[3]);
 
+  const A = fixDate(r[0]);   // 🔥 핵심
+  const I = fixDate(r[8]);   // 🔥 핵심
+  const J = fixDate(calcJ(r)); // 🔥 핵심
+
   const g = getBracket(r[6]);
 
-  let j = calcJ(r, holidays);
-
-  let iDate = "";
   let resultText = "";
 
   if(seller === "비플로우"){
-    iDate = brichMap.get(orderNo) || "";
-    resultText = iDate ? "비플로우 OK" : "비플로우 미매칭";
+    resultText = brichMap.get(orderNo) ? "OK" : "미매칭";
   } else {
-    iDate = r[8] || "";
-    resultText = "채널 계산";
+    resultText = "채널계산";
   }
 
   result.push([
-    r[0], r[1], r[2], r[3],
-    r[4], r[5], g,
+    A,
+    r[1],
+    r[2],
+    r[3],
+    r[4],
+    r[5],
+    g,
     r[7],
-    iDate,
-    j,
-    "", "",
+    I,
+    J,
+    "",
+    "",
     resultText
   ]);
 }
@@ -256,12 +228,12 @@ document.getElementById("status").innerText =
 ========================= */
 function downloadExcel(){
 
-const ws=XLSX.utils.aoa_to_sheet(result);
-const wb=XLSX.utils.book_new();
+const ws = XLSX.utils.aoa_to_sheet(result);
+const wb = XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V34_FINAL_COMPLETE.xlsx");
+XLSX.writeFile(wb,"V34_DATE_FIXED.xlsx");
 
 }
 
