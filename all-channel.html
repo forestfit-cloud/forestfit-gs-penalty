@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>포레스트핏 장기지연 납기 자동 시스템 V9</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V10</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -19,12 +19,6 @@ h1{color:#6B5310}
   border-radius:12px;
   padding:18px;
   margin-bottom:15px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
 }
 
 input,textarea{
@@ -44,20 +38,9 @@ button{
   background:#C9A227;
   font-weight:bold;
   cursor:pointer;
-  margin-top:10px;
 }
 
 .small{font-size:12px;color:#777}
-
-.debug{
-  font-size:12px;
-  background:#111;
-  color:#0f0;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  white-space:pre-wrap;
-}
 </style>
 </head>
 
@@ -65,7 +48,7 @@ button{
 
 <div class="wrap">
 
-<h1>포레스트핏 장기지연 납기 자동 시스템 V9</h1>
+<h1>포레스트핏 장기지연 납기 자동 시스템 V10</h1>
 
 <div class="card">
 <label>1. 셀메이트 파일</label>
@@ -78,7 +61,7 @@ button{
 </div>
 
 <div class="card">
-<label>공휴일 입력</label>
+<label>공휴일</label>
 <textarea id="holiday"></textarea>
 </div>
 
@@ -87,11 +70,7 @@ button{
 <button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
-<div class="card">
 <div id="status"></div>
-<div id="summary"></div>
-<div id="debug" class="debug"></div>
-</div>
 
 </div>
 
@@ -101,28 +80,36 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   공휴일
+   🔥 날짜 변환 (핵심 수정)
 ========================= */
-function getHolidays(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean);
+function excelDate(v){
+  if(!v) return "";
+
+  // 이미 Date
+  if(v instanceof Date) return formatDate(v);
+
+  // 숫자 (엑셀 시리얼)
+  if(typeof v === "number"){
+    const d = new Date((v - 25569) * 86400 * 1000);
+    return formatDate(d);
+  }
+
+  // 문자열
+  const d = new Date(v);
+  if(!isNaN(d)) return formatDate(d);
+
+  return v;
 }
 
-function isWeekend(d){
-  return d.getDay() === 0 || d.getDay() === 6;
-}
-
-function isHoliday(d, holidays){
+function formatDate(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,"0");
   const dd = String(d.getDate()).padStart(2,"0");
-  return holidays.includes(`${y}-${m}-${dd}`);
+  return `${y}-${m}-${dd}`;
 }
 
 /* =========================
-   옵션 정리
+   브리치 옵션
 ========================= */
 function cleanOption(v){
   if(!v) return "";
@@ -135,9 +122,6 @@ function cleanOption(v){
     .replace(/[A-Za-z]+\d+/g,"");
 }
 
-/* =========================
-   괄호 추출
-========================= */
 function extractBracket(v){
   const m = String(v||"").match(/\(([^()]*)\)/);
   return m ? m[1] : "";
@@ -155,6 +139,7 @@ function buildBrichMap(rows){
     if(!r) continue;
 
     const key = r[1] + "|" + extractBracket(r[6]) + "|" + cleanOption(r[11]);
+
     map.set(key, r[19]);
   }
 
@@ -173,18 +158,14 @@ document.getElementById("file2").onchange = async (e)=>{
 }
 
 /* =========================
-   V9 RUN
+   핵심 실행
 ========================= */
 function run(){
-
-console.clear();
 
 if(!wb1 || !wb2){
   alert("파일 2개 필요");
   return;
 }
-
-const holidays = getHolidays();
 
 const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]], {
   header:1,
@@ -200,50 +181,38 @@ const brichMap = buildBrichMap(data2);
 
 result = [];
 
-let success = 0;
-let fail = 0;
-
-let debugLog = "";
-
+/* ✔ 전체 유지 (비플로우 제거 삭제) */
 for(let i=1;i<data1.length;i++){
 
   const r = data1[i];
   if(!r) continue;
 
-  if(r[2] !== "비플로우") continue;
-
   const key = r[3] + "|" + extractBracket(r[10]) + "|" + cleanOption(r[7]);
 
   let shipDate = brichMap.get(key);
 
-  if(shipDate){
-    success++;
-    debugLog += "MATCH OK: " + key + "\n";
-  }else{
-    fail++;
+  if(!shipDate){
     shipDate = r[8];
-    debugLog += "NO MATCH: " + key + "\n";
   }
 
   result.push([
-    r[0], r[1], r[2], r[3],
-    r[4], r[5], r[6], r[7],
-    r[8],
+    excelDate(r[0]),   // ✔ A열 날짜 수정
+    r[1],
+    r[2],
+    r[3],
+    r[4],
+    r[5],
+    r[6],
+    r[7],
+    excelDate(r[8]),   // ✔ I열 날짜 수정
     shipDate,
     r[10] || "",
     r[11] || ""
   ]);
 }
 
-/* 상태 */
 document.getElementById("status").innerText =
-"총 " + result.length + "건";
-
-document.getElementById("summary").innerText =
-"성공: " + success + " / 실패: " + fail;
-
-document.getElementById("debug").innerText =
-debugLog.slice(0, 2000);
+"완료 : " + result.length + "건";
 
 }
 
@@ -276,7 +245,7 @@ const url = URL.createObjectURL(blob);
 
 const a = document.createElement("a");
 a.href = url;
-a.download = "장기지연_결과_V9.xlsx";
+a.download = "장기지연_결과_V10.xlsx";
 document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
