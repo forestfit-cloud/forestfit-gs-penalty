@@ -2,14 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>포레스트핏 납기 V18 FINAL</title>
+<title>포레스트핏 납기 시스템 V19 STABLE</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
 body{font-family:Arial;background:#FFF9E8;margin:0}
 .wrap{max-width:1200px;margin:auto;padding:30px}
 .card{background:#fff;border:1px solid #ddd;padding:12px;margin-bottom:10px}
-button{width:100%;padding:10px;background:#C9A227;border:0}
+button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
+h2{margin-bottom:15px}
 </style>
 </head>
 
@@ -17,7 +18,7 @@ button{width:100%;padding:10px;background:#C9A227;border:0}
 
 <div class="wrap">
 
-<h2>V18 FINAL SYSTEM</h2>
+<h2>V19 STABLE (FULL FIX)</h2>
 
 <div class="card">
 <input type="file" id="file1">
@@ -28,12 +29,12 @@ button{width:100%;padding:10px;background:#C9A227;border:0}
 </div>
 
 <div class="card">
-<textarea id="holiday"></textarea>
+<textarea id="holiday" placeholder="공휴일 입력"></textarea>
 </div>
 
 <div class="card">
-<button onclick="run()">계산</button>
-<button onclick="downloadExcel()">다운로드</button>
+<button onclick="run()">계산 실행</button>
+<button onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
 <div id="status"></div>
@@ -46,56 +47,68 @@ let wb1, wb2;
 let result = [];
 
 /* =========================
-   날짜 FIX
+   날짜 변환 (엑셀 / 문자열 완전 대응)
 ========================= */
-function fixDate(v){
-
-  if(!v) return "";
+function toDate(v){
+  if(!v) return null;
 
   if(typeof v === "number"){
-    return format(new Date((v - 25569) * 86400 * 1000));
+    return new Date(Math.round((v - 25569) * 86400 * 1000));
   }
 
   const d = new Date(v);
-  return isNaN(d) ? "" : format(d);
+  return isNaN(d) ? null : d;
 }
 
-function format(d){
+function fmt(d){
+  if(!d) return "";
   return d.getFullYear()+"-"+
   String(d.getMonth()+1).padStart(2,"0")+"-"+
   String(d.getDate()).padStart(2,"0");
 }
 
 /* =========================
-   괄호 추출
+   판매처 정규화 (핵심)
+========================= */
+function normSeller(v){
+  return String(v||"")
+    .replace(/\(.*\)/g,"")   // 괄호 제거
+    .trim();
+}
+
+/* =========================
+   상품 괄호 추출
 ========================= */
 function bracket(v){
   const m=String(v||"").match(/\(([^()]*)\)/);
-  return m?m[1]:"";
+  return (m?m[1]:"").replace(/\s/g,"");
 }
 
 /* =========================
-   옵션 정리 (핵심)
+   옵션 정규화 (핵심 안정화)
 ========================= */
-function opt(v){
+function normOpt(v){
   return String(v||"")
-  .replace(/\s/g,"")
-  .replace(/\//g,",")
-  .replace(/_/g,"")
-  .replace(/기본옵션:옵션/g,"")
-  .replace(/-/g,"")
-  .replace(/[A-Za-z]+\d+/g,"");
+    .replace(/\s/g,"")
+    .replace(/\//g,",")
+    .replace(/_/g,"")
+    .replace(/-/g,"")
+    .replace(/기본옵션:옵션/g,"")
+    .replace(/[A-Za-z]+\d+/g,"")
+    .trim();
 }
 
 /* =========================
-   KEY
+   KEY (절대 고정 구조)
 ========================= */
 function key(a,b,c){
-  return a+"|"+b+"|"+c;
+  return String(a).trim()+"|"+
+         String(b).trim()+"|"+
+         String(c).trim();
 }
 
 /* =========================
-   RUN
+   실행
 ========================= */
 document.getElementById("file1").onchange=async(e)=>{
   wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
@@ -107,52 +120,58 @@ document.getElementById("file2").onchange=async(e)=>{
 
 function run(){
 
-const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1});
-const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1});
-
-const map=new Map();
+const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
+const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
 
 /* =========================
-   BRICH MAP (정답)
+   브리치 MAP (정규화 통일)
 ========================= */
+const map=new Map();
+
 for(let i=1;i<d2.length;i++){
   const r=d2[i];
   if(!r) continue;
 
   const k=key(
-    r[1],          // 주문번호
-    bracket(r[10]), // 상품명 괄호 (K열)
-    opt(r[11])      // 옵션 (L열)
+    r[1],                 // 주문번호
+    bracket(r[10]),       // 상품 (K)
+    normOpt(r[11])        // 옵션 (L)
   );
 
-  map.set(k, r[19]); // T열
+  map.set(k,r[19]); // T열
 }
 
 result=[];
 
+/* =========================
+   메인 루프
+========================= */
 for(let i=1;i<d1.length;i++){
 
   const r=d1[i];
   if(!r) continue;
 
-  let j="";
+  const seller = normSeller(r[2]);
+  const orderDate = toDate(r[0]);
+
+  let j = "";
 
   /* =========================
      비플로우 ONLY
   ========================= */
-  if(r[2]==="비플로우"){
+  if(seller === "비플로우"){
 
     const k=key(
-      r[3],        // 주문번호
-      bracket(r[6]), // G열
-      opt(r[7])     // H열
+      r[3],             // 주문번호
+      bracket(r[6]),    // G 상품
+      normOpt(r[7])     // H 옵션
     );
 
-    j=map.get(k)||"";
+    j = map.get(k) || "";
   }
 
   result.push([
-    fixDate(r[0]),
+    fmt(orderDate),
     r[1],
     r[2],
     r[3],
@@ -160,20 +179,20 @@ for(let i=1;i<d1.length;i++){
     r[5],
     r[6],
     r[7],
-    fixDate(r[8]),
-    j?fixDate(j):"",
+    fmt(r[8]),
+    j ? fmt(j) : "",
     r[10],
     r[11]
   ]);
 }
 
-document.getElementById("status").innerText=
-"완료:"+result.length+"건";
+document.getElementById("status").innerText =
+"완료: " + result.length + "건";
 
 }
 
 /* =========================
-   DOWNLOAD
+   다운로드
 ========================= */
 function downloadExcel(){
 
@@ -189,7 +208,7 @@ const ws=XLSX.utils.aoa_to_sheet([
 const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"result");
 
-XLSX.writeFile(wb,"V18_FINAL.xlsx");
+XLSX.writeFile(wb,"V19_STABLE.xlsx");
 }
 
 </script>
