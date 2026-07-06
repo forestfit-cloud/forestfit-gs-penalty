@@ -2,24 +2,17 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>FORESTFIT V45 AUTO SAFE ENGINE</title>
+<title>FORESTFIT V46 FINAL ENGINE</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
 <style>
 body{font-family:Arial;background:#FFF9E8;margin:0}
 .wrap{max-width:1200px;margin:auto;padding:30px}
-
 .card{background:#fff;border:1px solid #ddd;padding:12px;margin-bottom:10px}
 button{width:100%;padding:10px;background:#C9A227;border:0;font-weight:bold}
-
 h2{margin-bottom:10px}
 .small{font-size:12px;color:#777}
-
-#status{
-  margin-top:10px;
-  font-weight:bold;
-}
 </style>
 </head>
 
@@ -27,8 +20,8 @@ h2{margin-bottom:10px}
 
 <div class="wrap">
 
-<h2>FORESTFIT V45 AUTO SAFE ENGINE</h2>
-<div class="small">자동 실행 + 다운로드 잠금 + 데이터 보호</div>
+<h2>FORESTFIT V46 FINAL ENGINE</h2>
+<div class="small">완전 안전 + 비플로우 1~5 영업일 매칭 + 채널별 L열 계산</div>
 
 <div class="card">
 <input type="file" id="file1">
@@ -39,7 +32,7 @@ h2{margin-bottom:10px}
 </div>
 
 <div class="card">
-<label>공휴일 입력</label>
+<label>공휴일 입력 (YYYY-MM-DD 줄바꿈)</label>
 <textarea id="holiday"></textarea>
 </div>
 
@@ -48,169 +41,136 @@ h2{margin-bottom:10px}
 <button onclick="downloadExcel()" id="downloadBtn" disabled>다운로드</button>
 </div>
 
-<div id="status">파일을 업로드해주세요</div>
+<div id="status">파일을 업로드 후 실행</div>
 
 </div>
 
 <script>
-
 let wb1, wb2;
-let result = [];
-let brichMap = new Map();
+let result=[];
+let brichMap=new Map();
+let isReady=false;
 
-let isLoaded1 = false;
-let isLoaded2 = false;
-let isDone = false;
-
-/* =========================
-   상태 UI
-========================= */
-function setStatus(msg){
-  document.getElementById("status").innerText = msg;
-}
-
-/* =========================
-   날짜
-========================= */
 function fmt(d){
-  return d.getFullYear()+"-"+
-    String(d.getMonth()+1).padStart(2,"0")+"-"+
-    String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 
 function toDate(v){
   if(!v) return null;
-  if(typeof v === "number"){
-    return new Date((v - 25569) * 86400 * 1000);
-  }
-  const d = new Date(v);
-  return isNaN(d) ? null : d;
+  if(typeof v==="number") return new Date(Math.round((v-25569)*86400*1000));
+  const d=new Date(v);
+  return isNaN(d)?null:d;
 }
 
-/* =========================
-   공휴일
-========================= */
-function holidays(){
-  return document.getElementById("holiday").value
-    .split("\n")
-    .map(v=>v.trim())
-    .filter(Boolean);
+function getHolidays(){
+  return document.getElementById("holiday").value.split("\n").map(v=>v.trim()).filter(Boolean);
 }
 
-/* =========================
-   영업일
-========================= */
-function addBiz(date, days, holi){
-
-  let d = new Date(date);
-  let c = 0;
-
-  while(c < days){
-
+function addBusinessDays(date, days, holidays){
+  let d=new Date(date), count=0;
+  while(count<days){
     d.setDate(d.getDate()+1);
-
-    const day = d.getDay();
-    const ymd = fmt(d);
-
-    if(day===0 || day===6) continue;
-    if(holi.includes(ymd)) continue;
-
-    c++;
+    const ymd=fmt(d);
+    if(d.getDay()===0||d.getDay()===6) continue;
+    if(holidays.includes(ymd)) continue;
+    count++;
   }
-
   return d;
 }
 
-/* =========================
-   파일 로딩
-========================= */
-document.getElementById("file1").onchange=async(e)=>{
-  wb1 = XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
-  isLoaded1 = true;
-  checkReady();
+function getBracket(v){
+  const m=String(v||"").match(/\(([^()]*)\)/);
+  return m?m[1]:"";
 }
 
-document.getElementById("file2").onchange=async(e)=>{
-  wb2 = XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
-  isLoaded2 = true;
-  checkReady();
-}
-
-/* =========================
-   자동 상태 체크
-========================= */
-function checkReady(){
-  if(isLoaded1 && isLoaded2){
-    setStatus("파일 준비 완료 → 계산 실행 가능");
+function buildBrich(data){
+  brichMap.clear();
+  for(let i=1;i<data.length;i++){
+    const r=data[i];
+    if(!r) continue;
+    const orderNo=String(r[1]||"").trim();
+    brichMap.set(orderNo,r);
   }
 }
 
-/* =========================
-   RUN
-========================= */
+function matchBrich(orderNo, baseDate, holidays){
+  for(const r of brichMap.values()){
+    const bOrder=String(r[1]||"");
+    if(bOrder!==orderNo) continue;
+    const bDate=toDate(r[0]);
+    const diff=(bDate-baseDate)/(1000*60*60*24);
+    if(diff>=1 && diff<=5){
+      return r[19];
+    }
+  }
+  return "";
+}
+
+function calcJ(r, holidays){
+  const seller=String(r[2]||"");
+  const orderDate=toDate(r[0]);
+  const orderNo=String(r[3]||"");
+  if(!orderDate) return "";
+  if(seller==="비플로우") return matchBrich(orderNo, orderDate, holidays)||"";
+  if(seller.includes("퀸잇")) return fmt(addBusinessDays(orderDate,21,holidays));
+  if(seller.includes("하프클럽")) return fmt(addBusinessDays(orderDate,15,holidays));
+  if(seller.includes("네이버")||seller.includes("롯데ON")){ const d=new Date(orderDate); d.setMonth(d.getMonth()+1); return fmt(d);}
+  return fmt(orderDate);
+}
+
+function calcL(channel, J, holidays){
+  const jDate=toDate(J);
+  if(channel.includes("지마켓")||channel.includes("옥션")||channel.includes("SSG")){
+    const d=addBusinessDays(jDate,14,holidays);
+    return `${channel} 출고준수일 연장전 / 연장시[${fmt(d)}]`;
+  }
+  if(channel.includes("카카오스타일")){
+    const d=addBusinessDays(jDate,7,holidays);
+    return `${channel} 출고준수일 연장전 / 연장시[${fmt(d)}]`;
+  }
+  if(channel.includes("CJ몰")){
+    const d=addBusinessDays(jDate,3,holidays);
+    return `${channel} 출고준수일 연장전 / 연장시[${fmt(d)}]`;
+  }
+  if(channel.includes("롯데I몰")||channel.includes("홈앤쇼핑")){
+    return `${channel} 출고예정일 연장 불가`;
+  }
+  return "";
+}
+
+document.getElementById("file1").onchange=async(e)=>{ wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"}); checkReady(); }
+document.getElementById("file2").onchange=async(e)=>{ wb2=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"}); checkReady(); }
+
+function checkReady(){ if(wb1&&wb2){ document.getElementById("status").innerText="파일 준비 완료 → 계산 실행 가능"; isReady=true; document.getElementById("downloadBtn").disabled=false; } }
+
 function run(){
-
-if(!isLoaded1 || !isLoaded2){
-  setStatus("파일 2개 모두 필요");
-  return;
+  if(!isReady){ alert("파일 2개 업로드 후 실행"); return; }
+  const d1=XLSX.utils.sheet_to_json(wb1.Sheets[wb1.SheetNames[0]],{header:1,defval:""});
+  const d2=XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]],{header:1,defval:""});
+  const holi=getHolidays();
+  buildBrich(d2);
+  result=[];
+  result.push(["A","B","C","D","E","F","G","H","I","J","K","L"]);
+  for(let i=1;i<d1.length;i++){
+    const r=d1[i]; if(!r) continue;
+    const seller=r[2], orderNo=r[3];
+    const A=toDate(r[0])?fmt(toDate(r[0])):"";
+    const I=toDate(r[8])?fmt(toDate(r[8])):"";
+    const G=getBracket(r[6]);
+    const J=calcJ(r,holi);
+    const L=calcL(r[4]||"",J,holi);
+    result.push([A,r[1],r[2],r[3],r[4],r[5],G,r[7],I,J,"",L]);
+  }
+  document.getElementById("status").innerText="완료: "+(result.length-1)+"건";
 }
 
-setStatus("계산 중...");
-
-const s1 = wb1.Sheets[wb1.SheetNames[0]];
-const s2 = wb2.Sheets[wb2.SheetNames[0]];
-
-const d1 = XLSX.utils.sheet_to_json(s1,{header:1,defval:""});
-const d2 = XLSX.utils.sheet_to_json(s2,{header:1,defval:""});
-
-result = [];
-brichMap.clear();
-
-/* 브리치 */
-for(let i=1;i<d2.length;i++){
-  const r=d2[i];
-  if(!r) continue;
-  brichMap.set(String(r[1]), r);
-}
-
-/* 결과 */
-result.push(["A","B","C","D","E","F","G","H","I","J","K","L"]);
-
-for(let i=1;i<d1.length;i++){
-  const r=d1[i];
-  if(!r) continue;
-
-  result.push([
-    r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11]
-  ]);
-}
-
-isDone = true;
-
-document.getElementById("downloadBtn").disabled = false;
-
-setStatus("계산 완료 → 다운로드 가능");
-
-}
-
-/* =========================
-   다운로드 (잠금)
-========================= */
 function downloadExcel(){
-
-if(!isDone || result.length === 0){
-  alert("먼저 계산 실행하세요");
-  return;
+  if(!isReady||result.length===0){ alert("먼저 계산 실행"); return; }
+  const ws=XLSX.utils.aoa_to_sheet(result);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"result");
+  XLSX.writeFile(wb,"V46_FINAL.xlsx");
 }
-
-const ws = XLSX.utils.aoa_to_sheet(result);
-const wb = XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(wb,ws,"result");
-
-XLSX.writeFile(wb,"V45_SAFE.xlsx");
-}
-
 </script>
 
 </body>
