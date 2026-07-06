@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>포레스트핏 장기지연 납기 자동 시스템 V55</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 <style>
-body{font-family:Arial;background:#FFF9E8;margin:0;color:#4A3A12}
-.wrap{max-width:1200px;margin:auto;padding:30px}
-h1{color:#6B5310}
-.card{background:#FFFDF7;border:1px solid #E7D8A3;border-radius:12px;padding:18px;margin-bottom:15px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-input,textarea{width:100%;padding:10px;margin-top:6px;margin-bottom:12px;border:1px solid #465163;border-radius:8px}
-button{width:100%;padding:12px;border:none;border-radius:8px;background:#C9A227;font-weight:bold;cursor:pointer;margin-top:10px}
-.small{font-size:12px;color:#777}
-.red{color:red;font-weight:bold;}
+body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12;}
+.wrap{max-width:1280px;margin:auto;padding:30px;}
+h1{color:#6B5310;margin-bottom:20px;}
+.card{background:#FFFDF7;border:1px solid #E7D8A3;border-radius:12px;padding:18px;margin-bottom:15px;}
+input,textarea,select,button{width:100%;padding:10px;margin-top:6px;margin-bottom:12px;border:1px solid #465163;border-radius:8px;font-size:14px;}
+button{background:#C9A227;color:#4A3A12;font-weight:bold;border:none;cursor:pointer;}
+button.secondary{background:#BFA45A;color:#FFFFFF;}
+.small{font-size:12px;color:#777;}
+.red-text{color:red;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -23,110 +23,157 @@ button{width:100%;padding:12px;border:none;border-radius:8px;background:#C9A227;
 
 <div class="card">
 <label>1. 셀메이트 파일 (베이스)</label>
-<input type="file" id="file1">
+<input type="file" id="file1" accept=".xlsx,.xls,.csv"/>
 </div>
 
 <div class="card">
 <label>2. 브리치 파일</label>
-<input type="file" id="file2">
+<input type="file" id="file2" accept=".xlsx,.xls,.csv"/>
 </div>
 
 <div class="card">
-<label>공휴일 입력 (YYYY-MM-DD, 한 줄에 하나)</label>
-<textarea id="holiday"></textarea>
+<label>공휴일 입력 (YYYY-MM-DD, 한 줄에 하나씩)</label>
+<textarea id="holidays" placeholder="2026-07-17"></textarea>
 </div>
 
 <div class="card">
 <button onclick="run()">계산 실행</button>
-<button onclick="downloadExcel()">결과 다운로드</button>
+<button class="secondary" onclick="downloadExcel()">결과 다운로드</button>
 </div>
 
 <div class="card">
-<div id="status"></div>
+<div id="status" class="small"></div>
 </div>
 </div>
 
 <script>
-let wb1, wb2;
-let result = [];
+let wb1, wb2, result=[], holidays=[];
 
 function getHolidays(){
-    return document.getElementById("holiday").value
-        .split("\n")
-        .map(v=>v.trim())
-        .filter(Boolean);
+  return document.getElementById("holidays").value.split("\n").map(v=>v.trim()).filter(Boolean);
 }
 
-function isWeekend(d){return d.getDay()===0||d.getDay()===6;}
-function isHoliday(d,holidays){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,"0");const dd=String(d.getDate()).padStart(2,"0");return holidays.includes(`${y}-${m}-${dd}`);}
-function addBusinessDays(date,num,holidays){let d=new Date(date.getTime());while(num>0){d.setDate(d.getDate()+1);if(!isWeekend(d)&&!isHoliday(d,holidays))num--;}return d;}
+function isWeekend(date){
+  return date.getDay()===0||date.getDay()===6;
+}
 
-function extractBracket(v){const s=String(v||"");const m=s.match(/\(([^()]*)\)/);return m?m[1]:"";}
-function cleanOption(v){if(!v)return"";return String(v).replace(/\s/g,"").replace(/\//g,",").replace(/_/g,"").replace(/기본옵션:옵션/g,"").replace(/-/g,"").replace(/[A-Za-z]+\d+/g,"");}
+function isHoliday(date){
+  const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
+  return holidays.includes(`${y}-${m}-${d}`);
+}
+
+function addBusinessDays(startDate, days){
+  let date=new Date(startDate.getTime());
+  let added=0;
+  while(added<days){
+    date.setDate(date.getDate()+1);
+    if(!isWeekend(date)&&!isHoliday(date)) added++;
+  }
+  return date;
+}
+
+function extractBracket(v){
+  const s=String(v||"");
+  const m=s.match(/\(([^()]*)\)/);
+  return m?m[1]:"";
+}
+
+function cleanOption(v){
+  if(!v) return "";
+  return String(v).replace(/\s/g,"").replace(/\//g,",").replace(/_/g,"")
+           .replace(/기본옵션:옵션/g,"").replace(/-/g,"").replace(/[A-Za-z]+\d+/g,"");
+}
 
 function buildBrichMap(rows){
-    const map=new Map();
-    for(let i=1;i<rows.length;i++){
-        const r=rows[i];if(!r)continue;
-        const orderNo=r[1], product=extractBracket(r[10]), option=cleanOption(r[11]);
-        const key=orderNo+"|"+product+"|"+option;
-        map.set(key,{shipDate:r[19], channel:r[4]});
-    }
-    return map;
+  const map=new Map();
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r) continue;
+    const key=r[1]; // 주문번호 기준
+    if(!map.has(key)) map.set(key,[]);
+    map.get(key).push({product:extractBracket(r[10]), option:cleanOption(r[11]), ship:r[19], channel:r[4]});
+  }
+  return map;
 }
 
-document.getElementById("file1").onchange=async e=>{wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});}
-document.getElementById("file2").onchange=async e=>{wb2=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});}
+document.getElementById("file1").onchange=async e=>{
+  wb1=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
+};
+
+document.getElementById("file2").onchange=async e=>{
+  wb2=XLSX.read(await e.target.files[0].arrayBuffer(),{type:"array"});
+};
 
 function run(){
-if(!wb1){alert("셀메이트 파일 필요");return;}
-const holidays=getHolidays();
-const sheet1=wb1.SheetNames[0];
-const data1=XLSX.utils.sheet_to_json(wb1.Sheets[sheet1],{header:1,defval:""});
-let sheet2Map=new Map();
-if(wb2){
-    const sheet2=wb2.SheetNames[0];
-    const data2=XLSX.utils.sheet_to_json(wb2.Sheets[sheet2],{header:1,defval:""});
-    sheet2Map=buildBrichMap(data2);
-}
-result=[];
-for(let i=0;i<data1.length;i++){
-    const r=data1[i];if(!r)continue;
+  if(!wb1||!wb2){alert("두 파일 모두 업로드 필요"); return;}
+  holidays=getHolidays();
+
+  const sheet1=wb1.SheetNames[0];
+  const data1=XLSX.utils.sheet_to_json(wb1.Sheets[sheet1],{header:1,defval:""});
+
+  const sheet2=wb2.SheetNames[0];
+  const data2=XLSX.utils.sheet_to_json(wb2.Sheets[sheet2],{header:1,defval:""});
+
+  const brichMap=buildBrichMap(data2);
+
+  result=[];
+
+  for(let i=1;i<data1.length;i++){
+    const r=data1[i]; if(!r) continue;
     const orderDate=new Date(r[0]);
-    const baseJ=r[0], baseI=r[8], seller=r[2], orderNo=r[3], prod=extractBracket(r[6]), option=r[7];
-    let jDate="";
-    if(seller==="비플로우" && wb2){
-        //주문번호 매칭 + 상품명/옵션 비교
-        for(const [key,val] of sheet2Map.entries()){
-            const [o,p,op]=key.split("|");
-            if(o===orderNo&&(p===prod||!p)&&(op===cleanOption(option)||!op)){
-                jDate=new Date(val.shipDate);
-                break;
-            }
+    const seller=r[2], orderNo=r[3], productG=extractBracket(r[6]), optionH=r[7];
+    let jDate=null;
+
+    // 비플로우
+    if(seller==="비플로우"){
+      const brichs=brichMap.get(orderNo)||[];
+      let match=null;
+      for(const b of brichs){
+        if(b.product===productG&&b.option===cleanOption(optionH)){
+          match=b; break;
         }
-    } else if(seller==="퀸잇"){ jDate=addBusinessDays(orderDate,21,holidays);}
-    else if(seller==="하프클럽"){ jDate=addBusinessDays(orderDate,15,holidays);}
-    else if(["네이버 스마트스토어","롯데ON","카카오톡스토어"].includes(seller)){ jDate=new Date(orderDate); jDate.setMonth(jDate.getMonth()+1);}
+      }
+      jDate=match?new Date(match.ship):null;
+    } else if(seller==="퀸잇") jDate=addBusinessDays(orderDate,21);
+    else if(seller==="하프클럽") jDate=addBusinessDays(orderDate,15);
+    else if(["네이버 스마트스토어","롯데ON","카카오톡스토어"].includes(seller)){
+      jDate=new Date(orderDate); jDate.setMonth(jDate.getMonth()+1);
+    }
+
+    const iVal=r[8]?new Date(r[8]):null;
+    const iDisplay=iVal?iVal:"입고일 기입 요망";
+    const iClass=iVal?"":"red-text";
+
+    // L 진행상황
+    let lDisplay="";
+    if(seller==="비플로우" && jDate){
+      const brichs=brichMap.get(orderNo)||[];
+      for(const b of brichs){
+        const channels=["지마켓","옥션","SSG"];
+        if(channels.includes(b.channel)) lDisplay=`${b.channel} 출고준수일 연장전 / 연장시 ${addBusinessDays(jDate,14).toLocaleDateString()}`;
+        else if(b.channel==="카카오스타일") lDisplay=`${b.channel} 출고준수일 연장전 / 연장시 ${addBusinessDays(jDate,7).toLocaleDateString()}`;
+        else if(b.channel==="CJ몰") lDisplay=`${b.channel} 출고준수일 연장전 / 연장시 ${addBusinessDays(jDate,3).toLocaleDateString()}`;
+        else if(["롯데I몰","홈앤쇼핑"].includes(b.channel)) lDisplay=`${b.channel} 출고예정일 연장 불가`;
+      }
+    }
+
     result.push([
-        r[0], r[1], r[2], r[3], r[4], r[5], extractBracket(r[6]), r[7],
-        baseI||"<span class='red'>입고일 기입 요망</span>",
-        jDate?r[9]?jDate:r[9]:"",
-        r[10]||"", r[11]||"", r[12]||""
+      r[0], r[1], r[2], r[3], r[4], r[5],
+      productG, r[7], iDisplay, jDate, r[10], lDisplay, ""
     ]);
-}
-document.getElementById("status").innerText="완료 : "+result.length+"건";
+  }
+  document.getElementById("status").innerText=`처리 완료 : ${result.length}건`;
 }
 
 function downloadExcel(){
-if(!result.length){alert("결과 없음");return;}
-const ws=XLSX.utils.aoa_to_sheet([["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","출고준수일","출고불가 여부","진행상황","처리결과"],...result]);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"result");
-const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-const blob=new Blob([wbout],{type:"application/octet-stream"});
-const url=URL.createObjectURL(blob);
-const a=document.createElement("a");a.href=url;a.download="장기지연_결과_V55.xlsx";document.body.appendChild(a);a.click();document.body.removeChild(a);
-URL.revokeObjectURL(url);
+  if(!result.length){alert("결과 없음"); return;}
+  const ws=XLSX.utils.aoa_to_sheet([
+    ["주문일자","지연일","판매처명","주문번호","공급처명","사입상품명","판매처상품명","옵션","입고예정일","출고준수일","출고불가","진행상황","처리결과"],
+    ...result
+  ]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"장기지연결과");
+  XLSX.writeFile(wb,"장기지연_결과_V55.xlsx");
 }
 </script>
 </body>
