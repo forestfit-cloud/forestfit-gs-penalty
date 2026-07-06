@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>FORESTFIT V49 FINAL ENGINE</title>
+<title>FORESTFIT V50 FINAL ENGINE</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 <style>
 body{font-family:Arial;background:#FFF9E8;margin:0}
@@ -16,8 +16,8 @@ h2{margin-bottom:10px}
 <body>
 
 <div class="wrap">
-<h2>FORESTFIT V49 FINAL ENGINE</h2>
-<div class="small">I열 비플로우 연동 + 채널별 L열 연장/불가 + 날짜 깨짐 방지</div>
+<h2>FORESTFIT V50 FINAL ENGINE</h2>
+<div class="small">I/J 날짜, 비플로우 + 채널별 L열 연동, G열 괄호 추출 완전 안정화</div>
 
 <div class="card"><input type="file" id="file1"></div>
 <div class="card"><input type="file" id="file2"></div>
@@ -78,7 +78,9 @@ function calcI_Bflow(orderNo, baseDate){
     if(bOrder!==orderNo) continue;
     const bDate=toDate(r[0]);
     const diff=(bDate-baseDate)/(1000*60*60*24);
-    if(diff>=1 && diff<=5) return r[19]; // T열 입고예정일
+    if(diff>=1 && diff<=5){
+      return r[19]; // T열 입고예정일
+    }
   }
   return "";
 }
@@ -134,7 +136,7 @@ function downloadExcel(){
   const ws=XLSX.utils.aoa_to_sheet(result);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,"result");
-  XLSX.writeFile(wb,"V49_FINAL.xlsx");
+  XLSX.writeFile(wb,"V50_FINAL.xlsx");
 }
 </script>
 </body>
