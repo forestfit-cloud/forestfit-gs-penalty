@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>포레스트핏 장기지연 납기 자동 시스템 V52</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V53</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 <style>
 body{font-family:Arial,"Noto Sans KR",sans-serif;margin:0;background:#FFF9E8;color:#4A3A12}
@@ -21,7 +21,7 @@ button{cursor:pointer;border:none;border-radius:8px;background:#C9A227;font-weig
 </head>
 <body>
 <div class="wrap">
-<h1>포레스트핏 장기지연 납기 자동 시스템 V52</h1>
+<h1>포레스트핏 장기지연 납기 자동 시스템 V53</h1>
 
 <div class="grid2">
 <div class="card">
@@ -53,9 +53,6 @@ button{cursor:pointer;border:none;border-radius:8px;background:#C9A227;font-weig
 let wb1, wb2;
 let result = [];
 
-// ===========================
-// 날짜 계산 유틸
-// ===========================
 function getHolidays() {
     return document.getElementById("holidays").value.split("\n").map(v=>v.trim()).filter(Boolean);
 }
@@ -72,20 +69,12 @@ function addBusinessDays(startDate, days, holidays){
     }
     return d;
 }
-
-// ===========================
-// 옵션 및 괄호 추출
-// ===========================
 function extractBracket(v){const s=String(v||""); const m=s.match(/\(([^()]*)\)/); return m?m[1]:"";}
 function cleanOption(v){
     if(!v) return "";
     return String(v).replace(/\s/g,"").replace(/\//g,",").replace(/_/g,"")
         .replace(/기본옵션:옵션/g,"").replace(/-/g,"").replace(/[A-Za-z]+\d+/g,"");
 }
-
-// ===========================
-// 브리치 MAP 생성 (상품명+옵션+주문번호 key)
-// ===========================
 function buildBrichMap(rows){
     const map = new Map();
     for(let i=1;i<rows.length;i++){
@@ -100,15 +89,9 @@ function buildBrichMap(rows){
     return map;
 }
 
-// ===========================
-// 파일 로딩
-// ===========================
 document.getElementById("file1").onchange = async (e)=>{wb1 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});}
 document.getElementById("file2").onchange = async (e)=>{wb2 = XLSX.read(await e.target.files[0].arrayBuffer(), {type:"array"});}
 
-// ===========================
-// 핵심 계산
-// ===========================
 function run(){
     if(!wb1 || !wb2){ alert("두 파일 모두 업로드 필요"); return; }
     const holidays = getHolidays();
@@ -116,7 +99,6 @@ function run(){
     const data1 = XLSX.utils.sheet_to_json(wb1.Sheets[sheet1], {header:1,defval:""});
     const sheet2 = wb2.SheetNames[0];
     const data2 = XLSX.utils.sheet_to_json(wb2.Sheets[sheet2], {header:1,defval:""});
-
     const brichMap = buildBrichMap(data2);
     result = [];
 
@@ -126,10 +108,9 @@ function run(){
 
         let orderNo = r[3], channel=r[2], jValue=null;
 
-        // I열 입고예정일 그대로, 비어있으면 표시
         let iValue = r[8] ? r[8] : "입고일 기입 요망";
 
-        // 비플로우 주문
+        // 비플로우
         if(channel==="비플로우"){
             const product = extractBracket(r[6]);
             const option = cleanOption(r[7]);
@@ -139,13 +120,12 @@ function run(){
         // 비플로우 외
         else if(channel==="퀸잇") jValue = addBusinessDays(r[0],21,holidays);
         else if(channel==="하프클럽") jValue = addBusinessDays(r[0],15,holidays);
-        else if(["네이버 스마트스토어","롯데ON"].includes(channel)) {
+        else if(["네이버 스마트스토어","롯데ON","카카오톡스토어"].includes(channel)) {
             let d = new Date(r[0]);
             d.setMonth(d.getMonth()+1);
             jValue = d;
         }
 
-        // L열 진행상황
         let lValue = "";
         if(channel==="비플로우" && jValue){
             let eCol = data2.find(x=>x[1]===orderNo);
@@ -161,17 +141,13 @@ function run(){
         result.push([
             r[0], r[1], r[2], r[3], r[4], r[5],
             extractBracket(r[6]), r[7],
-            iValue,
-            jValue,
-            r[10]||"", lValue, ""
+            iValue, jValue, r[10]||"", lValue, ""
         ]);
     }
+
     document.getElementById("status").innerText = "계산 완료 : "+result.length+"건";
 }
 
-// ===========================
-// 다운로드
-// ===========================
 function downloadExcel(){
     if(!result.length){ alert("결과 없음"); return; }
     const ws = XLSX.utils.aoa_to_sheet([[
@@ -179,7 +155,6 @@ function downloadExcel(){
         "입고예정일","출고준수일","출고불가 여부","진행상황","처리결과"
     ],...result]);
 
-    // 날짜 컬럼 고정
     const range = XLSX.utils.decode_range(ws['!ref']);
     for(let R=1; R<=range.e.r; ++R){
         ['A','I','J'].forEach(c=>{
@@ -190,7 +165,7 @@ function downloadExcel(){
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "결과");
-    XLSX.writeFile(wb, "장기지연_결과_V52.xlsx");
+    XLSX.writeFile(wb, "장기지연_결과_V53.xlsx");
 }
 </script>
 </body>
