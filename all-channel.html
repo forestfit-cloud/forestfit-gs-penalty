@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>포레스트핏 장기지연 납기 자동 시스템 V63</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V64</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -27,7 +27,6 @@ body{
     font-weight:700;
     text-align:center;
     margin-bottom:30px;
-    color:#222;
 }
 
 .card{
@@ -56,7 +55,6 @@ textarea{
 
 textarea{
     height:100px;
-    resize:none;
 }
 
 .info{
@@ -79,13 +77,8 @@ textarea{
     margin-top:10px;
 }
 
-.btn:hover{
-    opacity:.85;
-}
-
 .status{
     margin-top:15px;
-    font-size:14px;
     font-weight:700;
 }
 
@@ -93,13 +86,12 @@ textarea{
 
 </head>
 
-
 <body>
 
 <div class="container">
 
 <div class="title">
-포레스트핏 장기지연 납기 자동 시스템 V63
+포레스트핏 장기지연 납기 자동 시스템 V64
 </div>
 
 
@@ -111,14 +103,9 @@ textarea{
 
 <input type="file" id="file1" accept=".xlsx,.xls">
 
+
 <div class="info">
-
-다운로드 방법<br>
-1) 셀메이트 접속<br>
-2) 주문관리 이동<br>
-3) 판매처 전체 조회<br>
-4) 엑셀 다운로드 후 업로드
-
+셀메이트 주문 파일 업로드
 </div>
 
 </div>
@@ -135,17 +122,10 @@ textarea{
 
 
 <div class="info">
-
-다운로드 방법<br>
-1) 브리치 접속<br>
-2) 비플로우 주문 파일 다운로드<br>
-3) 다운로드 파일 업로드
-
+비플로우 주문 파일 업로드
 </div>
 
-
 </div>
-
 
 
 
@@ -155,16 +135,12 @@ textarea{
 공휴일 입력
 </label>
 
-
-<textarea 
-id="holiday"
-placeholder="예시) 2026-07-17
-
-한 줄에 하나씩 입력">
-</textarea>
-
+<textarea id="holiday"
+placeholder="예시)
+2026-07-17"></textarea>
 
 </div>
+
 
 
 
@@ -182,7 +158,6 @@ placeholder="예시) 2026-07-17
 
 <div class="status" id="status"></div>
 
-
 </div>
 
 
@@ -195,7 +170,6 @@ placeholder="예시) 2026-07-17
 
 let wb1=null;
 let wb2=null;
-
 let resultData=[];
 
 
@@ -205,11 +179,13 @@ let resultData=[];
 // ===============================
 
 
-document.getElementById("file1").addEventListener("change",async function(e){
+document.getElementById("file1")
+.addEventListener("change",async function(e){
 
     const file=e.target.files[0];
 
     if(!file) return;
+
 
     wb1=XLSX.read(
         await file.arrayBuffer(),
@@ -223,12 +199,13 @@ document.getElementById("file1").addEventListener("change",async function(e){
 
 
 
-
-document.getElementById("file2").addEventListener("change",async function(e){
+document.getElementById("file2")
+.addEventListener("change",async function(e){
 
     const file=e.target.files[0];
 
     if(!file) return;
+
 
     wb2=XLSX.read(
         await file.arrayBuffer(),
@@ -266,11 +243,21 @@ function getHoliday(){
 
 function dateString(d){
 
-    if(!(d instanceof Date)) return "";
+    if(!(d instanceof Date))
+        return "";
+
 
     let y=d.getFullYear();
-    let m=String(d.getMonth()+1).padStart(2,"0");
-    let day=String(d.getDate()).padStart(2,"0");
+
+    let m=String(
+        d.getMonth()+1
+    ).padStart(2,"0");
+
+
+    let day=String(
+        d.getDate()
+    ).padStart(2,"0");
+
 
     return `${y}-${m}-${day}`;
 
@@ -282,19 +269,21 @@ function dateString(d){
 
 function isWeekend(d){
 
-    return d.getDay()===0 || d.getDay()===6;
+    return d.getDay()===0
+    ||
+    d.getDay()===6;
 
 }
 
 
 
 
-
 function isHoliday(d){
 
-    let holidays=getHoliday();
-
-    return holidays.includes(dateString(d));
+    return getHoliday()
+    .includes(
+        dateString(d)
+    );
 
 }
 
@@ -308,6 +297,10 @@ function isHoliday(d){
 
 
 function addBusinessDays(date,days){
+
+    if(!date)
+        return null;
+
 
     let d=new Date(date);
 
@@ -343,23 +336,70 @@ function addBusinessDays(date,days){
 
 
 // ===============================
-// 날짜 안전 변환
+// V64 날짜 안정화 함수
+// 숫자형 엑셀 날짜 대응
 // ===============================
 
 
 function safeDate(value){
 
-    if(!value) return null;
 
-
-    if(value instanceof Date){
-
-        if(!isNaN(value.getTime()))
-            return value;
+    if(
+        value===null
+        ||
+        value===undefined
+        ||
+        value===""
+    ){
 
         return null;
 
     }
+
+
+
+
+    // Date 객체
+
+    if(value instanceof Date){
+
+        return isNaN(value.getTime())
+        ?
+        null
+        :
+        value;
+
+    }
+
+
+
+
+    // 엑셀 serial date
+
+    if(typeof value==="number"){
+
+
+        let excelDate =
+        XLSX.SSF.parse_date_code(value);
+
+
+        if(excelDate){
+
+
+            return new Date(
+                excelDate.y,
+                excelDate.m-1,
+                excelDate.d
+            );
+
+        }
+
+
+    }
+
+
+
+
 
 
     let text=String(value).trim();
@@ -367,16 +407,17 @@ function safeDate(value){
 
 
     if(
-        text===""
-        ||
         text==="NaN"
         ||
         text==="Invalid Date"
+        ||
+        text==="입고일 기입 요망"
     ){
 
         return null;
 
     }
+
 
 
 
@@ -388,6 +429,7 @@ function safeDate(value){
 
     if(match){
 
+
         let d=new Date(
             Number(match[1]),
             Number(match[2])-1,
@@ -395,16 +437,21 @@ function safeDate(value){
         );
 
 
-        if(!isNaN(d.getTime()))
-            return d;
+        return isNaN(d.getTime())
+        ?
+        null
+        :
+        d;
 
     }
+
 
 
 
     return null;
 
 }
+
 
 
 
@@ -418,12 +465,17 @@ function extractBracket(value){
 
     let text=String(value||"");
 
+
     let result=text.match(
         /\(([^()]*)\)/
     );
 
 
-    return result ? result[1] : "";
+    return result
+    ?
+    result[1]
+    :
+    "";
 
 }
 
@@ -459,16 +511,13 @@ function cleanOption(value){
 }
 
 
-
-
-
-
 // ===============================
-// 비플로우 매칭 데이터 생성
+// 비플로우 데이터 생성
 // ===============================
 
 
 function createBflowMap(){
+
 
     let map=[];
 
@@ -532,19 +581,27 @@ function createBflowMap(){
 
 
 
+
 // ===============================
-// 비플로우 출고일 찾기
-// 주문번호 우선
-// 중복 시 상품명+옵션 비교
+// 비플로우 출고준수일 찾기
 // ===============================
 
 
-function findBflowDate(orderNo, product, option, bflowData){
+function findBflowDate(
+    orderNo,
+    product,
+    option,
+    bflowData
+){
 
 
     let sameOrder =
     bflowData.filter(v=>
-        String(v.orderNo)===String(orderNo)
+
+        String(v.orderNo)
+        ===
+        String(orderNo)
+
     );
 
 
@@ -554,7 +611,8 @@ function findBflowDate(orderNo, product, option, bflowData){
 
 
 
-    // 주문번호 단독 1건
+    // 주문번호 1개
+
     if(sameOrder.length===1){
 
         return sameOrder[0].shipDate;
@@ -564,7 +622,11 @@ function findBflowDate(orderNo, product, option, bflowData){
 
 
 
+
     // 중복 주문번호
+    // 상품명 + 옵션 비교
+
+
     let match =
     sameOrder.find(v=>
 
@@ -581,7 +643,6 @@ function findBflowDate(orderNo, product, option, bflowData){
 
 
 
-
     return null;
 
 
@@ -592,36 +653,51 @@ function findBflowDate(orderNo, product, option, bflowData){
 
 
 
+
 // ===============================
 // L열 진행상황
+// 주문일(A열) 기준 1~5영업일
 // ===============================
 
 
-function getProgress(channel, jDate){
+function getProgress(
+    channel,
+    orderDate,
+    jDate
+){
 
 
-    if(!channel || !jDate)
+    if(
+        !channel
+        ||
+        !orderDate
+        ||
+        !jDate
+    ){
+
         return "";
 
+    }
 
 
-    let today =
-    new Date();
 
+    let today=new Date();
 
 
     let diff=0;
 
-    let temp =
-    new Date(jDate);
+
+    let temp=new Date(orderDate);
 
 
 
     while(temp < today){
 
+
         temp.setDate(
             temp.getDate()+1
         );
+
 
 
         if(
@@ -634,15 +710,24 @@ function getProgress(channel, jDate){
 
         }
 
+
     }
 
 
 
 
-    // 비플로우 + 1~5 영업일 범위만 적용
+    // 주문일 기준 1~5 영업일
 
-    if(diff<1 || diff>5)
+    if(
+        diff<1
+        ||
+        diff>5
+    ){
+
         return "";
+
+    }
+
 
 
 
@@ -702,7 +787,6 @@ function getProgress(channel, jDate){
 
 
 
-
     let extendDate =
     addBusinessDays(
         jDate,
@@ -713,7 +797,11 @@ function getProgress(channel, jDate){
 
     return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
 
+
 }
+
+
+
 
 
 
@@ -737,8 +825,11 @@ function calculate(){
 
 
 
+
     let bflowData =
     createBflowMap();
+
+
 
 
 
@@ -756,6 +847,7 @@ function calculate(){
             raw:true
         }
     );
+
 
 
 
@@ -786,6 +878,8 @@ function calculate(){
 
 
 
+
+
     for(let i=1;i<rows.length;i++){
 
 
@@ -794,6 +888,7 @@ function calculate(){
 
         if(!r)
             continue;
+
 
 
 
@@ -829,12 +924,16 @@ function calculate(){
 
 
 
+
+
         // ===================
         // J열 출고준수일
         // ===================
 
 
+
         if(seller==="비플로우"){
+
 
 
             jDate =
@@ -846,35 +945,54 @@ function calculate(){
             );
 
 
-        }
-
-
-
-        else if(seller==="퀸잇"){
-
-
-            jDate =
-            addBusinessDays(
-                orderDate,
-                21
-            );
-
 
         }
 
 
 
-        else if(seller==="하프클럽"){
+
+        else if(
+            seller==="퀸잇"
+        ){
 
 
-            jDate =
-            addBusinessDays(
-                orderDate,
-                15
-            );
+
+            if(orderDate){
+
+                jDate =
+                addBusinessDays(
+                    orderDate,
+                    21
+                );
+
+            }
 
 
         }
+
+
+
+
+
+        else if(
+            seller==="하프클럽"
+        ){
+
+
+            if(orderDate){
+
+                jDate =
+                addBusinessDays(
+                    orderDate,
+                    15
+                );
+
+            }
+
+
+        }
+
+
 
 
 
@@ -889,16 +1007,22 @@ function calculate(){
         ){
 
 
-            jDate =
-            new Date(orderDate);
+            if(orderDate){
+
+                jDate =
+                new Date(orderDate);
 
 
-            jDate.setMonth(
-                jDate.getMonth()+1
-            );
+                jDate.setMonth(
+                    jDate.getMonth()+1
+                );
+
+            }
 
 
         }
+
+
 
 
 
@@ -913,6 +1037,10 @@ function calculate(){
 
 
 
+
+
+
+
         let lValue="";
 
 
@@ -920,13 +1048,12 @@ function calculate(){
         if(seller==="비플로우"){
 
 
-            let channel="";
-
-
             let bMatch =
             bflowData.find(v=>
 
-                String(v.orderNo)===String(r[3])
+                String(v.orderNo)
+                ===
+                String(r[3])
 
                 &&
                 v.product===product
@@ -940,19 +1067,22 @@ function calculate(){
 
             if(bMatch){
 
-                channel=bMatch.channel;
 
-
-                lValue=
+                lValue =
                 getProgress(
-                    channel,
+                    bMatch.channel,
+                    orderDate,
                     jDate
                 );
+
 
             }
 
 
         }
+
+
+
 
 
 
@@ -986,7 +1116,6 @@ function calculate(){
 
             ""
 
-
         ]);
 
 
@@ -995,19 +1124,24 @@ function calculate(){
 
 
 
-    document.getElementById("status").innerText =
+
+
+    document.getElementById("status").innerText=
+
     "계산 완료 : "
-    +(resultData.length-1)
-    +"건";
+    +
+    (resultData.length-1)
+    +
+    "건";
 
 
 }
 
 
 
+
 // ===============================
 // 엑셀 다운로드
-// 날짜 오류 방지 핵심
 // ===============================
 
 
@@ -1024,6 +1158,7 @@ function downloadExcel(){
 
 
 
+
     let ws =
     XLSX.utils.aoa_to_sheet(
         resultData
@@ -1031,23 +1166,23 @@ function downloadExcel(){
 
 
 
+
+
     // ===============================
-    // A / I / J 날짜 처리
-    // 날짜만 날짜타입 적용
-    // 문자는 문자 유지
+    // A / I / J 날짜 안정화
     // ===============================
 
 
     for(let i=1;i<resultData.length;i++){
 
 
-        let excelRow=i+1;
+        let row=i+1;
 
 
 
         setDateCell(
             ws,
-            "A"+excelRow,
+            "A"+row,
             resultData[i][0]
         );
 
@@ -1055,7 +1190,7 @@ function downloadExcel(){
 
         setDateCell(
             ws,
-            "I"+excelRow,
+            "I"+row,
             resultData[i][8]
         );
 
@@ -1063,7 +1198,7 @@ function downloadExcel(){
 
         setDateCell(
             ws,
-            "J"+excelRow,
+            "J"+row,
             resultData[i][9]
         );
 
@@ -1075,18 +1210,22 @@ function downloadExcel(){
 
 
 
+
     // ===============================
-    // K열 수식
-    // I 문자 또는 I > J
+    // K열 출고불가 수식
     // ===============================
 
 
-    for(let i=2;i<=resultData.length;i++){
+    for(
+        let i=2;
+        i<=resultData.length;
+        i++
+    ){
 
 
         ws["K"+i]={
 
-            t:"n",
+            t:"str",
 
             f:
             `IF(OR(ISTEXT(I${i}),I${i}>J${i}),"출고불가","")`
@@ -1101,47 +1240,71 @@ function downloadExcel(){
 
 
 
+
     // ===============================
-    // 스타일 적용
+    // 헤더 스타일
     // ===============================
 
 
 
     const headerStyle={
 
+
         fill:{
+
             fgColor:{
                 rgb:"FFD9D9D9"
             }
+
         },
+
 
         font:{
+
             bold:true,
+
             sz:12
+
         },
 
+
         alignment:{
+
             horizontal:"center",
+
             vertical:"center"
+
         }
+
 
     };
 
 
 
 
+
+
+
     for(let c=0;c<13;c++){
 
-        let cell =
+
+        let address =
         XLSX.utils.encode_cell({
+
             r:0,
+
             c:c
+
         });
 
 
-        if(ws[cell]){
 
-            ws[cell].s=headerStyle;
+        if(ws[address]){
+
+
+            ws[address].s=
+            headerStyle;
+
 
         }
 
@@ -1153,13 +1316,16 @@ function downloadExcel(){
 
 
 
+
+    // ===============================
     // 전체 가운데 정렬
+    // ===============================
 
 
     Object.keys(ws).forEach(key=>{
 
 
-        if(key[0]==="!") 
+        if(key==="!ref")
             return;
 
 
@@ -1171,9 +1337,11 @@ function downloadExcel(){
 
         ws[key].s.alignment={
 
+
             horizontal:"center",
 
             vertical:"center"
+
 
         };
 
@@ -1185,17 +1353,23 @@ function downloadExcel(){
 
 
 
+
     // ===============================
-    // 입고일 기입 요망 빨간색
+    // I열 입고일 기입 요망
+    // 빨간색
     // ===============================
 
 
-
-    for(let i=2;i<=resultData.length;i++){
+    for(
+        let i=2;
+        i<=resultData.length;
+        i++
+    ){
 
 
         let cell =
         ws["I"+i];
+
 
 
         if(
@@ -1207,23 +1381,31 @@ function downloadExcel(){
 
             cell.s={
 
+
                 font:{
+
 
                     color:{
                         rgb:"FFFF0000"
                     },
 
+
                     bold:true
+
 
                 },
 
+
                 alignment:{
+
 
                     horizontal:"center",
 
                     vertical:"center"
 
+
                 }
+
 
             };
 
@@ -1232,6 +1414,7 @@ function downloadExcel(){
 
 
     }
+
 
 
 
@@ -1255,11 +1438,12 @@ function downloadExcel(){
 
 
 
+
     XLSX.writeFile(
 
         wb,
 
-        "장기지연_결과_V63.xlsx"
+        "장기지연_결과_V64.xlsx"
 
     );
 
@@ -1271,16 +1455,23 @@ function downloadExcel(){
 
 
 
+
+
 // ===============================
-// 날짜 셀 안정화 함수
+// 날짜 셀 저장 함수
 // ===============================
 
 
-function setDateCell(ws,cellAddress,value){
+function setDateCell(
+    ws,
+    address,
+    value
+){
+
 
 
     let cell =
-    ws[cellAddress];
+    ws[address];
 
 
 
@@ -1290,7 +1481,10 @@ function setDateCell(ws,cellAddress,value){
 
 
 
-    // 날짜 객체
+
+
+    // Date 객체
+
 
     if(
         value instanceof Date
@@ -1314,7 +1508,10 @@ function setDateCell(ws,cellAddress,value){
 
 
 
-    // 날짜 문자열
+
+
+    // 문자열 / 숫자 날짜 확인
+
 
     let d =
     safeDate(value);
@@ -1340,7 +1537,10 @@ function setDateCell(ws,cellAddress,value){
 
 
 
+
+
     // 문자 유지
+
 
     cell.t="s";
 
@@ -1361,4 +1561,4 @@ function setDateCell(ws,cellAddress,value){
 
 </body>
 
-</html>  
+</html>
