@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -81,7 +81,7 @@ textarea{
 <div class="container">
 
 <div class="title">
-포레스트핏 장기지연 납기 자동 시스템 V64 FINAL
+포레스트핏 장기지연 납기 자동 시스템 V64 FINAL2
 </div>
 
 <div class="card">
@@ -142,7 +142,6 @@ let wb2=null;
 let resultData=[];
 
 
-
 document.getElementById("file1")
 .addEventListener("change",async e=>{
 
@@ -159,7 +158,6 @@ cellDates:true
 );
 
 });
-
 
 
 document.getElementById("file2")
@@ -196,7 +194,8 @@ return document
 
 function dateString(d){
 
-if(!(d instanceof Date)) return "";
+if(!(d instanceof Date))
+return "";
 
 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
@@ -222,7 +221,8 @@ return getHoliday().includes(dateString(d));
 
 function addBusinessDays(date,days){
 
-if(!date)return null;
+if(!date)
+return null;
 
 let d=new Date(date);
 
@@ -232,8 +232,14 @@ while(count<days){
 
 d.setDate(d.getDate()+1);
 
-if(!isWeekend(d)&&!isHoliday(d)){
+if(
+!isWeekend(d)
+&&
+!isHoliday(d)
+){
+
 count++;
+
 }
 
 }
@@ -245,17 +251,18 @@ return d;
 
 
 
-// 날짜 최종 안정화
+// 날짜 안정화
 
 function safeDate(value){
-
 
 if(
 value===null ||
 value===undefined ||
 value===""
 ){
+
 return null;
+
 }
 
 
@@ -305,7 +312,9 @@ return null;
 
 
 
-let match=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+let match=text.match(
+/^(\d{4})-(\d{2})-(\d{2})$/
+);
 
 
 
@@ -316,6 +325,7 @@ Number(match[1]),
 Number(match[2])-1,
 Number(match[3])
 );
+
 
 return isNaN(d.getTime())
 ?
@@ -333,13 +343,18 @@ return null;
 
 
 
-
 function extractBracket(value){
 
-let result=String(value||"")
+let result=
+String(value||"")
 .match(/\(([^()]*)\)/);
 
-return result ? result[1] : "";
+
+return result
+?
+result[1]
+:
+"";
 
 }
 
@@ -347,7 +362,8 @@ return result ? result[1] : "";
 
 function cleanOption(value){
 
-if(!value)return "";
+if(!value)
+return "";
 
 return String(value)
 .replace(/\s/g,"")
@@ -360,7 +376,7 @@ return String(value)
 }
 
 
-
+  
 
 function createBflowMap(){
 
@@ -374,6 +390,7 @@ return map;
 
 let sheet =
 wb2.Sheets[wb2.SheetNames[0]];
+
 
 
 let rows =
@@ -479,6 +496,7 @@ null;
 
 
 
+
 function getProgress(
 channel,
 orderDate,
@@ -487,11 +505,16 @@ jDate
 
 
 if(
-!channel ||
-!orderDate ||
+!channel
+||
+!orderDate
+||
 !jDate
-)
+){
+
 return "";
+
+}
 
 
 
@@ -505,9 +528,11 @@ let temp=new Date(orderDate);
 
 while(temp<today){
 
+
 temp.setDate(
 temp.getDate()+1
 );
+
 
 
 if(
@@ -520,12 +545,22 @@ diff++;
 
 }
 
+
 }
 
 
 
-if(diff<1 || diff>5)
+if(
+diff<1
+||
+diff>5
+){
+
 return "";
+
+}
+
+
 
 
 
@@ -545,13 +580,17 @@ addDay=14;
 
 }
 
-else if(channel==="카카오스타일"){
+else if(
+channel==="카카오스타일"
+){
 
 addDay=7;
 
 }
 
-else if(channel==="CJ몰"){
+else if(
+channel==="CJ몰"
+){
 
 addDay=3;
 
@@ -576,6 +615,7 @@ return "";
 
 
 
+
 let extendDate =
 addBusinessDays(
 jDate,
@@ -588,6 +628,7 @@ return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate
 
 
 }
+
 
 
 
@@ -636,21 +677,36 @@ resultData=[];
 
 resultData.push([
 
+
 "주문일자",
+
 "지연일",
+
 "판매처명",
+
 "주문번호",
+
 "공급처명",
+
 "사입상품명",
+
 "판매처상품명",
+
 "옵션",
+
 "입고예정일",
+
 "출고준수일",
+
 "출고불가 여부",
+
 "진행상황",
+
 "처리결과"
 
+
 ]);
+
 
 
 
@@ -698,6 +754,8 @@ let jDate=null;
 
 
 
+
+
 if(seller==="비플로우"){
 
 
@@ -714,7 +772,11 @@ bflowData
 
 
 
-else if(seller==="퀸잇"){
+
+
+else if(
+seller==="퀸잇"
+){
 
 
 jDate =
@@ -728,7 +790,10 @@ orderDate,
 
 
 
-else if(seller==="하프클럽"){
+
+else if(
+seller==="하프클럽"
+){
 
 
 jDate =
@@ -739,6 +804,7 @@ orderDate,
 
 
 }
+
 
 
 
@@ -753,9 +819,11 @@ seller==="카카오톡스토어"
 ){
 
 
+
 if(orderDate){
 
 jDate=new Date(orderDate);
+
 
 jDate.setMonth(
 jDate.getMonth()+1
@@ -770,6 +838,7 @@ jDate.getMonth()+1
 
 
 
+
 let iValue =
 inboundDate
 ?
@@ -779,11 +848,16 @@ inboundDate
 
 
 
+
+
+
 let lValue="";
 
 
 
+
 if(seller==="비플로우"){
+
 
 
 let bMatch =
@@ -860,6 +934,8 @@ lValue,
 
 
 
+
+
 document.getElementById("status").innerText=
 
 "계산 완료 : "
@@ -869,8 +945,8 @@ document.getElementById("status").innerText=
 "건";
 
 
-}
 
+}
 
 
 
@@ -896,7 +972,9 @@ resultData
 
 
 
-// 날짜 셀 안정화
+
+
+// 날짜 셀 처리
 
 for(let i=1;i<resultData.length;i++){
 
@@ -945,14 +1023,19 @@ i++
 ){
 
 
+
 ws["K"+i]={
 
+
 t:"str",
+
 
 f:
 `IF(OR(ISTEXT(I${i}),I${i}>J${i}),"출고불가","")`
 
+
 };
+
 
 
 }
@@ -964,7 +1047,6 @@ f:
 
 
 // 헤더 스타일
-
 
 let headerStyle={
 
@@ -997,6 +1079,8 @@ vertical:"center"
 
 
 };
+
+
 
 
 
@@ -1041,21 +1125,28 @@ return;
 
 
 
-if(!ws[key].s)
+if(!ws[key].s){
+
 ws[key].s={};
+
+}
 
 
 
 ws[key].s.alignment={
 
+
 horizontal:"center",
 
 vertical:"center"
 
+
 };
 
 
+
 });
+
 
 
 
@@ -1085,25 +1176,31 @@ cell.v==="입고일 기입 요망"
 ){
 
 
+
 cell.s={
 
 
 font:{
 
+
 color:{
 rgb:"FFFF0000"
 },
 
+
 bold:true
+
 
 },
 
 
 alignment:{
 
+
 horizontal:"center",
 
 vertical:"center"
+
 
 }
 
@@ -1111,11 +1208,11 @@ vertical:"center"
 };
 
 
-}
-
 
 }
 
+
+}
 
 
 
@@ -1145,7 +1242,7 @@ XLSX.writeFile(
 
 wb,
 
-"장기지연_결과_V64_FINAL.xlsx"
+"장기지연_결과_V64_FINAL2.xlsx"
 
 );
 
@@ -1180,6 +1277,36 @@ return;
 
 
 
+
+
+// FINAL2 추가
+// 입고일 기입 요망 문자 보호
+
+
+if(
+value==="입고일 기입 요망"
+){
+
+
+cell.t="s";
+
+cell.v=value;
+
+
+return;
+
+
+}
+
+
+
+
+
+
+
+// 날짜 객체
+
+
 if(
 value instanceof Date
 &&
@@ -1196,10 +1323,16 @@ cell.z="yyyy-mm-dd";
 
 return;
 
+
 }
 
 
 
+
+
+
+
+// 숫자/문자 날짜 변환
 
 
 let d =
@@ -1226,7 +1359,10 @@ return;
 
 
 
-// 문자 유지
+
+
+// 일반 문자 유지
+
 
 cell.t="s";
 
@@ -1240,9 +1376,12 @@ cell.v=value || "";
 
 
 
+
+
 </script>
 
 
 </body>
 
 </html>
+  
