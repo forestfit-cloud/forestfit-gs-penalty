@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,7 +9,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
+
 <style>
+
 body{
     margin:0;
     padding:0;
@@ -17,10 +20,12 @@ body{
     color:#333;
 }
 
+
 .container{
     width:900px;
     margin:40px auto;
 }
+
 
 .title{
     font-size:28px;
@@ -28,6 +33,7 @@ body{
     text-align:center;
     margin-bottom:30px;
 }
+
 
 .card{
     background:#fff;
@@ -37,26 +43,35 @@ body{
     box-shadow:0 4px 15px rgba(0,0,0,0.08);
 }
 
+
 .label{
     font-weight:700;
     margin-bottom:8px;
     display:block;
 }
 
+
 input[type=file],
 textarea{
+
     width:100%;
     box-sizing:border-box;
     padding:12px;
     border:1px solid #ddd;
     border-radius:10px;
+
 }
+
 
 textarea{
+
     height:100px;
+
 }
 
+
 .btn{
+
     width:100%;
     padding:14px;
     margin-top:10px;
@@ -66,14 +81,20 @@ textarea{
     color:#fff;
     font-weight:bold;
     cursor:pointer;
+
 }
+
 
 .status{
+
     margin-top:15px;
     font-weight:bold;
+
 }
 
+
 </style>
+
 
 </head>
 
@@ -85,20 +106,26 @@ textarea{
 
 
 <div class="title">
-포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5
-</div>
 
+포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5
+
+</div>
 
 
 
 <div class="card">
 
+
 <label class="label">
+
 1. 셀메이트 파일 업로드
+
 </label>
+
 
 <input type="file" id="file1" accept=".xlsx,.xls">
 
+
 </div>
 
 
@@ -107,12 +134,17 @@ textarea{
 
 <div class="card">
 
+
 <label class="label">
+
 2. 브리치 파일 업로드
+
 </label>
+
 
 <input type="file" id="file2" accept=".xlsx,.xls">
 
+
 </div>
 
 
@@ -121,15 +153,20 @@ textarea{
 
 <div class="card">
 
+
 <label class="label">
+
 공휴일 입력
+
 </label>
+
 
 <textarea 
 id="holiday"
 placeholder="예시
 2026-07-17
 한 줄에 하나씩 입력"></textarea>
+
 
 </div>
 
@@ -141,20 +178,26 @@ placeholder="예시
 
 
 <button class="btn" onclick="calculate()">
+
 기존 장기지연 결과 계산
+
 </button>
 
 
 
 <button class="btn" onclick="downloadExcel()">
+
 기존 장기지연 결과 다운로드
+
 </button>
 
 
 
 
 <button class="btn" onclick="downloadBreachFinalExcel()">
+
 브리치 출고준수일 연장 전 주문건 포함 최종 계산 다운로드
+
 </button>
 
 
@@ -178,6 +221,7 @@ let wb1=null;
 
 let wb2=null;
 
+
 let resultData=[];
 
 
@@ -192,6 +236,7 @@ const file=e.target.files[0];
 
 
 if(!file)
+
 return;
 
 
@@ -201,8 +246,11 @@ wb1=XLSX.read(
 await file.arrayBuffer(),
 
 {
+
 type:"array",
+
 cellDates:true
+
 }
 
 );
@@ -224,6 +272,7 @@ const file=e.target.files[0];
 
 
 if(!file)
+
 return;
 
 
@@ -233,8 +282,11 @@ wb2=XLSX.read(
 await file.arrayBuffer(),
 
 {
+
 type:"array",
+
 cellDates:true
+
 }
 
 );
@@ -250,17 +302,24 @@ cellDates:true
 
 
 
-// 공휴일 입력값 정규화 FINAL5 수정
+// FINAL5 공휴일 처리 수정
+// 공백 제거 / 점(.) 날짜 변환
 
 function getHoliday(){
 
 
 return document
+
 .getElementById("holiday")
+
 .value
+
 .split("\n")
+
 .map(v=>v.trim())
+
 .map(v=>v.replace(/\./g,"-"))
+
 .filter(v=>v);
 
 
@@ -273,10 +332,13 @@ return document
 
 
 
+
+
 function dateString(d){
 
 
 if(!(d instanceof Date))
+
 return "";
 
 
@@ -312,8 +374,11 @@ function isHoliday(d){
 
 
 return getHoliday()
+
 .includes(
+
 dateString(d)
+
 );
 
 
@@ -325,10 +390,12 @@ dateString(d)
 
 
 
+
 function addBusinessDays(date,days){
 
 
 if(!date)
+
 return null;
 
 
@@ -344,15 +411,21 @@ while(count<days){
 
 
 d.setDate(
+
 d.getDate()+1
+
 );
 
 
 
 if(
+
 !isWeekend(d)
+
 &&
+
 !isHoliday(d)
+
 ){
 
 
@@ -381,14 +454,19 @@ function safeDate(value){
 
 
 if(
+
 value===null ||
+
 value===undefined ||
+
 value===""
-){
+
+)
 
 return null;
 
-}
+
+
 
 
 
@@ -397,9 +475,13 @@ if(value instanceof Date){
 
 
 return isNaN(value.getTime())
+
 ?
+
 null
+
 :
+
 value;
 
 
@@ -410,7 +492,9 @@ value;
 
 
 
+
 if(typeof value==="number"){
+
 
 
 let x=XLSX.SSF.parse_date_code(value);
@@ -421,9 +505,13 @@ if(x){
 
 
 return new Date(
+
 x.y,
+
 x.m-1,
+
 x.d
+
 );
 
 
@@ -444,17 +532,23 @@ let text=String(value).trim();
 
 
 
-if(
-text==="NaN" ||
-text==="Invalid Date" ||
-text==="입고일 기입 요망"
-){
 
+if(
+
+text==="NaN"
+
+||
+
+text==="Invalid Date"
+
+||
+
+text==="입고일 기입 요망"
+
+)
 
 return null;
 
-
-}
 
 
 
@@ -462,12 +556,19 @@ return null;
 
 
 let match=text.match(
+
 /^(\d{4})-(\d{2})-(\d{2})$/
+
 );
 
 
 
+
+
+
+
 if(match){
+
 
 
 let d=new Date(
@@ -483,13 +584,19 @@ Number(match[3])
 
 
 return isNaN(d.getTime())
+
 ?
+
 null
+
 :
+
 d;
 
 
+
 }
+
 
 
 
@@ -507,20 +614,27 @@ return null;
 
 
 
+
+
 function extractBracket(value){
 
 
 let result=
 
 String(value||"")
+
 .match(/\(([^()]*)\)/);
 
 
 
 return result
+
 ?
+
 result[1]
+
 :
+
 "";
 
 
@@ -532,10 +646,12 @@ result[1]
 
 
 
+
 function cleanOption(value){
 
 
 if(!value)
+
 return "";
 
 
@@ -566,16 +682,23 @@ let map=[];
 
 
 if(!wb2)
+
 return map;
 
 
 
+
+
 let sheet =
+
 wb2.Sheets[wb2.SheetNames[0]];
 
 
 
+
+
 let rows =
+
 XLSX.utils.sheet_to_json(
 
 sheet,
@@ -600,11 +723,15 @@ raw:true
 for(let i=1;i<rows.length;i++){
 
 
+
 let r=rows[i];
 
 
+
 if(!r || !r[1])
+
 continue;
+
 
 
 
@@ -613,19 +740,25 @@ continue;
 map.push({
 
 
+
 orderNo:String(r[1]).trim(),
+
 
 
 channel:String(r[4] || "").trim(),
 
 
+
 product:extractBracket(r[10]),
+
 
 
 option:cleanOption(r[11]),
 
 
+
 shipDate:safeDate(r[19])
+
 
 
 });
@@ -670,6 +803,7 @@ let sameOrder =
 bflowData.filter(v=>
 
 
+
 String(v.orderNo)
 
 ===
@@ -677,7 +811,9 @@ String(v.orderNo)
 String(orderNo)
 
 
+
 );
+
 
 
 
@@ -708,11 +844,13 @@ let match =
 sameOrder.find(v=>
 
 
+
 v.product===product
 
 &&
 
 v.option===option
+
 
 
 );
@@ -745,9 +883,95 @@ null;
 
 
 
+
 // FINAL5 수정
-// 비플로우 L열 판단
-// 주문일 기준 영업일 1~5일만 표시
+// 비플로우 L열 표시 기준
+// 주문일 기준 영업일 1~5일 경과 주문만 표시
+
+
+function getBusinessDayCount(orderDate){
+
+
+
+if(!orderDate)
+
+return 0;
+
+
+
+
+
+
+let today=new Date();
+
+
+
+let temp=new Date(orderDate);
+
+
+
+let count=0;
+
+
+
+
+
+
+
+while(temp < today){
+
+
+
+temp.setDate(
+
+temp.getDate()+1
+
+);
+
+
+
+
+
+
+
+if(
+
+!isWeekend(temp)
+
+&&
+
+!isHoliday(temp)
+
+){
+
+
+
+count++;
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+return count;
+
+
+
+}
+
+
+
+
+
+
+
 
 
 function getProgress(
@@ -774,87 +998,38 @@ if(
 
 !jDate
 
-){
+)
 
 return "";
 
-}
 
 
 
 
 
 
-let today=new Date();
+let diff=
 
-
-
-let diff=0;
-
-
-
-let temp=new Date(orderDate);
+getBusinessDayCount(orderDate);
 
 
 
 
 
 
-while(temp<today){
-
-
-
-temp.setDate(
-
-temp.getDate()+1
-
-);
-
-
-
+// 이미 연장된 주문건 제외
 
 if(
 
-!isWeekend(temp)
-
-&&
-
-!isHoliday(temp)
-
-){
-
-
-diff++;
-
-
-}
-
-
-
-}
-
-
-
-
-
-
-
-if(
-
-diff<1
+diff < 1
 
 ||
 
-diff>5
+diff > 5
 
-){
-
+)
 
 return "";
-
-
-}
-
 
 
 
@@ -893,6 +1068,8 @@ addDay=14;
 
 
 
+
+
 else if(
 
 channel==="카카오스타일"
@@ -909,6 +1086,8 @@ addDay=7;
 
 
 
+
+
 else if(
 
 channel==="CJ몰"
@@ -920,6 +1099,8 @@ addDay=3;
 
 
 }
+
+
 
 
 
@@ -943,8 +1124,6 @@ return `${channel} 출고예정일 연장 불가`;
 
 
 
-
-
 else{
 
 
@@ -956,7 +1135,9 @@ return "";
 
 
 
-let extendDate =
+
+
+let extendDate=
 
 addBusinessDays(
 
@@ -975,8 +1156,6 @@ return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate
 
 
 
-
-
 }
 
 
@@ -992,9 +1171,12 @@ function calculate(){
 
 if(!wb1){
 
+
 alert("셀메이트 파일을 업로드해주세요.");
 
+
 return;
+
 
 }
 
@@ -1002,7 +1184,8 @@ return;
 
 
 
-let bflowData =
+
+let bflowData=
 
 createBflowMap();
 
@@ -1010,7 +1193,9 @@ createBflowMap();
 
 
 
-let sheet =
+
+
+let sheet=
 
 wb1.Sheets[wb1.SheetNames[0]];
 
@@ -1019,7 +1204,8 @@ wb1.Sheets[wb1.SheetNames[0]];
 
 
 
-let rows =
+
+let rows=
 
 XLSX.utils.sheet_to_json(
 
@@ -1042,7 +1228,6 @@ raw:true
 
 
 
-
 resultData=[];
 
 
@@ -1051,6 +1236,7 @@ resultData=[];
 
 
 resultData.push([
+
 
 
 "주문일자",
@@ -1098,6 +1284,7 @@ for(let i=1;i<rows.length;i++){
 let r=rows[i];
 
 
+
 if(!r)
 
 continue;
@@ -1107,7 +1294,7 @@ continue;
 
 
 
-let orderDate =
+let orderDate=
 
 safeDate(r[0]);
 
@@ -1115,7 +1302,8 @@ safeDate(r[0]);
 
 
 
-let inboundDate =
+
+let inboundDate=
 
 safeDate(r[8]);
 
@@ -1123,7 +1311,8 @@ safeDate(r[8]);
 
 
 
-let seller =
+
+let seller=
 
 String(r[2] || "").trim();
 
@@ -1131,7 +1320,8 @@ String(r[2] || "").trim();
 
 
 
-let product =
+
+let product=
 
 extractBracket(r[6]);
 
@@ -1139,9 +1329,11 @@ extractBracket(r[6]);
 
 
 
-let option =
+
+let option=
 
 cleanOption(r[7]);
+
 
 
 
@@ -1155,10 +1347,13 @@ let jDate=null;
 
 
 
+
+
 if(seller==="비플로우"){
 
 
-jDate =
+
+jDate=
 
 findBflowDate(
 
@@ -1180,6 +1375,8 @@ bflowData
 
 
 
+
+
 else if(
 
 seller==="퀸잇"
@@ -1188,7 +1385,7 @@ seller==="퀸잇"
 
 
 
-jDate =
+jDate=
 
 addBusinessDays(
 
@@ -1216,7 +1413,7 @@ seller==="하프클럽"
 
 
 
-jDate =
+jDate=
 
 addBusinessDays(
 
@@ -1249,6 +1446,8 @@ seller==="롯데ON"
 ||
 
 seller==="카카오톡스토어"
+
+
 
 ){
 
@@ -1283,7 +1482,8 @@ jDate.getMonth()+1
 
 
 
-let iValue =
+
+let iValue=
 
 inboundDate
 
@@ -1301,7 +1501,9 @@ inboundDate
 
 
 
+
 let lValue="";
+
 
 
 
@@ -1313,7 +1515,7 @@ if(seller==="비플로우"){
 
 
 
-let bMatch =
+let bMatch=
 
 bflowData.find(v=>
 
@@ -1325,15 +1527,11 @@ String(v.orderNo)
 
 String(r[3])
 
-
 &&
-
 
 v.product===product
 
-
 &&
-
 
 v.option===option
 
@@ -1351,7 +1549,7 @@ if(bMatch){
 
 
 
-lValue =
+lValue=
 
 getProgress(
 
@@ -1370,6 +1568,7 @@ jDate
 
 
 }
+
 
 
 
@@ -1422,7 +1621,7 @@ lValue,
 
 
 
-document.getElementById("status").innerText =
+document.getElementById("status").innerText=
 
 
 "기존 계산 완료 : "
@@ -1445,16 +1644,20 @@ document.getElementById("status").innerText =
 
 
 
-// 브리치 포함 최종 데이터 생성
+
+// 브리치 포함 최종 계산
 // 기존 결과 구조 유지
 
 
 function createBreachFinalData(){
 
 
-let finalData =
+
+let finalData=
 
 resultData.map(row=>[...row]);
+
+
 
 
 
@@ -1469,9 +1672,10 @@ return finalData;
 
 
 
-let bflowData =
+let bflowData=
 
 createBflowMap();
+
 
 
 
@@ -1490,9 +1694,11 @@ finalData[i];
 
 
 
+
 let orderNo=
 
 String(row[3]).trim();
+
 
 
 
@@ -1504,6 +1710,7 @@ let match=
 bflowData.find(v=>
 
 
+
 String(v.orderNo)
 
 ===
@@ -1511,7 +1718,9 @@ String(v.orderNo)
 orderNo
 
 
+
 );
+
 
 
 
@@ -1522,7 +1731,7 @@ if(match && match.shipDate){
 
 
 
-let extendDate =
+let extendDate=
 
 addBusinessDays(
 
@@ -1531,6 +1740,8 @@ match.shipDate,
 14
 
 );
+
+
 
 
 
@@ -1555,6 +1766,7 @@ row[11]=
 
 
 }
+
 
 
 
@@ -1586,13 +1798,15 @@ return;
 
 
 
-let ws =
+
+let ws=
 
 XLSX.utils.aoa_to_sheet(
 
 resultData
 
 );
+
 
 
 
@@ -1671,8 +1885,7 @@ wb,
 
 
 
-
-// 브리치 포함 최종 계산 다운로드
+// 브리치 출고준수일 연장 전 주문건 포함 최종 계산 다운로드
 
 function downloadBreachFinalExcel(){
 
@@ -1681,7 +1894,6 @@ if(resultData.length===0){
 
 
 alert("기존 계산 먼저 실행해주세요.");
-
 
 return;
 
@@ -1694,7 +1906,7 @@ return;
 
 
 
-let finalData =
+let finalData=
 
 createBreachFinalData();
 
@@ -1703,7 +1915,7 @@ createBreachFinalData();
 
 
 
-let ws =
+let ws=
 
 XLSX.utils.aoa_to_sheet(
 
@@ -1750,6 +1962,7 @@ XLSX.utils.book_new();
 
 
 
+
 XLSX.utils.book_append_sheet(
 
 wb,
@@ -1788,9 +2001,10 @@ wb,
 
 
 
-// A/I/J 날짜 저장 처리
+// 날짜 셀 정상 처리
 
 function applyDateFormat(ws){
+
 
 
 let range=
@@ -1832,6 +2046,8 @@ ws["A"+(r+1)]?.v
 
 
 
+
+
 setDateCell(
 
 ws,
@@ -1841,6 +2057,8 @@ ws,
 ws["I"+(r+1)]?.v
 
 );
+
+
 
 
 
@@ -1874,9 +2092,8 @@ ws["J"+(r+1)]?.v
 
 
 // K열 수식
-
-// L열 연장 날짜 있으면 L 기준
-// 없으면 기존 J 기준
+// L열 연장시 날짜 존재 → L 기준
+// L열 없음 → 기존 J 기준 유지
 
 
 function applyFormulaK(ws){
@@ -1916,6 +2133,7 @@ let row=r+1;
 
 
 
+
 ws["K"+row]={
 
 
@@ -1945,7 +2163,6 @@ IF(OR(ISTEXT(I${row}),I${row}>J${row}),
 
 
 };
-
 
 
 
@@ -1981,7 +2198,6 @@ rgb:"FFD9D9D9"
 
 
 }
-
 
 
 },
@@ -2020,8 +2236,6 @@ vertical:"center"
 
 
 
-
-
 for(let c=0;c<13;c++){
 
 
@@ -2037,6 +2251,7 @@ c:c
 
 
 });
+
 
 
 
@@ -2062,6 +2277,8 @@ headerStyle;
 
 
 
+
+
 Object.keys(ws).forEach(key=>{
 
 
@@ -2074,13 +2291,18 @@ return;
 
 
 
+
 if(!ws[key].s){
+
 
 
 ws[key].s={};
 
 
+
 }
+
+
 
 
 
@@ -2104,6 +2326,8 @@ vertical:"center"
 
 
 
+
+
 }
 
 
@@ -2116,7 +2340,7 @@ vertical:"center"
 
 
 
-// I열 입고일 기입 요망 빨간색
+// I열 입고일 기입 요망 표시
 
 function applyInputDateStyle(ws){
 
@@ -2129,6 +2353,7 @@ XLSX.utils.decode_range(
 ws["!ref"]
 
 );
+
 
 
 
@@ -2150,6 +2375,8 @@ r++
 let cell=
 
 ws["I"+(r+1)];
+
+
 
 
 
@@ -2224,7 +2451,9 @@ vertical:"center"
 
 
 
-// K열 출고불가 빨간색 굵게
+
+
+// K열 출고불가 빨간색 표시
 
 function applyKRedStyle(ws){
 
@@ -2328,7 +2557,6 @@ vertical:"center"
 
 
 
-
 function setDateCell(
 
 ws,
@@ -2347,9 +2575,13 @@ ws[address];
 
 
 
+
+
+
 if(!cell)
 
 return;
+
 
 
 
@@ -2370,7 +2602,9 @@ cell.t="s";
 cell.v=value;
 
 
+
 return;
+
 
 
 }
@@ -2413,10 +2647,12 @@ return;
 
 
 
-
 let d=
 
 safeDate(value);
+
+
+
 
 
 
