@@ -41,7 +41,7 @@ margin:0 0 10px;
 
 
 
-.sub-title{
+.subtitle{
 
 color:#777;
 
@@ -51,7 +51,8 @@ margin-bottom:30px;
 
 
 
-.top-area{
+
+.header-area{
 
 display:flex;
 
@@ -65,6 +66,7 @@ margin-bottom:25px;
 
 
 
+
 button{
 
 border:none;
@@ -75,9 +77,7 @@ padding:12px 20px;
 
 cursor:pointer;
 
-font-size:14px;
-
-font-weight:700;
+font-weight:bold;
 
 }
 
@@ -115,7 +115,7 @@ color:white;
 
 .delete-btn{
 
-background:#eeeeee;
+background:#eee;
 
 color:#777;
 
@@ -157,6 +157,7 @@ margin-bottom:20px;
 
 
 
+
 .grid{
 
 display:grid;
@@ -167,6 +168,8 @@ repeat(2,1fr);
 gap:20px;
 
 }
+
+
 
 
 
@@ -182,13 +185,16 @@ gap:8px;
 
 
 
+
+
 label{
 
 font-size:14px;
 
-font-weight:700;
+font-weight:bold;
 
 }
+
 
 
 
@@ -210,18 +216,9 @@ font-size:14px;
 
 textarea{
 
-height:180px;
+height:200px;
 
 resize:none;
-
-}
-
-
-
-
-.full{
-
-margin-top:20px;
 
 }
 
@@ -232,26 +229,16 @@ margin-top:20px;
 
 background:#faf8f3;
 
-border-radius:12px;
-
 padding:15px;
 
-margin-top:20px;
+border-radius:12px;
 
 color:#666;
 
-font-size:14px;
+margin-top:20px;
 
 }
 
-
-
-
-.result-area{
-
-margin-top:30px;
-
-}
 
 
 
@@ -263,16 +250,16 @@ border-radius:20px;
 
 padding:25px;
 
-min-height:150px;
+margin-top:20px;
 
-box-shadow:
-0 10px 25px rgba(0,0,0,.06);
+min-height:150px;
 
 }
 
 
 
-.option-table{
+
+table{
 
 width:100%;
 
@@ -284,14 +271,52 @@ margin-top:20px;
 
 
 
-.option-table th,
-.option-table td{
+th,
+td{
 
 border:1px solid #ddd;
 
 padding:10px;
 
 text-align:center;
+
+}
+
+
+
+.popup{
+
+display:none;
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:100%;
+
+background:rgba(0,0,0,.4);
+
+align-items:center;
+
+justify-content:center;
+
+}
+
+
+
+.popup-inner{
+
+background:white;
+
+padding:30px;
+
+border-radius:20px;
+
+width:500px;
 
 }
 
@@ -306,19 +331,22 @@ text-align:center;
 <body>
 
 
+<h1>
+📦 재고장 생성 툴
+</h1>
 
-<h1>📦 재고장 생성 툴</h1>
 
+<div class="subtitle">
 
-<div class="sub-title">
-
-거래처 재고표 입력 → 상품 옵션 분석 → 재고장 자동 생성
+거래처 재고표 입력 → 자동 분석 → 재고장 생성
 
 </div>
 
 
 
-<div class="top-area">
+
+
+<div class="header-area">
 
 
 <button class="add-btn"
@@ -329,15 +357,17 @@ onclick="addProduct()">
 </button>
 
 
+
 <button class="download-btn"
 onclick="downloadExcel()">
 
-📥 재고장 엑셀 다운로드
+📥 엑셀 다운로드
 
 </button>
 
 
 </div>
+
 
 
 
@@ -349,30 +379,8 @@ onclick="downloadExcel()">
 
 
 
-<div class="result-area">
 
-
-<h2>
-
-📋 재고장 미리보기
-
-</h2>
-
-
-
-<div id="resultBox"
-class="result-box">
-
-상품 분석 후 결과가 표시됩니다.
-
-</div>
-
-
-</div>
-
-
-
-<div style="text-align:center;margin-top:30px;">
+<div style="text-align:center;margin-top:20px;">
 
 
 <button class="analyze-btn"
@@ -385,19 +393,76 @@ onclick="analyzeAll()">
 
 </div>
 
-    <script>
-
-
-let productCount = 0;
-
-
-// 상품 데이터 저장
-let products = [];
 
 
 
 
-// 상품 추가
+<h2>
+📋 재고장 미리보기
+</h2>
+
+
+<div id="resultBox"
+class="result-box">
+
+분석 후 결과가 표시됩니다.
+
+</div>
+
+
+
+
+
+<!-- 확인 팝업 -->
+
+<div id="popup"
+class="popup">
+
+
+<div class="popup-inner">
+
+
+<h3 id="popupTitle">
+
+</h3>
+
+
+<div id="popupContent">
+
+</div>
+
+
+<br>
+
+
+<button onclick="closePopup()">
+
+확인
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+let productCount=0;
+
+
+let products=[];
+
+
+let resultData=[];
+
+
 
 function addProduct(){
 
@@ -405,23 +470,23 @@ function addProduct(){
 productCount++;
 
 
-const area =
+let area=
 document.getElementById("productArea");
 
 
 
-const card =
+let card=
 document.createElement("div");
 
 
 card.className="card";
 
 
-card.dataset.id = productCount;
+card.dataset.id=productCount;
 
 
 
-card.innerHTML = `
+card.innerHTML=`
 
 
 <div class="card-header">
@@ -434,7 +499,9 @@ card.innerHTML = `
 
 <button class="delete-btn"
 onclick="deleteProduct(this)">
+
 삭제
+
 </button>
 
 
@@ -451,12 +518,11 @@ onclick="deleteProduct(this)">
 
 
 <label>
-상품명 (셀메이트 상품명)
+셀메이트 상품명
 </label>
 
 
-<input 
-class="productName"
+<input class="product-name"
 placeholder="예) 여름노컷진14탄">
 
 
@@ -477,7 +543,7 @@ placeholder="예) 여름노컷진14탄">
 
 
 <option value="">
-거래처 선택
+선택
 </option>
 
 
@@ -516,16 +582,6 @@ placeholder="예) 여름노컷진14탄">
 </option>
 
 
-<option value="jinmoney">
-진머니
-</option>
-
-
-<option value="adorable">
-아도라블
-</option>
-
-
 <option value="direct">
 직접입력
 </option>
@@ -543,70 +599,38 @@ placeholder="예) 여름노컷진14탄">
 
 
 
-<div class="input-box full">
+<div class="input-box"
+style="margin-top:20px;">
 
 
 <label>
-사입 상품명 입력
+사입 상품명
 </label>
 
 
 <textarea
-class="stockName"
-
-placeholder="
-재고표 그대로 붙여넣기
-
-예)
-
-2.LC-1084-A1
-2.LC-1084-A1SH
-2.LC-1084-A1LONG
-
-
-또는
-
-BA-1025-#1(Blue)-S
-
-"></textarea>
+class="stock-code"
+placeholder="재고표 그대로 붙여넣기"></textarea>
 
 
 </div>
-
 
 
 
 
 <div class="notice">
 
-💡 분석 버튼 클릭 시
-색상 / 기장 / 사이즈 패턴을 자동 확인합니다.
+색상 / 기장 / 사이즈 패턴을 자동 분석합니다.
 
 </div>
 
-
-
-
-
-<div style="margin-top:20px;">
-
-
-<button class="analyze-btn"
-onclick="analyzeProduct(this)">
-
-🔍 이 상품 분석
-
-</button>
-
-
-</div>
 
 
 `;
 
 
-area.appendChild(card);
 
+area.appendChild(card);
 
 
 }
@@ -614,30 +638,86 @@ area.appendChild(card);
 
 
 
-
-
-// 상품 삭제
 
 function deleteProduct(btn){
 
 
-const card =
-btn.closest(".card");
+btn.closest(".card").remove();
 
 
-const id =
-card.dataset.id;
-
-
-
-products =
-products.filter(
-p=>p.id != id
-);
+}
 
 
 
-card.remove();
+function closePopup(){
+
+document.getElementById("popup").style.display="none";
+
+}
+// ================================
+// 상품 분석
+// ================================
+
+
+function analyzeAll(){
+
+
+resultData=[];
+
+
+
+let cards =
+document.querySelectorAll(".card");
+
+
+
+cards.forEach(card=>{
+
+
+let productName =
+card.querySelector(".product-name").value;
+
+
+
+let company =
+card.querySelector(".company").value;
+
+
+
+let codes =
+card.querySelector(".stock-code")
+.value
+.split("\n")
+.map(v=>v.trim())
+.filter(v=>v);
+
+
+
+codes.forEach(code=>{
+
+
+let data =
+parseCode(company,code);
+
+
+
+data.productName =
+productName;
+
+
+resultData.push(data);
+
+
+
+});
+
+
+
+});
+
+
+
+showResult();
 
 
 }
@@ -648,84 +728,467 @@ card.remove();
 
 
 
-// 상품 분석
-
-function analyzeProduct(btn){
-
-
-const card =
-btn.closest(".card");
+// ================================
+// 거래처 분석
+// ================================
 
 
-
-const data = {
-
-
-id:
-card.dataset.id,
+function parseCode(company,code){
 
 
-productName:
-card.querySelector(".productName").value,
+
+switch(company){
 
 
-company:
-card.querySelector(".company").value,
+case "lizard":
+
+return analyzeLizard(code);
 
 
-stockNames:
-card.querySelector(".stockName")
-.value
-.split("\n")
-.map(v=>v.trim())
-.filter(v=>v)
+
+case "kdg":
+
+return analyzeKdg(code);
+
+
+
+case "norunja":
+
+return analyzeNorunja(code);
+
+
+
+case "sinabro":
+
+return analyzeSinabro(code);
+
+
+
+case "remind":
+
+return analyzeRemind(code);
+
+
+
+case "newhang":
+
+return analyzeNewhang(code);
+
+
+
+case "shinan":
+
+return analyzeShinan(code);
+
+
+
+default:
+
+
+return {
+
+code:code,
+
+color:"확인필요",
+
+length:"확인필요",
+
+size:"확인필요"
+
+};
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+// ================================
+// 리자드
+// ================================
+
+
+function analyzeLizard(code){
+
+
+let length="기본";
+
+
+if(code.includes("SH"))
+length="숏";
+
+
+if(code.includes("LONG"))
+length="롱";
+
+
+
+let temp =
+code
+.replace("LONG","")
+.replace("SH","");
+
+
+
+let arr =
+temp.split("-");
+
+
+
+return {
+
+
+code:code,
+
+
+color:
+arr[arr.length-1],
+
+
+length:length,
+
+
+size:""
 
 
 };
 
 
 
-console.log(data);
+}
 
 
 
-products.push(data);
 
 
 
-document.getElementById("resultBox").innerHTML = `
+
+// ================================
+// 케이디지
+// ================================
 
 
-<h3>
-🔎 분석 준비 완료
-</h3>
+function analyzeKdg(code){
 
 
-상품명 :
-${data.productName || "미입력"}
-
-<br><br>
+let length="기본";
 
 
-거래처 :
-${data.company || "미선택"}
-
-<br><br>
+if(code.includes("SH"))
+length="숏";
 
 
-입력 상품 수 :
-${data.stockNames.length}건
+if(code.includes("LO"))
+length="롱";
 
 
-<br><br>
+
+let temp =
+code
+.replace("SH","")
+.replace("LO","");
 
 
-다음 단계에서
 
-색상 / 기장 / 사이즈 자동 분석됩니다.
+return {
 
 
-`;
+code:code,
+
+
+color:
+temp.split("-").pop(),
+
+
+length:length,
+
+
+size:""
+
+
+};
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 노른자
+// ================================
+
+
+function analyzeNorunja(code){
+
+
+let length="기본";
+
+
+if(code.endsWith("SH"))
+length="숏";
+
+
+if(code.endsWith("LO"))
+length="롱";
+
+
+
+let temp =
+code
+.replace("SH","")
+.replace("LO","");
+
+
+
+return {
+
+
+code:code,
+
+
+color:
+temp.split("-").pop(),
+
+
+length:length,
+
+
+size:""
+
+
+};
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 시나브로
+// ================================
+
+
+function analyzeSinabro(code){
+
+
+return {
+
+
+code:code,
+
+
+color:"확인필요",
+
+
+length:
+code.endsWith("-1")
+?
+"확인필요"
+:
+"기본",
+
+
+size:""
+
+
+};
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 리마인드
+// ================================
+
+
+function analyzeRemind(code){
+
+
+let length="기본";
+
+
+if(code.includes("(숏)"))
+length="숏";
+
+
+if(code.includes("(롱)"))
+length="롱";
+
+
+
+return {
+
+
+code:code,
+
+
+color:"확인필요",
+
+
+length:length,
+
+
+size:""
+
+
+};
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 뉴행
+// ================================
+
+
+function analyzeNewhang(code){
+
+
+let length="기본";
+
+
+if(code.includes("-SH"))
+length="숏";
+
+
+if(code.includes("-LO"))
+length="롱";
+
+
+
+return {
+
+
+code:code,
+
+
+color:"확인필요",
+
+
+length:length,
+
+
+size:""
+
+
+};
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 신안
+// ================================
+
+
+function analyzeShinan(code){
+
+
+
+let length="기본";
+
+
+
+if(code.startsWith("롱"))
+length="롱";
+
+
+
+if(code.startsWith("숏"))
+length="숏";
+
+
+
+
+
+let color="";
+
+
+
+let colorMatch =
+code.match(/#\d+\((.*?)\)/);
+
+
+
+if(colorMatch){
+
+color=colorMatch[1];
+
+}
+
+
+
+
+
+
+let size="";
+
+
+
+let sizeMatch =
+code.match(/-(S|M|L|XL|2XL|3XL)$/);
+
+
+
+if(sizeMatch){
+
+size=sizeMatch[1];
+
+}
+
+
+
+
+return {
+
+
+code:code,
+
+
+color:color,
+
+
+length:length,
+
+
+size:size
+
+
+};
 
 
 
@@ -737,15 +1200,281 @@ ${data.stockNames.length}건
 
 
 
-// 전체 분석
-
-function analyzeAll(){
-
-
-if(products.length===0){
+// ================================
+// 결과 출력
+// ================================
 
 
-alert("상품을 먼저 분석해주세요.");
+function showResult(){
+
+
+
+let html=`
+
+
+<table>
+
+
+<tr>
+
+<th>상품명</th>
+
+<th>사입명</th>
+
+<th>컬러</th>
+
+<th>기장</th>
+
+<th>사이즈</th>
+
+
+</tr>
+
+
+`;
+
+
+
+resultData.forEach(item=>{
+
+
+html+=`
+
+
+<tr>
+
+<td>${item.productName}</td>
+
+<td>${item.code}</td>
+
+<td>${item.color}</td>
+
+<td>${item.length}</td>
+
+<td>${item.size}</td>
+
+
+</tr>
+
+
+`;
+
+
+});
+
+
+
+html+="</table>";
+
+
+
+document.getElementById("resultBox")
+.innerHTML=html;
+
+
+
+}
+// ================================
+// 확인 필요 데이터 체크
+// ================================
+
+
+function checkNeedConfirm(){
+
+
+let needColor=[];
+
+let needLength=[];
+
+
+
+resultData.forEach(item=>{
+
+
+if(item.color==="확인필요"){
+
+needColor.push(item.code);
+
+}
+
+
+
+if(item.length==="확인필요"){
+
+needLength.push(item.code);
+
+}
+
+
+});
+
+
+
+
+
+if(
+needColor.length>0 ||
+needLength.length>0
+){
+
+
+openPopup(
+"⚠️ 확인 필요한 옵션이 있습니다",
+`
+색상 확인 :
+${needColor.join("<br>") || "없음"}
+
+<br><br>
+
+기장 확인 :
+${needLength.join("<br>") || "없음"}
+`
+);
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+// ================================
+// 팝업
+// ================================
+
+
+function openPopup(title,content){
+
+
+document.getElementById("popupTitle")
+.innerHTML=title;
+
+
+
+document.getElementById("popupContent")
+.innerHTML=content;
+
+
+
+document.getElementById("popup")
+.style.display="flex";
+
+
+}
+
+
+
+
+
+
+
+// ================================
+// 재고장 생성
+// ================================
+
+
+function makeStockTable(){
+
+
+
+let html=`
+
+
+<table>
+
+
+<tr>
+
+<th>상품명</th>
+
+<th>컬러</th>
+
+<th>사입명</th>
+
+<th>기장</th>
+
+<th>사이즈</th>
+
+
+</tr>
+
+
+`;
+
+
+
+
+
+resultData.forEach(item=>{
+
+
+html+=`
+
+<tr>
+
+<td>${item.productName}</td>
+
+<td>${item.color}</td>
+
+<td>${item.code}</td>
+
+<td>${item.length}</td>
+
+<td>${item.size}</td>
+
+
+</tr>
+
+
+`;
+
+
+
+});
+
+
+
+
+html+="</table>";
+
+
+
+document.getElementById("resultBox")
+.innerHTML=html;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// ================================
+// 엑셀 다운로드
+// ================================
+
+
+function downloadExcel(){
+
+
+
+if(resultData.length===0){
+
+
+alert("먼저 분석해주세요.");
 
 return;
 
@@ -754,8 +1483,12 @@ return;
 
 
 
+makeStockTable();
+
+
+
 alert(
-"전체 분석 기능 연결 예정"
+"재고장 데이터 생성 완료\n(엑셀 다운로드 기능 연결 예정)"
 );
 
 
@@ -768,33 +1501,38 @@ alert(
 
 
 
-// 엑셀 다운로드
 
-function downloadExcel(){
+// 분석 완료 후 확인
+
+const originalAnalyzeAll = analyzeAll;
 
 
-alert(
-"엑셀 생성 기능 연결 예정"
-);
+
+analyzeAll = function(){
+
+
+originalAnalyzeAll();
+
+
+setTimeout(()=>{
+
+
+checkNeedConfirm();
+
+
+
+},300);
 
 
 }
 
-
-
-
-
-
-// 최초 상품 생성
-
-addProduct();
 
 
 
 </script>
 
 
-
 </body>
+
 
 </html>
