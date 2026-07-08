@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -9,11 +10,12 @@
 
 
 <title>
-FORESTFIT 장기지연 납기 자동 관리 시스템 V64 FINAL11 FIX
+FORESTFIT 장기지연 납기 자동 관리 시스템 V64 FINAL11 FIX3
 </title>
 
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
+
 
 
 <style>
@@ -80,7 +82,7 @@ body{
 
 .header h1{
 
-    margin:12px 0 10px;
+    margin:12px 0;
 
     font-size:30px;
 
@@ -94,8 +96,6 @@ body{
 
     opacity:0.6;
 
-    margin-left:8px;
-
 }
 
 
@@ -105,8 +105,6 @@ body{
     margin:0;
 
     color:#ddd;
-
-    font-size:14px;
 
 }
 
@@ -148,17 +146,17 @@ body{
 
     height:34px;
 
-    border-radius:50%;
-
     background:#222;
 
-    color:#fff;
+    color:white;
+
+    border-radius:50%;
 
     display:flex;
 
-    justify-content:center;
-
     align-items:center;
+
+    justify-content:center;
 
     font-weight:bold;
 
@@ -170,7 +168,7 @@ body{
 
     font-size:18px;
 
-    font-weight:700;
+    font-weight:bold;
 
 }
 
@@ -198,9 +196,9 @@ textarea{
 
     padding:12px;
 
-    border-radius:10px;
-
     border:1px solid #ddd;
+
+    border-radius:10px;
 
 }
 
@@ -209,8 +207,6 @@ textarea{
 .file-name{
 
     margin-top:10px;
-
-    font-size:14px;
 
     color:#555;
 
@@ -228,9 +224,9 @@ textarea{
 
     border-radius:12px;
 
-    line-height:1.7;
-
     font-size:14px;
+
+    line-height:1.7;
 
 }
 
@@ -262,9 +258,9 @@ textarea{
 
     color:white;
 
-    font-size:16px;
-
     font-weight:bold;
+
+    font-size:16px;
 
     cursor:pointer;
 
@@ -278,9 +274,9 @@ textarea{
 
     padding:15px;
 
-    border-radius:10px;
-
     background:#f5f5f5;
+
+    border-radius:10px;
 
     font-weight:bold;
 
@@ -307,13 +303,14 @@ FORESTFIT INTERNAL TOOL
 </div>
 
 
+
 <h1>
 
 장기지연 납기 자동 관리 시스템
 
 <span class="version">
 
-V64 FINAL11 FIX
+V64 FINAL11 FIX3
 
 </span>
 
@@ -323,13 +320,14 @@ V64 FINAL11 FIX
 
 <p>
 
-셀메이트 · 비플로우 · 더소재 데이터를 자동 매칭하여
-출고준수일과 장기지연 건을 관리합니다.
+셀메이트 주문과 출고준수일 데이터를 자동 매칭합니다.
 
 </p>
 
 
 </div>
+
+
 
 
 
@@ -356,7 +354,6 @@ V64 FINAL11 FIX
 
 
 
-
 <div class="file-box">
 
 
@@ -372,8 +369,6 @@ accept=".xlsx,.xls"
 선택된 파일 없음
 
 </div>
-
-
 
 
 
@@ -451,19 +446,19 @@ accept=".xlsx,.xls"
 <br><br>
 
 
-5. 확장필터에서 출고불가 필터 적용
+5. 확장필터 → 출고불가 적용
 
 
 <br><br>
 
 
-6. 조회 후 [장기지연건] 양식 다운로드
+6. [장기지연건] 양식 다운로드
 
 
 <br><br>
 
 
-7. 다운로드한 파일 첨부
+7. 다운로드 파일 첨부
 
 
 </div>
@@ -481,15 +476,16 @@ accept=".xlsx,.xls"
 
 
 
+
+
 <div class="card">
 
 
 <div class="step">
 
+
 <div class="step-number">
-
 2
-
 </div>
 
 
@@ -501,6 +497,8 @@ accept=".xlsx,.xls"
 
 
 </div>
+
+
 
 
 <div class="file-box">
@@ -521,78 +519,6 @@ accept=".xlsx,.xls"
 
 
 
-<details class="guide">
-
-
-<summary>
-
-📌 비플로우 첨부 파일 다운로드 방법
-
-</summary>
-
-
-<div>
-
-
-1. 비플로우 접속
-
-<br>
-
-2. 판매관리 메뉴 클릭
-
-<br>
-
-3. 주문조회 클릭
-
-
-<br><br>
-
-
-4. 주문상태 선택
-
-<br>
-
-- 배송지연
-
-<br>
-
-- 배송준비
-
-
-<br><br>
-
-
-5. 조회기간 설정
-
-<br>
-
-- 시작일 : 3개월 전
-
-<br>
-
-- 종료일 : 조회일 기준 평일 2~5일 전
-
-
-<br><br>
-
-
-6. 검색 버튼 클릭
-
-<br>
-
-7. 파일 다운로드
-
-<br>
-
-8. 다운로드한 파일 첨부
-
-
-</div>
-
-
-</details>
-
-
 </div>
 
 
@@ -606,9 +532,7 @@ accept=".xlsx,.xls"
 
 
 <div class="step-number">
-
 3
-
 </div>
 
 
@@ -643,6 +567,7 @@ accept=".xlsx,.xls"
 
 
 
+
 <details class="guide">
 
 
@@ -653,11 +578,10 @@ accept=".xlsx,.xls"
 </summary>
 
 
-
 <div>
 
 
-※ 비플로우 파일과 동일한 방법으로 다운로드해주세요.
+※ 셀메이트 C열 판매처가 "비플로우(더소재)"인 경우 해당 파일에서 주문번호를 찾습니다.
 
 
 <br><br>
@@ -707,15 +631,11 @@ accept=".xlsx,.xls"
 
 6. 검색 버튼 클릭
 
-
-<br><br>
-
+<br>
 
 7. 파일 다운로드
 
-
-<br><br>
-
+<br>
 
 8. 다운로드한 파일 첨부
 
@@ -747,9 +667,7 @@ accept=".xlsx,.xls"
 
 
 <div class="step-number">
-
 📅
-
 </div>
 
 
@@ -787,9 +705,7 @@ id="todayDate"
 
 
 <div class="step-number">
-
 📌
-
 </div>
 
 
@@ -876,6 +792,7 @@ id="status"
 
 
 
+
 </div>
 
 
@@ -887,13 +804,14 @@ id="status"
 
 let wbCellmate=null;
 
+
 let wbBflow=null;
+
 
 let wbTheSoje=null;
 
 
 let resultData=[];
-
 
 
 
@@ -921,13 +839,11 @@ return;
 
 
 
-
 document
 
 .getElementById("cellmateName")
 
 .innerText=file.name;
-
 
 
 
@@ -982,13 +898,11 @@ return;
 
 
 
-
 document
 
 .getElementById("bflowName")
 
 .innerText=file.name;
-
 
 
 
@@ -1043,13 +957,11 @@ return;
 
 
 
-
 document
 
 .getElementById("theSojeName")
 
 .innerText=file.name;
-
 
 
 
@@ -1366,10 +1278,6 @@ text.match(
 
 
 
-
-
-
-
 if(match){
 
 
@@ -1399,6 +1307,7 @@ null
 d;
 
 
+
 }
 
 
@@ -1407,7 +1316,6 @@ return null;
 
 
 }
-
 
 
 function extractBracket(value){
@@ -1476,43 +1384,23 @@ return String(value)
 
 
 
-// 비플로우 + 비플로우(더소재) 통합
+// 출고준수일 파일 데이터 생성
 
-function createShippingMap(){
-
-
-let map=[];
+function createShippingData(wb){
 
 
-let files=[];
+let data=[];
 
 
 
+if(!wb)
 
-
-
-
-if(wbBflow)
-
-files.push(wbBflow);
+return data;
 
 
 
 
 
-
-
-if(wbTheSoje)
-
-files.push(wbTheSoje);
-
-
-
-
-
-
-
-files.forEach(wb=>{
 
 
 let sheet=
@@ -1567,7 +1455,7 @@ continue;
 
 
 
-map.push({
+data.push({
 
 
 
@@ -1575,9 +1463,7 @@ orderNo:String(r[1]).trim(),
 
 
 
-channel:String(r[4] || "").trim()
-.replace("비플로우(더소재)","비플로우")
-.replace("더소재","비플로우"),
+channel:String(r[4]||"").trim(),
 
 
 
@@ -1601,15 +1487,7 @@ shipDate:safeDate(r[19])
 
 
 
-});
-
-
-
-
-
-
-
-return map;
+return data;
 
 
 }
@@ -1622,7 +1500,9 @@ return map;
 
 
 
-function findShippingDate(
+// 주문번호 + 상품 + 옵션 매칭
+
+function findShippingData(
 
 orderNo,
 
@@ -1630,15 +1510,15 @@ product,
 
 option,
 
-shippingData
+data
 
 ){
 
 
 
-let sameOrder=
+let result=
 
-shippingData.filter(v=>
+data.filter(v=>
 
 
 
@@ -1658,7 +1538,7 @@ String(orderNo)
 
 
 
-if(sameOrder.length===0)
+if(result.length===0)
 
 return null;
 
@@ -1668,19 +1548,17 @@ return null;
 
 
 
-if(sameOrder.length===1)
+if(result.length===1)
 
-return sameOrder[0].shipDate;
-
-
+return result[0];
 
 
 
 
 
-let match=
 
-sameOrder.find(v=>
+
+return result.find(v=>
 
 
 
@@ -1692,23 +1570,9 @@ v.option===option
 
 
 
-);
+)
 
-
-
-
-
-
-
-return match
-
-?
-
-match.shipDate
-
-:
-
-null;
+|| null;
 
 
 }
@@ -1721,7 +1585,192 @@ null;
 
 
 
-// 주문일 기준 오늘까지 영업일 계산
+// 판매채널 기준 L열 생성
+
+function makeProgress(
+
+channel,
+
+jDate,
+
+orderDate
+
+){
+
+
+
+if(
+
+!channel
+
+||
+
+!jDate
+
+)
+
+return "";
+
+
+
+
+
+
+
+let delayDay=
+
+getBusinessDayCount(orderDate);
+
+
+
+
+
+
+
+// 6영업일 이상이면 공백
+
+if(delayDay>5)
+
+return "";
+
+
+
+
+
+
+
+let extendDate=null;
+
+
+
+
+
+
+
+if(
+
+channel==="지마켓"
+
+||
+
+channel==="옥션"
+
+||
+
+channel==="SSG"
+
+){
+
+
+
+extendDate=
+
+addBusinessDays(
+
+jDate,
+
+14
+
+);
+
+
+
+}
+
+
+
+else if(
+
+channel==="카카오스타일"
+
+){
+
+
+
+extendDate=
+
+addBusinessDays(
+
+jDate,
+
+7
+
+);
+
+
+
+}
+
+
+
+else if(
+
+channel==="CJ몰"
+
+){
+
+
+
+extendDate=
+
+addBusinessDays(
+
+jDate,
+
+3
+
+);
+
+
+
+}
+
+
+
+else if(
+
+channel==="롯데I몰"
+
+||
+
+channel==="홈앤쇼핑"
+
+){
+
+
+
+return `${channel} 출고예정일 연장 불가`;
+
+
+
+}
+
+
+
+else{
+
+
+return "";
+
+}
+
+
+
+return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+// 주문일 기준 영업일 계산
 
 function getBusinessDayCount(orderDate){
 
@@ -1754,7 +1803,6 @@ return 0;
 let temp=
 
 new Date(orderDate);
-
 
 
 let count=0;
@@ -1799,187 +1847,7 @@ count++;
 
 
 
-
-
-
-
 return count;
-
-
-}
-
-
-
-
-
-
-
-
-
-// 6영업일 이상 주문건 L열 공백
-
-function getProgress(
-
-channel,
-
-orderDate,
-
-jDate
-
-){
-
-
-
-if(
-
-!channel
-
-||
-
-!orderDate
-
-||
-
-!jDate
-
-)
-
-return "";
-
-
-
-
-
-
-
-let delayDay=
-
-getBusinessDayCount(orderDate);
-
-
-
-
-
-
-
-if(delayDay>5)
-
-return "";
-
-
-
-
-
-
-
-let addDay=0;
-
-
-
-
-
-
-
-if(
-
-channel==="지마켓"
-
-||
-
-channel==="옥션"
-
-||
-
-channel==="SSG"
-
-){
-
-
-
-addDay=14;
-
-
-
-}
-
-
-
-else if(
-
-channel==="카카오스타일"
-
-){
-
-
-
-addDay=7;
-
-
-
-}
-
-
-
-else if(
-
-channel==="CJ몰"
-
-){
-
-
-
-addDay=3;
-
-
-
-}
-
-
-
-else if(
-
-channel==="롯데I몰"
-
-||
-
-channel==="홈앤쇼핑"
-
-){
-
-
-
-return `${channel} 출고예정일 연장 불가`;
-
-}
-
-
-
-else{
-
-
-return "";
-
-}
-
-
-
-let extendDate=
-
-addBusinessDays(
-
-jDate,
-
-addDay
-
-);
-
-
-
-
-
-
-
-return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
 
 
 }
@@ -2000,7 +1868,6 @@ if(!wbCellmate){
 
 alert("셀메이트 파일을 업로드해주세요.");
 
-
 return;
 
 
@@ -2012,43 +1879,15 @@ return;
 
 
 
-if(!wbBflow && !wbTheSoje){
+let bflowData=
 
-
-alert("비플로우 파일을 업로드해주세요.");
-
-
-return;
-
-
-}
+createShippingData(wbBflow);
 
 
 
+let theSojeData=
 
-
-
-
-if(!getTodayDate()){
-
-
-alert("오늘 날짜를 입력해주세요.");
-
-
-return;
-
-
-}
-
-
-
-
-
-
-
-let shippingData=
-
-createShippingMap();
+createShippingData(wbTheSoje);
 
 
 
@@ -2139,6 +1978,7 @@ resultData.push([
 
 
 
+
 for(let i=1;i<rows.length;i++){
 
 
@@ -2210,28 +2050,23 @@ cleanOption(r[7]);
 let jDate=null;
 
 
+let lValue="";
 
 
 
 
 
-// 비플로우 + 더소재 동일 처리
 
-if(
 
-seller==="비플로우"
+// 비플로우
 
-||
-
-seller==="더소재"
-
-){
+if(seller==="비플로우"){
 
 
 
-jDate=
+let match=
 
-findShippingDate(
+findShippingData(
 
 orderNo,
 
@@ -2239,9 +2074,47 @@ product,
 
 option,
 
-shippingData
+bflowData
 
 );
+
+
+
+
+
+
+
+if(match){
+
+
+
+jDate=match.shipDate;
+
+
+
+lValue=
+
+makeProgress(
+
+match.channel,
+
+jDate,
+
+orderDate
+
+);
+
+
+
+}
+
+else{
+
+
+lValue="취소/출고 확인 요망";
+
+
+}
 
 
 
@@ -2253,11 +2126,87 @@ shippingData
 
 
 
-// 퀸잇
+
+
+// 비플로우(더소재)
+
+else if(seller==="비플로우(더소재)"){
+
+
+
+let match=
+
+findShippingData(
+
+orderNo,
+
+product,
+
+option,
+
+theSojeData
+
+);
+
+
+
+
+
+
+
+if(match){
+
+
+
+jDate=match.shipDate;
+
+
+
+lValue=
+
+makeProgress(
+
+match.channel,
+
+jDate,
+
+orderDate
+
+);
+
+
+
+}
+
+else{
+
+
+lValue="취소/출고 확인 요망";
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// 퀸잇 / 퀸잇(더소재)
 
 else if(
 
 seller==="퀸잇"
+
+||
+
+seller==="퀸잇(더소재)"
 
 ){
 
@@ -2276,6 +2225,8 @@ orderDate,
 
 
 }
+
+
 
 
 
@@ -2306,6 +2257,8 @@ orderDate,
 
 
 }
+
+
 
 
 
@@ -2386,70 +2339,6 @@ inboundDate
 :
 
 "입고일 기입 요망";
-
-
-
-
-
-
-
-let lValue="";
-
-
-
-
-
-
-
-let match=
-
-shippingData.find(v=>
-
-
-
-String(v.orderNo)
-
-===
-
-String(orderNo)
-
-&&
-
-v.product===product
-
-&&
-
-v.option===option
-
-
-
-);
-
-
-
-
-
-
-
-if(match){
-
-
-
-lValue=
-
-getProgress(
-
-match.channel,
-
-orderDate,
-
-jDate
-
-);
-
-
-
-}
 
 
 
@@ -2569,6 +2458,10 @@ applyKRedStyle(ws);
 
 
 
+applyLRedStyle(ws);
+
+
+
 
 
 
@@ -2603,7 +2496,7 @@ XLSX.writeFile(
 
 wb,
 
-"장기지연_최종계산_V64_FINAL11_FIX.xlsx"
+"장기지연_최종계산_V64_FINAL11_FIX3.xlsx"
 
 );
 
@@ -2619,11 +2512,9 @@ wb,
 
 
 
-
-
 // 날짜 표시 처리
 
-// B열은 원본 데이터 유지
+// B열은 원본 유지
 
 
 function applyDateFormat(ws){
@@ -2722,9 +2613,7 @@ ws["J"+row]?.v
 
 
 
-
-
-// K열 출고불가 자동 계산
+// K열 출고불가 계산
 
 function applyFormulaK(ws){
 
@@ -2981,9 +2870,7 @@ vertical:"center"
 
 
 
-
-
-// I열 입고일 기입 요망 표시
+// I열 입고일 기입 요망 빨간색
 
 function applyInputDateStyle(ws){
 
@@ -3093,9 +2980,7 @@ vertical:"center"
 
 
 
-
-
-// K열 출고불가 빨간색 표시
+// K열 빨간색
 
 function applyKRedStyle(ws){
 
@@ -3184,6 +3069,116 @@ vertical:"center"
 
 
 };
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// L열 취소/출고 확인 요망 빨간색
+
+function applyLRedStyle(ws){
+
+
+
+let range=
+
+XLSX.utils.decode_range(
+
+ws["!ref"]
+
+);
+
+
+
+
+
+
+
+for(let r=1;r<=range.e.r;r++){
+
+
+
+let cell=
+
+ws["L"+(r+1)];
+
+
+
+
+
+
+
+if(
+
+cell &&
+
+cell.v==="취소/출고 확인 요망"
+
+){
+
+
+
+cell.s={
+
+
+
+font:{
+
+
+
+color:{
+
+
+
+rgb:"FFFF0000"
+
+
+
+},
+
+
+
+bold:true
+
+
+
+},
+
+
+
+alignment:{
+
+
+
+horizontal:"center",
+
+
+
+vertical:"center"
+
+
+
+}
+
+
+
+};
+
+
+
+}
 
 
 
