@@ -2,10 +2,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL6</title>
+
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -92,7 +95,6 @@ textarea{
 
 }
 
-
 </style>
 
 
@@ -107,9 +109,11 @@ textarea{
 
 <div class="title">
 
-포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5
+포레스트핏 장기지연 납기 자동 시스템 V64 FINAL6
 
 </div>
+
+
 
 
 
@@ -127,6 +131,7 @@ textarea{
 
 
 </div>
+
 
 
 
@@ -151,6 +156,7 @@ textarea{
 
 
 
+
 <div class="card">
 
 
@@ -161,14 +167,20 @@ textarea{
 </label>
 
 
-<textarea 
+
+<textarea
+
 id="holiday"
+
 placeholder="예시
 2026-07-17
-한 줄에 하나씩 입력"></textarea>
+한 줄에 하나씩 입력">
+
+</textarea>
 
 
 </div>
+
 
 
 
@@ -185,11 +197,15 @@ placeholder="예시
 
 
 
+
+
 <button class="btn" onclick="downloadExcel()">
 
 기존 장기지연 결과 다운로드
 
 </button>
+
+
 
 
 
@@ -202,6 +218,8 @@ placeholder="예시
 
 
 
+
+
 <div class="status" id="status"></div>
 
 
@@ -209,6 +227,7 @@ placeholder="예시
 
 
 </div>
+
 
 
 
@@ -229,6 +248,7 @@ let resultData=[];
 
 
 document.getElementById("file1")
+
 .addEventListener("change",async e=>{
 
 
@@ -263,8 +283,8 @@ cellDates:true
 
 
 
-
 document.getElementById("file2")
+
 .addEventListener("change",async e=>{
 
 
@@ -302,8 +322,9 @@ cellDates:true
 
 
 
-// FINAL5 공휴일 처리 수정
-// 공백 제거 / 점(.) 날짜 변환
+// 공휴일 처리
+// 2026.07.17 / 2026-07-17 모두 인식
+
 
 function getHoliday(){
 
@@ -333,14 +354,12 @@ return document
 
 
 
-
 function dateString(d){
 
 
 if(!(d instanceof Date))
 
 return "";
-
 
 
 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -434,6 +453,7 @@ count++;
 }
 
 
+
 }
 
 
@@ -496,7 +516,6 @@ value;
 if(typeof value==="number"){
 
 
-
 let x=XLSX.SSF.parse_date_code(value);
 
 
@@ -527,6 +546,7 @@ x.d
 
 
 let text=String(value).trim();
+
 
 
 
@@ -594,7 +614,6 @@ null
 d;
 
 
-
 }
 
 
@@ -607,7 +626,6 @@ return null;
 
 
 }
-
 
 
 
@@ -689,7 +707,7 @@ return map;
 
 
 
-let sheet =
+let sheet=
 
 wb2.Sheets[wb2.SheetNames[0]];
 
@@ -697,7 +715,8 @@ wb2.Sheets[wb2.SheetNames[0]];
 
 
 
-let rows =
+
+let rows=
 
 XLSX.utils.sheet_to_json(
 
@@ -731,6 +750,7 @@ let r=rows[i];
 if(!r || !r[1])
 
 continue;
+
 
 
 
@@ -798,7 +818,7 @@ bflowData
 
 
 
-let sameOrder =
+let sameOrder=
 
 bflowData.filter(v=>
 
@@ -839,7 +859,7 @@ return sameOrder[0].shipDate;
 
 
 
-let match =
+let match=
 
 sameOrder.find(v=>
 
@@ -884,101 +904,17 @@ null;
 
 
 
-// FINAL5 수정
+// FINAL6 수정
 // 비플로우 L열 표시 기준
-// 주문일 기준 영업일 1~5일 경과 주문만 표시
-
-
-function getBusinessDayCount(orderDate){
-
-
-
-if(!orderDate)
-
-return 0;
-
-
-
-
-
-
-let today=new Date();
-
-
-
-let temp=new Date(orderDate);
-
-
-
-let count=0;
-
-
-
-
-
-
-
-while(temp < today){
-
-
-
-temp.setDate(
-
-temp.getDate()+1
-
-);
-
-
-
-
-
-
-
-if(
-
-!isWeekend(temp)
-
-&&
-
-!isHoliday(temp)
-
-){
-
-
-
-count++;
-
-
-
-}
-
-
-
-}
-
-
-
-
-
-return count;
-
-
-
-}
-
-
-
-
-
-
-
+// 셀메이트 B열 지연일 기준
+// 5일 초과 주문은 L열 표시 제외
 
 
 function getProgress(
 
 channel,
 
-orderDate,
+delayDay,
 
 jDate
 
@@ -989,10 +925,6 @@ jDate
 if(
 
 !channel
-
-||
-
-!orderDate
 
 ||
 
@@ -1008,28 +940,14 @@ return "";
 
 
 
-let diff=
-
-getBusinessDayCount(orderDate);
-
-
-
-
-
-
-// 이미 연장된 주문건 제외
-
 if(
 
-diff < 1
-
-||
-
-diff > 5
+Number(delayDay)>5
 
 )
 
 return "";
+
 
 
 
@@ -1156,6 +1074,8 @@ return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate
 
 
 
+
+
 }
 
 
@@ -1228,7 +1148,9 @@ raw:true
 
 
 
+
 resultData=[];
+
 
 
 
@@ -1294,9 +1216,11 @@ continue;
 
 
 
+
 let orderDate=
 
 safeDate(r[0]);
+
 
 
 
@@ -1312,9 +1236,11 @@ safeDate(r[8]);
 
 
 
+
 let seller=
 
 String(r[2] || "").trim();
+
 
 
 
@@ -1330,6 +1256,7 @@ extractBracket(r[6]);
 
 
 
+
 let option=
 
 cleanOption(r[7]);
@@ -1339,9 +1266,18 @@ cleanOption(r[7]);
 
 
 
+
+let delayDay=
+
+Number(r[1] || 0);
+
+
+
+
+
+
+
 let jDate=null;
-
-
 
 
 
@@ -1501,9 +1437,7 @@ inboundDate
 
 
 
-
 let lValue="";
-
 
 
 
@@ -1555,7 +1489,7 @@ getProgress(
 
 bMatch.channel,
 
-orderDate,
+delayDay,
 
 jDate
 
@@ -1582,7 +1516,7 @@ resultData.push([
 
 orderDate,
 
-r[1],
+delayDay,
 
 seller,
 
@@ -1623,7 +1557,6 @@ lValue,
 
 document.getElementById("status").innerText=
 
-
 "기존 계산 완료 : "
 
 +
@@ -1645,7 +1578,11 @@ document.getElementById("status").innerText=
 
 
 
-// 브리치 포함 최종 계산
+
+
+
+// 브리치 포함 최종 데이터
+
 // 기존 결과 구조 유지
 
 
@@ -1672,9 +1609,11 @@ return finalData;
 
 
 
+
 let bflowData=
 
 createBflowMap();
+
 
 
 
@@ -1689,6 +1628,7 @@ for(let i=1;i<finalData.length;i++){
 let row=
 
 finalData[i];
+
 
 
 
@@ -1766,6 +1706,7 @@ row[11]=
 
 
 }
+
 
 
 
@@ -1867,7 +1808,7 @@ XLSX.writeFile(
 
 wb,
 
-"장기지연_결과_V64_FINAL5.xlsx"
+"장기지연_결과_V64_FINAL6.xlsx"
 
 );
 
@@ -1894,6 +1835,7 @@ if(resultData.length===0){
 
 
 alert("기존 계산 먼저 실행해주세요.");
+
 
 return;
 
@@ -2093,7 +2035,7 @@ ws["J"+(r+1)]?.v
 
 // K열 수식
 // L열 연장시 날짜 존재 → L 기준
-// L열 없음 → 기존 J 기준 유지
+// L열 없음 → 기존 J 기준
 
 
 function applyFormulaK(ws){
@@ -2340,7 +2282,7 @@ vertical:"center"
 
 
 
-// I열 입고일 기입 요망 표시
+// I열 입고일 기입 요망 빨간색
 
 function applyInputDateStyle(ws){
 
@@ -2453,7 +2395,7 @@ vertical:"center"
 
 
 
-// K열 출고불가 빨간색 표시
+// K열 출고불가 빨간색
 
 function applyKRedStyle(ws){
 
@@ -2581,7 +2523,6 @@ ws[address];
 if(!cell)
 
 return;
-
 
 
 
