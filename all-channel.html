@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -10,7 +9,7 @@
 
 
 <title>
-FORESTFIT 장기지연 납기 자동 관리 시스템 V64 FINAL11
+FORESTFIT 장기지연 납기 자동 관리 시스템 V64 FINAL11 FIX
 </title>
 
 
@@ -18,6 +17,7 @@ FORESTFIT 장기지연 납기 자동 관리 시스템 V64 FINAL11
 
 
 <style>
+
 
 *{
     box-sizing:border-box;
@@ -83,6 +83,18 @@ body{
     margin:12px 0 10px;
 
     font-size:30px;
+
+}
+
+
+
+.version{
+
+    font-size:18px;
+
+    opacity:0.6;
+
+    margin-left:8px;
 
 }
 
@@ -275,7 +287,6 @@ textarea{
 }
 
 
-
 </style>
 
 
@@ -297,18 +308,28 @@ FORESTFIT INTERNAL TOOL
 
 
 <h1>
+
 장기지연 납기 자동 관리 시스템
+
+<span class="version">
+
+V64 FINAL11 FIX
+
+</span>
+
 </h1>
 
 
+
 <p>
+
 셀메이트 · 비플로우 · 더소재 데이터를 자동 매칭하여
 출고준수일과 장기지연 건을 관리합니다.
+
 </p>
 
 
 </div>
-
 
 
 
@@ -323,11 +344,17 @@ FORESTFIT INTERNAL TOOL
 1
 </div>
 
+
 <div class="step-title">
+
 셀메이트 파일 업로드
-</div>
 
 </div>
+
+
+</div>
+
+
 
 
 <div class="file-box">
@@ -341,8 +368,11 @@ accept=".xlsx,.xls"
 
 
 <div class="file-name" id="cellmateName">
+
 선택된 파일 없음
+
 </div>
+
 
 
 
@@ -351,7 +381,9 @@ accept=".xlsx,.xls"
 
 
 <summary>
+
 📌 셀메이트 첨부 파일 다운로드 방법
+
 </summary>
 
 
@@ -431,7 +463,7 @@ accept=".xlsx,.xls"
 <br><br>
 
 
-7. 다운로드 파일 첨부
+7. 다운로드한 파일 첨부
 
 
 </div>
@@ -449,30 +481,32 @@ accept=".xlsx,.xls"
 
 
 
-
 <div class="card">
 
 
 <div class="step">
 
 <div class="step-number">
+
 2
+
 </div>
 
 
 <div class="step-title">
+
 비플로우 파일 업로드
-</div>
-
 
 </div>
 
+
+</div>
 
 
 <div class="file-box">
 
 
-<input 
+<input
 type="file"
 id="bflowFile"
 accept=".xlsx,.xls"
@@ -480,15 +514,20 @@ accept=".xlsx,.xls"
 
 
 <div class="file-name" id="bflowName">
+
 선택된 파일 없음
+
 </div>
+
 
 
 <details class="guide">
 
 
 <summary>
+
 📌 비플로우 첨부 파일 다운로드 방법
+
 </summary>
 
 
@@ -504,6 +543,7 @@ accept=".xlsx,.xls"
 <br>
 
 3. 주문조회 클릭
+
 
 <br><br>
 
@@ -544,7 +584,7 @@ accept=".xlsx,.xls"
 
 <br>
 
-8. 다운로드 파일 첨부
+8. 다운로드한 파일 첨부
 
 
 </div>
@@ -559,19 +599,23 @@ accept=".xlsx,.xls"
 </div>
 
 
-
 <div class="card">
 
 
 <div class="step">
 
+
 <div class="step-number">
+
 3
+
 </div>
 
 
 <div class="step-title">
+
 비플로우(더소재) 파일 업로드 (선택)
+
 </div>
 
 
@@ -583,7 +627,7 @@ accept=".xlsx,.xls"
 <div class="file-box">
 
 
-<input 
+<input
 type="file"
 id="theSojeFile"
 accept=".xlsx,.xls"
@@ -591,8 +635,11 @@ accept=".xlsx,.xls"
 
 
 <div class="file-name" id="theSojeName">
+
 선택된 파일 없음
+
 </div>
+
 
 
 
@@ -600,7 +647,9 @@ accept=".xlsx,.xls"
 
 
 <summary>
+
 📌 비플로우(더소재) 첨부 파일 다운로드 방법
+
 </summary>
 
 
@@ -698,19 +747,24 @@ accept=".xlsx,.xls"
 
 
 <div class="step-number">
+
 📅
+
 </div>
 
 
 <div class="step-title">
+
 오늘 날짜 설정
-</div>
-
 
 </div>
 
 
-<input 
+</div>
+
+
+
+<input
 type="date"
 id="todayDate"
 >
@@ -733,16 +787,21 @@ id="todayDate"
 
 
 <div class="step-number">
+
 📌
+
 </div>
 
 
 <div class="step-title">
+
 공휴일 설정
+
 </div>
 
 
 </div>
+
 
 
 
@@ -750,18 +809,14 @@ id="todayDate"
 
 id="holiday"
 
-placeholder="
-예시)
-
+placeholder="예시)
 2026-07-17
 2026-08-15
 
 ※ 날짜 형식 : YYYY-MM-DD
-※ 공휴일은 한 줄씩 입력해주세요.
-">
+※ 공휴일은 한 줄씩 입력해주세요."
 
-
-</textarea>
+></textarea>
 
 
 
@@ -778,7 +833,7 @@ placeholder="
 <div class="card">
 
 
-<button 
+<button
 class="btn"
 onclick="calculate()"
 >
@@ -791,7 +846,7 @@ onclick="calculate()"
 
 
 
-<button 
+<button
 class="btn"
 onclick="downloadFinalExcel()"
 >
@@ -804,7 +859,7 @@ onclick="downloadFinalExcel()"
 
 
 
-<div 
+<div
 class="status"
 id="status"
 >
@@ -826,6 +881,7 @@ id="status"
 
 
 
+
 <script>
 
 
@@ -837,6 +893,7 @@ let wbTheSoje=null;
 
 
 let resultData=[];
+
 
 
 
@@ -896,6 +953,7 @@ cellDates:true
 }
 
 );
+
 
 
 
@@ -1078,6 +1136,7 @@ return document
 .filter(v=>v);
 
 
+
 }
 
 
@@ -1094,6 +1153,7 @@ function dateString(d){
 if(!(d instanceof Date))
 
 return "";
+
 
 
 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -1190,6 +1250,7 @@ count++;
 }
 
 
+
 }
 
 
@@ -1253,7 +1314,6 @@ value;
 if(typeof value==="number"){
 
 
-
 let x=
 
 XLSX.SSF.parse_date_code(value);
@@ -1275,6 +1335,7 @@ x.d
 
 
 }
+
 
 
 }
@@ -1338,12 +1399,7 @@ null
 d;
 
 
-
 }
-
-
-
-
 
 
 
@@ -1351,6 +1407,7 @@ return null;
 
 
 }
+
 
 
 function extractBracket(value){
@@ -1419,7 +1476,7 @@ return String(value)
 
 
 
-// 비플로우 + 더소재 통합 출고준수일 데이터
+// 비플로우 + 비플로우(더소재) 통합
 
 function createShippingMap(){
 
@@ -1448,7 +1505,6 @@ files.push(wbBflow);
 if(wbTheSoje)
 
 files.push(wbTheSoje);
-
 
 
 
@@ -1493,7 +1549,6 @@ raw:true
 
 
 
-
 for(let i=1;i<rows.length;i++){
 
 
@@ -1512,7 +1567,6 @@ continue;
 
 
 
-
 map.push({
 
 
@@ -1521,7 +1575,9 @@ orderNo:String(r[1]).trim(),
 
 
 
-channel:String(r[4] || "").trim(),
+channel:String(r[4] || "").trim()
+.replace("비플로우(더소재)","비플로우")
+.replace("더소재","비플로우"),
 
 
 
@@ -1601,6 +1657,7 @@ String(orderNo)
 
 
 
+
 if(sameOrder.length===0)
 
 return null;
@@ -1614,7 +1671,6 @@ return null;
 if(sameOrder.length===1)
 
 return sameOrder[0].shipDate;
-
 
 
 
@@ -1665,7 +1721,7 @@ null;
 
 
 
-// 주문일 기준 오늘 날짜까지 영업일 계산
+// 주문일 기준 오늘까지 영업일 계산
 
 function getBusinessDayCount(orderDate){
 
@@ -1721,10 +1777,6 @@ temp.getDate()+1
 
 
 
-
-
-
-
 if(
 
 !isWeekend(temp)
@@ -1764,7 +1816,7 @@ return count;
 
 
 
-// 6영업일 이상이면 L열 공백
+// 6영업일 이상 주문건 L열 공백
 
 function getProgress(
 
@@ -1800,7 +1852,7 @@ return "";
 
 
 
-let diff=
+let delayDay=
 
 getBusinessDayCount(orderDate);
 
@@ -1810,7 +1862,7 @@ getBusinessDayCount(orderDate);
 
 
 
-if(diff>5)
+if(delayDay>5)
 
 return "";
 
@@ -1930,7 +1982,6 @@ addDay
 return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
 
 
-
 }
 
 
@@ -1942,7 +1993,6 @@ return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate
 
 
 function calculate(){
-
 
 
 if(!wbCellmate){
@@ -2127,6 +2177,16 @@ String(r[2]||"").trim();
 
 
 
+let orderNo=
+
+r[3];
+
+
+
+
+
+
+
 let product=
 
 extractBracket(r[6]);
@@ -2155,10 +2215,15 @@ let jDate=null;
 
 
 
+// 비플로우 + 더소재 동일 처리
 
 if(
 
 seller==="비플로우"
+
+||
+
+seller==="더소재"
 
 ){
 
@@ -2168,7 +2233,7 @@ jDate=
 
 findShippingDate(
 
-r[3],
+orderNo,
 
 product,
 
@@ -2187,6 +2252,8 @@ shippingData
 
 
 
+
+// 퀸잇
 
 else if(
 
@@ -2216,6 +2283,8 @@ orderDate,
 
 
 
+// 하프클럽
+
 else if(
 
 seller==="하프클럽"
@@ -2244,6 +2313,8 @@ orderDate,
 
 
 
+// 네이버 / 롯데ON / 카카오톡스토어
+
 else if(
 
 seller==="네이버"
@@ -2268,7 +2339,9 @@ if(orderDate){
 
 
 
-jDate=new Date(orderDate);
+jDate=
+
+new Date(orderDate);
 
 
 
@@ -2285,8 +2358,6 @@ jDate.getMonth()+1
 
 
 }
-
-
 
 
 
@@ -2340,7 +2411,7 @@ String(v.orderNo)
 
 ===
 
-String(r[3])
+String(orderNo)
 
 &&
 
@@ -2353,7 +2424,6 @@ v.option===option
 
 
 );
-
 
 
 
@@ -2387,7 +2457,6 @@ jDate
 
 
 
-
 resultData.push([
 
 
@@ -2398,7 +2467,7 @@ r[1],
 
 seller,
 
-r[3],
+orderNo,
 
 r[4],
 
@@ -2432,7 +2501,6 @@ lValue,
 
 
 
-
 document
 
 .getElementById("status")
@@ -2444,7 +2512,6 @@ document
 
 
 }
-
 
 
 
@@ -2536,7 +2603,7 @@ XLSX.writeFile(
 
 wb,
 
-"장기지연_최종계산_V64_FINAL11.xlsx"
+"장기지연_최종계산_V64_FINAL11_FIX.xlsx"
 
 );
 
@@ -2554,9 +2621,9 @@ wb,
 
 
 
-// 날짜 형식 처리
+// 날짜 표시 처리
 
-// B열은 원본 그대로 유지
+// B열은 원본 데이터 유지
 
 
 function applyDateFormat(ws){
@@ -2657,7 +2724,7 @@ ws["J"+row]?.v
 
 
 
-// K열 출고불가 수식 적용
+// K열 출고불가 자동 계산
 
 function applyFormulaK(ws){
 
@@ -2916,7 +2983,7 @@ vertical:"center"
 
 
 
-// I열 입고일 기입 요망 빨간색
+// I열 입고일 기입 요망 표시
 
 function applyInputDateStyle(ws){
 
@@ -3028,7 +3095,7 @@ vertical:"center"
 
 
 
-// K열 출고불가 빨간색
+// K열 출고불가 빨간색 표시
 
 function applyKRedStyle(ws){
 
