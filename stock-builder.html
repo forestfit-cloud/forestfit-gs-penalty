@@ -1,10 +1,668 @@
-역할:
+<!DOCTYPE html>
+<html lang="ko">
 
-상품명 입력
-컬러 입력
-사입명 입력
-기장 선택
-사이즈 선택
-버튼으로 여러 상품 추가
-색상코드별 진행 여부 선택
-재고장 엑셀 생성
+<head>
+
+<meta charset="UTF-8">
+
+<title>재고장 생성 툴</title>
+
+
+<style>
+
+body{
+    font-family:Pretendard, sans-serif;
+    background:#f7f3eb;
+    padding:40px;
+    color:#173d2b;
+}
+
+
+h1{
+    margin:0 0 10px;
+    font-size:32px;
+}
+
+
+.subtitle{
+    color:#777;
+    margin-bottom:35px;
+}
+
+
+
+.header-area{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+
+
+button{
+
+    border:none;
+    cursor:pointer;
+
+    border-radius:12px;
+
+    padding:12px 20px;
+
+    font-size:15px;
+
+}
+
+
+
+.add-btn{
+
+    background:#173d2b;
+    color:white;
+
+}
+
+
+
+.excel-btn{
+
+    background:#4d8b5b;
+    color:white;
+
+}
+
+
+
+.analyze-btn{
+
+    background:#d8a84e;
+    color:white;
+
+}
+
+
+
+.delete-btn{
+
+    background:#f1f1f1;
+    color:#777;
+
+}
+
+
+
+.product-list{
+
+    display:flex;
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+
+
+
+.product-card{
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:25px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.08);
+
+}
+
+
+
+.card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+
+
+.card-header h2{
+
+    margin:0;
+
+}
+
+
+
+.input-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+
+    gap:20px;
+
+}
+
+
+
+
+.input-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+
+}
+
+
+
+label{
+
+    font-size:14px;
+
+    font-weight:bold;
+
+}
+
+
+
+input,
+select,
+textarea{
+
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    font-size:14px;
+
+}
+
+
+
+textarea{
+
+    height:180px;
+
+    resize:none;
+
+}
+
+
+
+.full-width{
+
+    margin-top:20px;
+
+}
+
+
+
+.info-box{
+
+    margin-top:20px;
+
+    background:#faf8f3;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    color:#666;
+
+    font-size:14px;
+
+}
+
+
+
+
+.result-area{
+
+    margin-top:30px;
+
+}
+
+
+
+.result-box{
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:20px;
+
+    min-height:100px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.06);
+
+}
+
+
+
+.bottom-area{
+
+    margin-top:30px;
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:15px;
+
+}
+
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+<h1>📦 재고장 생성 툴</h1>
+
+
+<div class="subtitle">
+
+거래처 재고표를 입력하면 상품별 옵션을 분석하여 재고장을 생성합니다.
+
+</div>
+
+
+
+<div class="header-area">
+
+
+<button class="add-btn"
+onclick="addProduct()">
+
+➕ 상품 추가
+
+</button>
+
+
+
+<button class="excel-btn">
+
+📥 엑셀 다운로드
+
+</button>
+
+
+
+</div>
+
+
+
+<div id="productList"
+class="product-list">
+
+
+</div>
+
+
+
+<div class="result-area">
+
+
+<h2>
+📋 재고장 미리보기
+</h2>
+
+
+<div id="resultBox"
+class="result-box">
+
+분석 후 결과가 표시됩니다.
+
+</div>
+
+
+</div>
+
+
+
+<div class="bottom-area">
+
+
+<button class="analyze-btn">
+
+🔍 전체 분석
+
+</button>
+
+
+</div>
+<script>
+
+let productCount = 0;
+
+
+// 상품 추가
+function addProduct(){
+
+
+    productCount++;
+
+
+    const productList =
+    document.getElementById("productList");
+
+
+    const card =
+    document.createElement("div");
+
+
+    card.className="product-card";
+
+
+    card.dataset.id = productCount;
+
+
+
+    card.innerHTML = `
+
+
+    <div class="card-header">
+
+
+        <h2>
+        상품 ${productCount}
+        </h2>
+
+
+        <button class="delete-btn"
+        onclick="deleteProduct(this)">
+        삭제
+        </button>
+
+
+    </div>
+
+
+
+    <div class="input-grid">
+
+
+        <div class="input-group">
+
+
+            <label>
+            상품명 (셀메이트 상품명)
+            </label>
+
+
+            <input 
+            class="product-name"
+            type="text"
+            placeholder="예) 여름노컷진14탄">
+
+
+        </div>
+
+
+
+
+        <div class="input-group">
+
+
+            <label>
+            거래처
+            </label>
+
+
+            <select class="company">
+
+
+                <option value="">
+                거래처 선택
+                </option>
+
+
+                <option>
+                리자드
+                </option>
+
+
+                <option>
+                케이디지
+                </option>
+
+
+                <option>
+                노른자
+                </option>
+
+
+                <option>
+                시나브로
+                </option>
+
+
+                <option>
+                리마인드
+                </option>
+
+
+                <option>
+                뉴행
+                </option>
+
+
+                <option>
+                신안어패럴
+                </option>
+
+
+                <option>
+                진머니
+                </option>
+
+
+                <option>
+                아도라블
+                </option>
+
+
+                <option>
+                직접입력
+                </option>
+
+
+            </select>
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+    <div class="input-group full-width">
+
+
+        <label>
+        사입 상품명 입력
+        </label>
+
+
+        <textarea
+        class="stock-code"
+        placeholder="
+예)
+
+리자드
+2.LC-1084-A1
+2.LC-1084-A1SH
+2.LC-1084-A1LONG
+
+
+신안
+BA-1025-#1(Blue)-S
+BA-1025-#1(Blue)-M
+
+재고표 그대로 붙여넣기 가능
+"></textarea>
+
+
+    </div>
+
+
+
+
+    <div class="info-box">
+
+    💡 입력 후 상품 분석 버튼을 누르면
+    색상 / 기장 / 사이즈 패턴을 자동 확인합니다.
+
+    </div>
+
+
+
+
+    <div style="margin-top:20px;">
+
+
+        <button class="analyze-btn"
+        onclick="analyzeSingleProduct(this)">
+
+        🔍 이 상품 분석
+
+        </button>
+
+
+    </div>
+
+
+
+    `;
+
+
+
+    productList.appendChild(card);
+
+
+
+}
+
+
+
+// 상품 삭제
+
+function deleteProduct(btn){
+
+
+    btn.closest(".product-card").remove();
+
+
+}
+
+
+
+// 상품 분석 준비 함수
+
+function analyzeSingleProduct(btn){
+
+
+    const card =
+    btn.closest(".product-card");
+
+
+    const data = {
+
+
+        id:
+        card.dataset.id,
+
+
+        name:
+        card.querySelector(".product-name").value,
+
+
+        company:
+        card.querySelector(".company").value,
+
+
+        codes:
+        card.querySelector(".stock-code").value
+        .split("\n")
+        .map(v=>v.trim())
+        .filter(v=>v!=="")
+
+
+    };
+
+
+
+    console.log(data);
+
+
+
+    document.getElementById("resultBox").innerHTML = `
+
+
+    <b>상품 분석 준비</b>
+    <br><br>
+
+    상품명 :
+    ${data.name || "미입력"}
+
+    <br>
+
+    거래처 :
+    ${data.company || "미선택"}
+
+    <br>
+
+    입력 건수 :
+    ${data.codes.length}건
+
+
+    `;
+
+
+
+}
+
+
+
+
+// 첫 화면 기본 상품 생성
+
+addProduct();
+
+
+
+</script>
+
+
+</body>
+
+</html>
