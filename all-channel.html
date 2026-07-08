@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL4</title>
+<title>포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style/dist/xlsx.bundle.js"></script>
 
@@ -14,7 +14,7 @@ body{
     padding:0;
     background:#f7f7f5;
     font-family:"Noto Sans KR",Arial,sans-serif;
-    color:"#333";
+    color:#333;
 }
 
 .container{
@@ -72,6 +72,7 @@ textarea{
     margin-top:15px;
     font-weight:bold;
 }
+
 </style>
 
 </head>
@@ -84,8 +85,9 @@ textarea{
 
 
 <div class="title">
-포레스트핏 장기지연 납기 자동 시스템 V64 FINAL4
+포레스트핏 장기지연 납기 자동 시스템 V64 FINAL5
 </div>
+
 
 
 
@@ -98,6 +100,8 @@ textarea{
 <input type="file" id="file1" accept=".xlsx,.xls">
 
 </div>
+
+
 
 
 
@@ -114,31 +118,39 @@ textarea{
 
 
 
+
 <div class="card">
 
 <label class="label">
 공휴일 입력
 </label>
 
-<textarea id="holiday"
+<textarea 
+id="holiday"
 placeholder="예시
-2026-07-17"></textarea>
+2026-07-17
+한 줄에 하나씩 입력"></textarea>
 
 </div>
 
 
 
 
+
 <div class="card">
+
 
 <button class="btn" onclick="calculate()">
 기존 장기지연 결과 계산
 </button>
 
 
+
 <button class="btn" onclick="downloadExcel()">
 기존 장기지연 결과 다운로드
 </button>
+
+
 
 
 <button class="btn" onclick="downloadBreachFinalExcel()">
@@ -166,8 +178,9 @@ let wb1=null;
 
 let wb2=null;
 
-
 let resultData=[];
+
+
 
 
 
@@ -196,6 +209,7 @@ cellDates:true
 
 
 });
+
 
 
 
@@ -234,6 +248,10 @@ cellDates:true
 
 
 
+
+
+// 공휴일 입력값 정규화 FINAL5 수정
+
 function getHoliday(){
 
 
@@ -242,12 +260,12 @@ return document
 .value
 .split("\n")
 .map(v=>v.trim())
+.map(v=>v.replace(/\./g,"-"))
 .filter(v=>v);
 
 
 
 }
-
 
 
 
@@ -267,6 +285,7 @@ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.
 
 
 }
+
 
 
 
@@ -299,7 +318,6 @@ dateString(d)
 
 
 }
-
 
 
 
@@ -375,7 +393,6 @@ return null;
 
 
 
-
 if(value instanceof Date){
 
 
@@ -444,7 +461,6 @@ return null;
 
 
 
-
 let match=text.match(
 /^(\d{4})-(\d{2})-(\d{2})$/
 );
@@ -474,7 +490,6 @@ d;
 
 
 }
-
 
 
 
@@ -560,7 +575,6 @@ wb2.Sheets[wb2.SheetNames[0]];
 
 
 
-
 let rows =
 XLSX.utils.sheet_to_json(
 
@@ -602,7 +616,7 @@ map.push({
 orderNo:String(r[1]).trim(),
 
 
-channel:r[4] || "",
+channel:String(r[4] || "").trim(),
 
 
 product:extractBracket(r[10]),
@@ -731,15 +745,16 @@ null;
 
 
 
-// L열 진행상황
-// 기존 FINAL3 유지
+// FINAL5 수정
+// 비플로우 L열 판단
+// 주문일 기준 영업일 1~5일만 표시
 
 
 function getProgress(
 
 channel,
 
-delayDay,
+orderDate,
 
 jDate
 
@@ -750,6 +765,10 @@ jDate
 if(
 
 !channel
+
+||
+
+!orderDate
 
 ||
 
@@ -765,19 +784,79 @@ return "";
 
 
 
+
+let today=new Date();
+
+
+
+let diff=0;
+
+
+
+let temp=new Date(orderDate);
+
+
+
+
+
+
+while(temp<today){
+
+
+
+temp.setDate(
+
+temp.getDate()+1
+
+);
+
+
+
+
 if(
 
-delayDay < 1
+!isWeekend(temp)
 
-||
+&&
 
-delayDay > 5
+!isHoliday(temp)
 
 ){
 
-return "";
+
+diff++;
+
 
 }
+
+
+
+}
+
+
+
+
+
+
+
+if(
+
+diff<1
+
+||
+
+diff>5
+
+){
+
+
+return "";
+
+
+}
+
+
+
 
 
 
@@ -857,6 +936,7 @@ channel==="홈앤쇼핑"
 ){
 
 
+
 return `${channel} 출고예정일 연장 불가`;
 
 }
@@ -871,7 +951,6 @@ else{
 return "";
 
 }
-
 
 
 
@@ -893,6 +972,8 @@ addDay
 
 
 return `${channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
+
+
 
 
 
@@ -1044,7 +1125,7 @@ safeDate(r[8]);
 
 let seller =
 
-r[2] || "";
+String(r[2] || "").trim();
 
 
 
@@ -1125,6 +1206,8 @@ orderDate,
 
 
 
+
+
 else if(
 
 seller==="하프클럽"
@@ -1151,6 +1234,8 @@ orderDate,
 
 
 
+
+
 else if(
 
 
@@ -1164,8 +1249,6 @@ seller==="롯데ON"
 ||
 
 seller==="카카오톡스토어"
-
-
 
 ){
 
@@ -1226,7 +1309,6 @@ let lValue="";
 
 
 
-
 if(seller==="비플로우"){
 
 
@@ -1275,7 +1357,7 @@ getProgress(
 
 bMatch.channel,
 
-Number(r[1]),
+orderDate,
 
 jDate
 
@@ -1363,9 +1445,8 @@ document.getElementById("status").innerText =
 
 
 
-
-// 브리치 포함 최종 계산용
-// 기존 resultData 기반으로 L열만 업데이트
+// 브리치 포함 최종 데이터 생성
+// 기존 결과 구조 유지
 
 
 function createBreachFinalData(){
@@ -1373,15 +1454,16 @@ function createBreachFinalData(){
 
 let finalData =
 
-JSON.parse(
-JSON.stringify(resultData)
-);
+resultData.map(row=>[...row]);
+
+
 
 
 
 if(!wb2)
 
 return finalData;
+
 
 
 
@@ -1400,7 +1482,7 @@ for(let i=1;i<finalData.length;i++){
 
 
 
-let row =
+let row=
 
 finalData[i];
 
@@ -1408,7 +1490,7 @@ finalData[i];
 
 
 
-let orderNo =
+let orderNo=
 
 String(row[3]).trim();
 
@@ -1416,10 +1498,10 @@ String(row[3]).trim();
 
 
 
-let match =
+
+let match=
 
 bflowData.find(v=>
-
 
 
 String(v.orderNo)
@@ -1429,7 +1511,6 @@ String(v.orderNo)
 orderNo
 
 
-
 );
 
 
@@ -1437,7 +1518,7 @@ orderNo
 
 
 
-if(match){
+if(match && match.shipDate){
 
 
 
@@ -1459,7 +1540,7 @@ if(extendDate){
 
 
 
-row[11] =
+row[11]=
 
 `${match.channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
 
@@ -1474,6 +1555,8 @@ row[11] =
 
 
 }
+
+
 
 
 
@@ -1503,7 +1586,6 @@ return;
 
 
 
-
 let ws =
 
 XLSX.utils.aoa_to_sheet(
@@ -1517,12 +1599,15 @@ resultData
 
 
 
-
-applyExcelStyle(ws);
+applyDateFormat(ws);
 
 
 
 applyFormulaK(ws);
+
+
+
+applyExcelStyle(ws);
 
 
 
@@ -1537,9 +1622,11 @@ applyKRedStyle(ws);
 
 
 
-let wb =
+
+let wb=
 
 XLSX.utils.book_new();
+
 
 
 
@@ -1561,17 +1648,19 @@ ws,
 
 
 
+
 XLSX.writeFile(
 
 wb,
 
-"장기지연_결과_V64_FINAL4.xlsx"
+"장기지연_결과_V64_FINAL5.xlsx"
 
 );
 
 
 
 }
+
 
 
 
@@ -1593,10 +1682,13 @@ if(resultData.length===0){
 
 alert("기존 계산 먼저 실행해주세요.");
 
+
 return;
 
 
 }
+
+
 
 
 
@@ -1625,11 +1717,15 @@ finalData
 
 
 
-applyExcelStyle(ws);
+applyDateFormat(ws);
 
 
 
 applyFormulaK(ws);
+
+
+
+applyExcelStyle(ws);
 
 
 
@@ -1645,7 +1741,7 @@ applyKRedStyle(ws);
 
 
 
-let wb =
+let wb=
 
 XLSX.utils.book_new();
 
@@ -1663,6 +1759,7 @@ ws,
 "브리치최종결과"
 
 );
+
 
 
 
@@ -1690,22 +1787,20 @@ wb,
 
 
 
-// K열 수식 적용
-// L열 있으면 L 연장 날짜 기준
-// L열 없으면 기존 J 기준
+
+// A/I/J 날짜 저장 처리
+
+function applyDateFormat(ws){
 
 
-
-function applyFormulaK(ws){
-
-
-let range =
+let range=
 
 XLSX.utils.decode_range(
 
 ws["!ref"]
 
 );
+
 
 
 
@@ -1724,7 +1819,98 @@ r++
 
 
 
-let row = r+1;
+setDateCell(
+
+ws,
+
+"A"+(r+1),
+
+ws["A"+(r+1)]?.v
+
+);
+
+
+
+
+setDateCell(
+
+ws,
+
+"I"+(r+1),
+
+ws["I"+(r+1)]?.v
+
+);
+
+
+
+
+setDateCell(
+
+ws,
+
+"J"+(r+1),
+
+ws["J"+(r+1)]?.v
+
+);
+
+
+
+}
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// K열 수식
+
+// L열 연장 날짜 있으면 L 기준
+// 없으면 기존 J 기준
+
+
+function applyFormulaK(ws){
+
+
+
+let range=
+
+XLSX.utils.decode_range(
+
+ws["!ref"]
+
+);
+
+
+
+
+
+
+
+for(
+
+let r=1;
+
+r<=range.e.r;
+
+r++
+
+){
+
+
+
+let row=r+1;
+
 
 
 
@@ -1740,12 +1926,20 @@ t:"str",
 
 f:
 
+
+
 `IF(ISNUMBER(SEARCH("연장시",L${row})),
+
 IF(OR(ISTEXT(I${row}),I${row}>DATEVALUE(MID(L${row},FIND("연장시",L${row})+4,10))),
+
 "출고불가",
+
 ""),
+
 IF(OR(ISTEXT(I${row}),I${row}>J${row}),
+
 "출고불가",
+
 ""))`
 
 
@@ -1754,14 +1948,12 @@ IF(OR(ISTEXT(I${row}),I${row}>J${row}),
 
 
 
-}
-
-
 
 }
 
 
 
+}
 
 
 
@@ -1770,13 +1962,13 @@ IF(OR(ISTEXT(I${row}),I${row}>J${row}),
 
 
 
-// 엑셀 공통 스타일
 
 function applyExcelStyle(ws){
 
 
 
 let headerStyle={
+
 
 
 fill:{
@@ -1791,7 +1983,9 @@ rgb:"FFD9D9D9"
 }
 
 
+
 },
+
 
 
 font:{
@@ -1803,6 +1997,7 @@ sz:12
 
 
 },
+
 
 
 alignment:{
@@ -1826,11 +2021,12 @@ vertical:"center"
 
 
 
+
 for(let c=0;c<13;c++){
 
 
 
-let cell =
+let cell=
 
 XLSX.utils.encode_cell({
 
@@ -1849,7 +2045,9 @@ c:c
 if(ws[cell]){
 
 
-ws[cell].s=headerStyle;
+ws[cell].s=
+
+headerStyle;
 
 
 }
@@ -1867,9 +2065,12 @@ ws[cell].s=headerStyle;
 Object.keys(ws).forEach(key=>{
 
 
+
 if(key==="!ref")
 
 return;
+
+
 
 
 
@@ -1888,6 +2089,7 @@ ws[key].s={};
 ws[key].s.alignment={
 
 
+
 horizontal:"center",
 
 vertical:"center"
@@ -1898,8 +2100,6 @@ vertical:"center"
 
 
 });
-
-
 
 
 
@@ -1916,18 +2116,20 @@ vertical:"center"
 
 
 
-// I열 입고일 기입 요망 스타일
+// I열 입고일 기입 요망 빨간색
 
 function applyInputDateStyle(ws){
 
 
-let range =
+
+let range=
 
 XLSX.utils.decode_range(
 
 ws["!ref"]
 
 );
+
 
 
 
@@ -1945,7 +2147,7 @@ r++
 
 
 
-let cell =
+let cell=
 
 ws["I"+(r+1)];
 
@@ -2022,20 +2224,20 @@ vertical:"center"
 
 
 
-
-
-// K열 출고불가 스타일
+// K열 출고불가 빨간색 굵게
 
 function applyKRedStyle(ws){
 
 
-let range =
+
+let range=
 
 XLSX.utils.decode_range(
 
 ws["!ref"]
 
 );
+
 
 
 
@@ -2054,9 +2256,10 @@ r++
 
 
 
-let cell =
+let cell=
 
 ws["K"+(r+1)];
+
 
 
 
@@ -2065,6 +2268,7 @@ ws["K"+(r+1)];
 if(!cell)
 
 continue;
+
 
 
 
@@ -2114,8 +2318,6 @@ vertical:"center"
 
 
 
-
-
 }
 
 
@@ -2126,7 +2328,6 @@ vertical:"center"
 
 
 
-// 날짜 저장
 
 function setDateCell(
 
@@ -2155,6 +2356,7 @@ return;
 
 
 
+
 if(
 
 value==="입고일 기입 요망"
@@ -2169,7 +2371,6 @@ cell.v=value;
 
 
 return;
-
 
 
 }
@@ -2199,11 +2400,14 @@ cell.v=value;
 cell.z="yyyy-mm-dd";
 
 
+
 return;
 
 
 
 }
+
+
 
 
 
@@ -2226,11 +2430,14 @@ cell.v=d;
 
 cell.z="yyyy-mm-dd";
 
+
+
 return;
 
 
 
 }
+
 
 
 
@@ -2244,6 +2451,8 @@ cell.v=value || "";
 
 
 }
+
+
 
 
 </script>
