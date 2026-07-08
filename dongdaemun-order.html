@@ -152,7 +152,10 @@ function buildText(r){
 
 function isSample(r){return txt(r.product).includes("샘플") || txt(r.buyName).includes("샘플") || txt(r.memo).includes("샘플");}
 function isReturn(r){return includesAny(r.product,returnWords) || includesAny(r.buyName,returnWords) || includesAny(r.memo,returnWords);}
-function isSoldout(r){return includesAny(r.memo,soldoutWords);}
+function isSoldout(r){
+ const memo = txt(r.memo).replace(/\s/g,"");
+ return includesAny(memo,soldoutWords);
+}
 function isCheck(r){return txt(r.memo).includes("확인") || txt(r.product).includes("확인");}
 function isSchedule(r){
   const m=txt(r.memo);
