@@ -14,7 +14,7 @@ body{
     padding:0;
     background:#f7f7f5;
     font-family:"Noto Sans KR",Arial,sans-serif;
-    color:#333;
+    color:"#333";
 }
 
 .container{
@@ -68,10 +68,6 @@ textarea{
     cursor:pointer;
 }
 
-.btn:hover{
-    opacity:.85;
-}
-
 .status{
     margin-top:15px;
     font-weight:bold;
@@ -105,7 +101,6 @@ textarea{
 
 
 
-
 <div class="card">
 
 <label class="label">
@@ -125,11 +120,9 @@ textarea{
 공휴일 입력
 </label>
 
-<textarea 
-id="holiday"
+<textarea id="holiday"
 placeholder="예시
-2026-07-17
-한 줄에 하나씩 입력"></textarea>
+2026-07-17"></textarea>
 
 </div>
 
@@ -148,12 +141,7 @@ placeholder="예시
 </button>
 
 
-<button class="btn" onclick="calculateBreach()">
-브리치 출고준수일 연장 전 주문건 포함 최종 계산
-</button>
-
-
-<button class="btn" onclick="downloadBreachExcel()">
+<button class="btn" onclick="downloadBreachFinalExcel()">
 브리치 출고준수일 연장 전 주문건 포함 최종 계산 다운로드
 </button>
 
@@ -170,17 +158,16 @@ placeholder="예시
 
 
 
+
 <script>
 
 
 let wb1=null;
+
 let wb2=null;
 
+
 let resultData=[];
-
-let breachResultData=[];
-
-
 
 
 
@@ -189,6 +176,7 @@ document.getElementById("file1")
 
 
 const file=e.target.files[0];
+
 
 if(!file)
 return;
@@ -220,6 +208,7 @@ document.getElementById("file2")
 
 const file=e.target.files[0];
 
+
 if(!file)
 return;
 
@@ -238,7 +227,6 @@ cellDates:true
 
 
 });
-
 
 
 
@@ -286,7 +274,6 @@ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.
 
 
 
-
 function isWeekend(d){
 
 
@@ -294,6 +281,7 @@ return d.getDay()===0 || d.getDay()===6;
 
 
 }
+
 
 
 
@@ -311,6 +299,7 @@ dateString(d)
 
 
 }
+
 
 
 
@@ -368,6 +357,8 @@ return d;
 
 
 
+
+
 function safeDate(value){
 
 
@@ -380,6 +371,7 @@ value===""
 return null;
 
 }
+
 
 
 
@@ -452,6 +444,7 @@ return null;
 
 
 
+
 let match=text.match(
 /^(\d{4})-(\d{2})-(\d{2})$/
 );
@@ -487,11 +480,11 @@ d;
 
 
 
+
 return null;
 
 
 }
-
 
 
 
@@ -517,6 +510,7 @@ result[1]
 
 
 }
+
 
 
 
@@ -563,6 +557,7 @@ return map;
 
 let sheet =
 wb2.Sheets[wb2.SheetNames[0]];
+
 
 
 
@@ -735,9 +730,9 @@ null;
 
 
 
+
 // L열 진행상황
 // 기존 FINAL3 유지
-// B열 지연일 기준 1~5일
 
 
 function getProgress(
@@ -765,6 +760,8 @@ if(
 return "";
 
 }
+
+
 
 
 
@@ -860,7 +857,6 @@ channel==="홈앤쇼핑"
 ){
 
 
-
 return `${channel} 출고예정일 연장 불가`;
 
 }
@@ -875,6 +871,7 @@ else{
 return "";
 
 }
+
 
 
 
@@ -914,7 +911,7 @@ function calculate(){
 
 if(!wb1){
 
-alert("1번 파일을 업로드해주세요.");
+alert("셀메이트 파일을 업로드해주세요.");
 
 return;
 
@@ -925,6 +922,7 @@ return;
 
 
 let bflowData =
+
 createBflowMap();
 
 
@@ -932,12 +930,16 @@ createBflowMap();
 
 
 let sheet =
+
 wb1.Sheets[wb1.SheetNames[0]];
 
 
 
 
+
+
 let rows =
+
 XLSX.utils.sheet_to_json(
 
 sheet,
@@ -959,7 +961,11 @@ raw:true
 
 
 
+
 resultData=[];
+
+
+
 
 
 
@@ -1002,7 +1008,10 @@ resultData.push([
 
 
 
+
+
 for(let i=1;i<rows.length;i++){
+
 
 
 let r=rows[i];
@@ -1018,27 +1027,42 @@ continue;
 
 
 let orderDate =
+
 safeDate(r[0]);
 
 
 
+
+
 let inboundDate =
+
 safeDate(r[8]);
 
 
 
+
+
 let seller =
+
 r[2] || "";
 
 
 
+
+
 let product =
+
 extractBracket(r[6]);
 
 
 
+
+
 let option =
+
 cleanOption(r[7]);
+
+
 
 
 
@@ -1049,8 +1073,8 @@ let jDate=null;
 
 
 
-if(seller==="비플로우"){
 
+if(seller==="비플로우"){
 
 
 jDate =
@@ -1070,8 +1094,6 @@ bflowData
 
 
 }
-
-
 
 
 
@@ -1103,8 +1125,6 @@ orderDate,
 
 
 
-
-
 else if(
 
 seller==="하프클럽"
@@ -1131,9 +1151,9 @@ orderDate,
 
 
 
-
-
 else if(
+
+
 
 seller==="네이버 스마트스토어"
 
@@ -1144,6 +1164,8 @@ seller==="롯데ON"
 ||
 
 seller==="카카오톡스토어"
+
+
 
 ){
 
@@ -1197,6 +1219,7 @@ inboundDate
 
 
 let lValue="";
+
 
 
 
@@ -1272,8 +1295,6 @@ jDate
 
 
 
-
-
 resultData.push([
 
 
@@ -1316,6 +1337,9 @@ lValue,
 
 
 
+
+
+
 document.getElementById("status").innerText =
 
 
@@ -1340,118 +1364,120 @@ document.getElementById("status").innerText =
 
 
 
-
-// 브리치 연장 계산용 데이터 생성
-
-
-function calculateBreach(){
+// 브리치 포함 최종 계산용
+// 기존 resultData 기반으로 L열만 업데이트
 
 
-if(!wb2){
+function createBreachFinalData(){
 
-alert("브리치 파일을 업로드해주세요.");
 
-return;
+let finalData =
+
+JSON.parse(
+JSON.stringify(resultData)
+);
+
+
+
+if(!wb2)
+
+return finalData;
+
+
+
+
+
+let bflowData =
+
+createBflowMap();
+
+
+
+
+
+
+for(let i=1;i<finalData.length;i++){
+
+
+
+let row =
+
+finalData[i];
+
+
+
+
+
+let orderNo =
+
+String(row[3]).trim();
+
+
+
+
+
+let match =
+
+bflowData.find(v=>
+
+
+
+String(v.orderNo)
+
+===
+
+orderNo
+
+
+
+);
+
+
+
+
+
+
+if(match){
+
+
+
+let extendDate =
+
+addBusinessDays(
+
+match.shipDate,
+
+14
+
+);
+
+
+
+
+
+if(extendDate){
+
+
+
+row[11] =
+
+`${match.channel} 출고준수일 연장전 / 연장시 ${dateString(extendDate)}`;
+
+
 
 }
 
 
 
-let bflowData =
-createBflowMap();
+}
 
 
 
-breachResultData=[];
+}
 
 
 
-breachResultData.push([
-
-
-"주문번호",
-
-"판매채널",
-
-"상품명",
-
-"옵션",
-
-"출고준수일",
-
-"연장 후 출고준수일",
-
-"결과"
-
-
-]);
-
-
-
-
-
-
-bflowData.forEach(v=>{
-
-
-
-if(!v.shipDate)
-return;
-
-
-
-
-let extendDate =
-addBusinessDays(
-v.shipDate,
-14
-);
-
-
-
-breachResultData.push([
-
-
-
-v.orderNo,
-
-v.channel,
-
-v.product,
-
-v.option,
-
-v.shipDate,
-
-extendDate,
-
-"연장 계산 완료"
-
-
-
-]);
-
-
-
-});
-
-
-
-
-
-document.getElementById("status").innerText =
-
-
-"브리치 계산 완료 : "
-
-+
-
-(breachResultData.length-1)
-
-+
-
-"건";
-
+return finalData;
 
 
 }
@@ -1477,6 +1503,7 @@ return;
 
 
 
+
 let ws =
 
 XLSX.utils.aoa_to_sheet(
@@ -1491,46 +1518,54 @@ resultData
 
 
 
-// 날짜 처리
-
-for(let i=1;i<resultData.length;i++){
-
-
-let row=i+1;
+applyExcelStyle(ws);
 
 
 
-setDateCell(
+applyFormulaK(ws);
+
+
+
+applyInputDateStyle(ws);
+
+
+
+applyKRedStyle(ws);
+
+
+
+
+
+
+let wb =
+
+XLSX.utils.book_new();
+
+
+
+
+
+
+XLSX.utils.book_append_sheet(
+
+wb,
 
 ws,
 
-"A"+row,
-
-resultData[i][0]
+"장기지연결과"
 
 );
 
 
 
-setDateCell(
-
-ws,
-
-"I"+row,
-
-resultData[i][8]
-
-);
 
 
 
-setDateCell(
+XLSX.writeFile(
 
-ws,
+wb,
 
-"J"+row,
-
-resultData[i][9]
+"장기지연_결과_V64_FINAL4.xlsx"
 
 );
 
@@ -1544,25 +1579,159 @@ resultData[i][9]
 
 
 
-// K열 최종 수식
-// L열 연장 날짜 존재 시 L 기준
-// L열 없으면 기존 J 기준 유지
+
+
+
+
+// 브리치 포함 최종 계산 다운로드
+
+function downloadBreachFinalExcel(){
+
+
+if(resultData.length===0){
+
+
+alert("기존 계산 먼저 실행해주세요.");
+
+return;
+
+
+}
+
+
+
+
+
+let finalData =
+
+createBreachFinalData();
+
+
+
+
+
+
+let ws =
+
+XLSX.utils.aoa_to_sheet(
+
+finalData
+
+);
+
+
+
+
+
+
+
+applyExcelStyle(ws);
+
+
+
+applyFormulaK(ws);
+
+
+
+applyInputDateStyle(ws);
+
+
+
+applyKRedStyle(ws);
+
+
+
+
+
+
+
+let wb =
+
+XLSX.utils.book_new();
+
+
+
+
+
+
+XLSX.utils.book_append_sheet(
+
+wb,
+
+ws,
+
+"브리치최종결과"
+
+);
+
+
+
+
+
+
+XLSX.writeFile(
+
+wb,
+
+"브리치_출고준수일_연장전_주문건포함_최종계산.xlsx"
+
+);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+// K열 수식 적용
+// L열 있으면 L 연장 날짜 기준
+// L열 없으면 기존 J 기준
+
+
+
+function applyFormulaK(ws){
+
+
+let range =
+
+XLSX.utils.decode_range(
+
+ws["!ref"]
+
+);
+
+
+
 
 
 
 for(
 
-let i=2;
+let r=1;
 
-i<=resultData.length;
+r<=range.e.r;
 
-i++
+r++
 
 ){
 
 
 
-ws["K"+i]={
+let row = r+1;
+
+
+
+
+
+ws["K"+row]={
+
 
 
 t:"str",
@@ -1571,9 +1740,14 @@ t:"str",
 
 f:
 
-`IF(ISNUMBER(SEARCH("연장시",L${i})),
-IF(I${i}>DATEVALUE(MID(L${i},FIND("연장시",L${i})+4,10)),"출고불가",""),
-IF(OR(ISTEXT(I${i}),I${i}>J${i}),"출고불가",""))`
+`IF(ISNUMBER(SEARCH("연장시",L${row})),
+IF(OR(ISTEXT(I${row}),I${row}>DATEVALUE(MID(L${row},FIND("연장시",L${row})+4,10))),
+"출고불가",
+""),
+IF(OR(ISTEXT(I${row}),I${row}>J${row}),
+"출고불가",
+""))`
+
 
 
 };
@@ -1584,12 +1758,25 @@ IF(OR(ISTEXT(I${i}),I${i}>J${i}),"출고불가",""))`
 
 
 
+}
 
+
+
+
+
+
+
+
+
+
+
+// 엑셀 공통 스타일
+
+function applyExcelStyle(ws){
 
 
 
 let headerStyle={
-
 
 
 fill:{
@@ -1597,13 +1784,14 @@ fill:{
 
 fgColor:{
 
+
 rgb:"FFD9D9D9"
+
 
 }
 
 
 },
-
 
 
 font:{
@@ -1615,7 +1803,6 @@ sz:12
 
 
 },
-
 
 
 alignment:{
@@ -1657,6 +1844,8 @@ c:c
 
 
 
+
+
 if(ws[cell]){
 
 
@@ -1675,11 +1864,6 @@ ws[cell].s=headerStyle;
 
 
 
-
-
-// 전체 가운데 정렬
-
-
 Object.keys(ws).forEach(key=>{
 
 
@@ -1691,6 +1875,7 @@ return;
 
 if(!ws[key].s){
 
+
 ws[key].s={};
 
 
@@ -1698,14 +1883,14 @@ ws[key].s={};
 
 
 
-ws[key].s.alignment={
 
+
+ws[key].s.alignment={
 
 
 horizontal:"center",
 
 vertical:"center"
-
 
 
 };
@@ -1719,28 +1904,52 @@ vertical:"center"
 
 
 
+}
 
 
 
-// I열 입고일 기입 요망 빨간색
+
+
+
+
+
+
+
+
+// I열 입고일 기입 요망 스타일
+
+function applyInputDateStyle(ws){
+
+
+let range =
+
+XLSX.utils.decode_range(
+
+ws["!ref"]
+
+);
+
+
 
 
 
 for(
 
-let i=2;
+let r=1;
 
-i<=resultData.length;
+r<=range.e.r;
 
-i++
+r++
 
 ){
 
 
 
-let cell=
+let cell =
 
-ws["I"+i];
+ws["I"+(r+1)];
+
+
 
 
 
@@ -1803,31 +2012,62 @@ vertical:"center"
 
 
 
+}
 
 
 
 
 
 
-// K열 출고불가 빨간색 굵게
+
+
+
+
+
+// K열 출고불가 스타일
+
+function applyKRedStyle(ws){
+
+
+let range =
+
+XLSX.utils.decode_range(
+
+ws["!ref"]
+
+);
+
+
+
 
 
 
 for(
 
-let i=2;
+let r=1;
 
-i<=resultData.length;
+r<=range.e.r;
 
-i++
+r++
 
 ){
 
 
 
-let cell=
+let cell =
 
-ws["K"+i];
+ws["K"+(r+1)];
+
+
+
+
+
+if(!cell)
+
+continue;
+
+
+
 
 
 
@@ -1876,42 +2116,6 @@ vertical:"center"
 
 
 
-
-
-
-
-let wb=
-
-XLSX.utils.book_new();
-
-
-
-
-
-XLSX.utils.book_append_sheet(
-
-wb,
-
-ws,
-
-"장기지연결과"
-
-);
-
-
-
-
-
-XLSX.writeFile(
-
-wb,
-
-"장기지연_결과_V64_FINAL4.xlsx"
-
-);
-
-
-
 }
 
 
@@ -1921,6 +2125,8 @@ wb,
 
 
 
+
+// 날짜 저장
 
 function setDateCell(
 
@@ -1948,9 +2154,6 @@ return;
 
 
 
-// 입고일 기입 요망 문자 보호
-
-
 
 if(
 
@@ -1963,7 +2166,6 @@ value==="입고일 기입 요망"
 cell.t="s";
 
 cell.v=value;
-
 
 
 return;
@@ -1997,13 +2199,11 @@ cell.v=value;
 cell.z="yyyy-mm-dd";
 
 
-
 return;
 
 
 
 }
-
 
 
 
@@ -2026,14 +2226,11 @@ cell.v=d;
 
 cell.z="yyyy-mm-dd";
 
-
-
 return;
 
 
 
 }
-
 
 
 
@@ -2047,264 +2244,6 @@ cell.v=value || "";
 
 
 }
-
-
-
-
-function downloadBreachExcel(){
-
-
-if(breachResultData.length===0){
-
-
-alert("브리치 계산 먼저 실행해주세요.");
-
-
-return;
-
-
-}
-
-
-
-
-
-
-
-let ws =
-
-XLSX.utils.aoa_to_sheet(
-
-breachResultData
-
-);
-
-
-
-
-
-
-
-// 날짜 처리
-
-for(let i=1;i<breachResultData.length;i++){
-
-
-
-let row=i+1;
-
-
-
-
-setDateCell(
-
-ws,
-
-"E"+row,
-
-breachResultData[i][4]
-
-);
-
-
-
-
-
-setDateCell(
-
-ws,
-
-"F"+row,
-
-breachResultData[i][5]
-
-);
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-let headerStyle={
-
-
-
-fill:{
-
-
-fgColor:{
-
-rgb:"FFD9D9D9"
-
-}
-
-
-},
-
-
-
-font:{
-
-
-bold:true,
-
-sz:12
-
-
-},
-
-
-
-alignment:{
-
-
-horizontal:"center",
-
-vertical:"center"
-
-
-}
-
-
-
-};
-
-
-
-
-
-
-
-
-
-for(let c=0;c<7;c++){
-
-
-
-let cell =
-
-XLSX.utils.encode_cell({
-
-
-r:0,
-
-c:c
-
-
-});
-
-
-
-if(ws[cell]){
-
-
-ws[cell].s=headerStyle;
-
-
-}
-
-
-
-}
-
-
-
-
-
-
-
-
-
-Object.keys(ws).forEach(key=>{
-
-
-if(key==="!ref")
-
-return;
-
-
-
-if(!ws[key].s){
-
-ws[key].s={};
-
-
-}
-
-
-
-ws[key].s.alignment={
-
-
-horizontal:"center",
-
-vertical:"center"
-
-
-};
-
-
-
-});
-
-
-
-
-
-
-
-
-
-
-let wb=
-
-XLSX.utils.book_new();
-
-
-
-
-
-XLSX.utils.book_append_sheet(
-
-wb,
-
-ws,
-
-"브리치연장계산"
-
-);
-
-
-
-
-
-
-XLSX.writeFile(
-
-wb,
-
-"브리치_출고준수일_연장전_주문건포함_최종계산.xlsx"
-
-);
-
-
-
-}
-
-
-
-
-
-
 
 
 </script>
