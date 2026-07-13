@@ -63,11 +63,10 @@ td.reason-cell{color:#6b3d00;font-weight:750;background:#fff8dc}
     <span class="pill">F 작업자 옵션</span>
     <span class="pill">G 옵션 매칭 확인</span>
     <span class="pill">H 확인 사유</span>
-    <span class="pill">I 재고매칭</span>
-    <span class="pill">J 설정수량</span>
-    <span class="pill">K 일련번호</span>
-    <span class="pill">L 등록일자</span>
-    <span class="pill">M 작업자</span>
+    <span class="pill">I 재고매칭 설정수량</span>
+    <span class="pill">J 일련번호</span>
+    <span class="pill">K 등록일자</span>
+    <span class="pill">L 작업자</span>
     <br><br>
     <button onclick="processFile()">매칭 확인 실행</button>
     <button class="secondary" onclick="downloadResult()">결과 엑셀 다운로드</button>
@@ -143,10 +142,10 @@ function isIgnorableValue(x){
 }
 
 function cleanInputToken(token){
-  return txt(token)
-    .replace(/^\s*\+\s*\d*\s*/,"")
-    .replace(/^\d+(?=[가-힣a-zA-Z])/,"")
-    .trim();
+  let s=txt(token).replace(/^\s*\+\s*\d*\s*/,"").trim();
+  // 2XL, 3XL 같은 사이즈와 7부~10부 같은 기장의 앞 숫자는 순번으로 제거하지 않음
+  if(isSizeValue(s)||isLengthValue(s))return s;
+  return s.replace(/^\d+(?=[가-힣a-zA-Z])/,"").trim();
 }
 
 function addTokenToSets(sets, token){
@@ -201,17 +200,24 @@ function parseOpt(v){
   const sets={colors:new Set(),sizes:new Set(),lengths:new Set()};
   const s=cleanOptionString(v);
 
-  // preSplitOption에서 이미 붙은 사이즈를 콤마로 분리했으므로
-  // 여기서는 구분자 기준으로만 안정적으로 파싱
-  s.split(/[,\//|]+/).forEach(seg=>{
+  // 콤마, 슬래시, +, |를 옵션 구분자로 사용
+  // 한 구간 안에 "롱 L", "진청 롱 L"처럼 공백으로 기장/사이즈가 붙으면 각각 분리
+  s.split(/[,\/+|]+/).forEach(seg=>{
     const t=txt(seg);
     if(!t)return;
-    addTokenToSets(sets,t);
 
-    if(!/\([^()]*\)/.test(t)){
-      t.split(/\s+/).forEach(piece=>{
-        if(txt(piece)) addTokenToSets(sets,piece);
+    const pieces=/\([^()]*\)/.test(t)?[t]:t.split(/\s+/).filter(Boolean);
+    const hasKnown=pieces.some(piece=>isSizeValue(piece)||isLengthValue(piece));
+
+    if(hasKnown){
+      const colorPieces=[];
+      pieces.forEach(piece=>{
+        if(isSizeValue(piece)||isLengthValue(piece)) addTokenToSets(sets,piece);
+        else colorPieces.push(piece);
       });
+      if(colorPieces.length) addTokenToSets(sets,colorPieces.join(" "));
+    }else{
+      addTokenToSets(sets,t);
     }
   });
 
@@ -262,27 +268,66 @@ function productReason(a,b,d){
   return"상품명 키워드 확인 필요";
 }
 
-function isBundleOption(v){return txt(v).includes("+");}
+function splitOptionSegments(v){
+  return cleanOptionString(v)
+    .split(/[,\/+|]+/)
+    .map(cleanInputToken)
+    .filter(Boolean);
+}
 
-function expectedBundleItems(originalOption){
+function segmentInfo(seg){
+  const raw=cleanInputToken(seg);
+  const parsed=parseOpt(raw);
+  const pieces=/\([^()]*\)/.test(raw)?[raw]:raw.split(/\s+/).filter(Boolean);
+  const hasKnown=pieces.some(piece=>isSizeValue(piece)||isLengthValue(piece));
+
+  let colorRaw=raw;
+  if(hasKnown){
+    colorRaw=pieces.filter(piece=>!isSizeValue(piece)&&!isLengthValue(piece)).join(" ");
+  }
+
+  const aliases=[];
+  const paren=colorRaw.match(/^(.+?)\(([^()]*)\)$/);
+  if(paren){
+    [paren[1],paren[2]].forEach(v=>{
+      const alias=canon(v);
+      if(alias&&!isIgnorableValue(alias)&&!isSizeValue(alias)&&!isLengthValue(alias)&&!aliases.includes(alias)) aliases.push(alias);
+    });
+  }else{
+    const alias=canon(colorRaw);
+    if(alias&&!isIgnorableValue(alias)&&!isSizeValue(alias)&&!isLengthValue(alias)) aliases.push(alias);
+  }
+
+  return {aliases,sizes:parsed.sizes,lengths:parsed.lengths};
+}
+
+function delimitedBundleItems(originalOption){
   const parsed=parseOpt(originalOption);
   const commonSizes=parsed.sizes;
   const commonLengths=parsed.lengths;
-  let s=cleanOptionString(originalOption);
-  s=s.replace(/사이즈\/[^,\/|]+/gi," ");
-  s=s.replace(/사이즈\s*:[^,\/|]+/gi," ");
-  s=s.replace(/기장\s*:[^,\/|]+/gi," ");
-
   const items=[];
-  s.split(/[,\//|]+/).forEach(seg=>{
-    let raw=cleanInputToken(seg);
-    if(!raw)return;
-    const p=parseOpt(raw);
-    p.colors.forEach(color=>{
-      items.push({colorAliases:[color],sizes:commonSizes,lengths:commonLengths});
+
+  splitOptionSegments(originalOption).forEach(seg=>{
+    const info=segmentInfo(seg);
+    if(!info.aliases.length)return;
+    items.push({
+      colorAliases:info.aliases,
+      sizes:info.sizes.length?info.sizes:commonSizes,
+      lengths:info.lengths.length?info.lengths:commonLengths
     });
   });
+
   return items;
+}
+
+function bundleMode(v){
+  return delimitedBundleItems(v).length>1?"delimited":"";
+}
+
+function isBundleOption(v){return bundleMode(v)!=="";}
+
+function expectedBundleItems(originalOption){
+  return delimitedBundleItems(originalOption);
 }
 
 function actualItem(workerOption){
@@ -399,7 +444,9 @@ function processFile(){
       stockName,
       originalOption,
       workerOption,
-      serial:bundleKeyFromRow(r),
+      bundleMode:bundleMode(originalOption),
+      serial:txt(r[0]),
+      orderQty:(()=>{const m=txt(r[5]).match(/^(\d+)개$/);return m?Number(m[1]):1;})(),
       productOk:isProductMatched(productName,stockName,originalOption),
       optionOk:normalOptionOk(originalOption,workerOption),
       isBundle:isBundleOption(originalOption),
@@ -410,17 +457,23 @@ function processFile(){
   const groups=new Map();
   temp.forEach((item,idx)=>{
     if(!item.isBundle||!item.serial)return;
-    if(!groups.has(item.serial))groups.set(item.serial,[]);
-    groups.get(item.serial).push({idx,item});
+    const groupKey=item.bundleMode+"||"+item.serial;
+    if(!groups.has(groupKey))groups.set(groupKey,[]);
+    groups.get(groupKey).push({idx,item});
   });
 
   temp.forEach((item,idx)=>{
     if(!item.isBundle)return;
     const expected=expectedBundleItems(item.originalOption);
     if(expected.length===0)return;
-    const group=groups.get(item.serial)||[{idx,item}];
-    const actual=group.map(g=>actualItem(g.item.workerOption));
-    const groupOk=matchSet(expected,actual);
+    const groupKey=item.bundleMode+"||"+item.serial;
+    const group=groups.get(groupKey)||[{idx,item}];
+    const actual=[];
+    group.forEach(g=>{
+      const one=actualItem(g.item.workerOption);
+      for(let q=0;q<g.item.orderQty;q++) actual.push({...one});
+    });
+    const groupOk=actual.length===expected.length&&matchSet(expected,actual);
     const rowActual=actualItem(item.workerOption);
     const rowOk=expected.some(exp=>itemMatch(rowActual,exp));
     item.optionOk=groupOk&&rowOk;
@@ -431,7 +484,7 @@ function processFile(){
     }
   });
 
-  resultRows=[["상태","상품명(상품매칭)","작업자 재고매칭 상품명","상품명 매칭 확인","원본 옵션","작업자 옵션","옵션 매칭 확인","확인 사유","재고매칭","설정수량","일련번호","등록일자","작업자"]];
+  resultRows=[["상태","상품명(상품매칭)","작업자 재고매칭 상품명","상품명 매칭 확인","원본 옵션","작업자 옵션","옵션 매칭 확인","확인 사유","재고매칭 설정수량","일련번호","등록일자","작업자"]];
 
   temp.forEach(item=>{
     const r=item.row;
@@ -452,7 +505,6 @@ function processFile(){
       reasons,
       r[5]??"",
       r[0]??"",
-      r[6]??"",
       r[7]??"",
       r[8]??""
     ]);
@@ -532,7 +584,7 @@ function downloadResult(){
   ws["!rows"]=ws["!rows"]||[];
   ws["!rows"][0]={hpx:30};
   ws["!cols"]=[
-    {wch:12},{wch:48},{wch:48},{wch:18},{wch:48},{wch:32},{wch:18},{wch:70},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}
+    {wch:12},{wch:48},{wch:48},{wch:18},{wch:48},{wch:32},{wch:18},{wch:70},{wch:24},{wch:18},{wch:18},{wch:18}
   ];
   ws["!autofilter"]={ref:ws["!ref"]};
 
