@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>포레스트핏 케이디지 재고장 매칭</title>
+<title>포레스트핏 거래처별 재고장 통합 매칭</title>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+
 <style>
 *{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
 body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
@@ -14,104 +16,112 @@ body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#
 .logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
 .badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750}
 h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 10px;font-weight:900}
-.desc{font-size:15px;color:#6d776f;line-height:1.6;margin-bottom:22px;font-weight:600}
+.desc{font-size:15px;color:#6d776f;line-height:1.7;margin-bottom:22px;font-weight:600}
 .card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 35px rgba(38,49,43,.07)}
 label{display:block;font-size:16px;font-weight:850;margin-bottom:9px;color:#173d2b}
 input,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
 button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer}
 button.secondary{background:#7b8b82}
+button.danger{background:#a45c5c}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:14px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.small{font-size:13px;color:#7c867f;line-height:1.55}
+.small{font-size:13px;color:#7c867f;line-height:1.6}
 .notice{background:#fff8dc;border:1px solid #efd894;color:#6b3d00;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;line-height:1.6;margin-top:8px}
-.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none}
+.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none;white-space:pre-line}
 .summary{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px}
 .summary b{font-size:26px;color:#244734}
-.table-wrap{max-height:420px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
+.vendor-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.vendor-row{border:1px solid #dfe7e2;border-radius:16px;padding:14px;background:#fbfdfc}
+.vendor-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.vendor-name{font-size:15px;font-weight:850;color:#173d2b}
+.vendor-state{font-size:12px;color:#7c867f;font-weight:700}
+.file-name{font-size:12px;color:#486052;margin-top:-5px;margin-bottom:8px;word-break:break-all}
+.table-wrap{max-height:470px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
 th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
 .ok{background:#eefaf3;color:#177245;font-weight:800}
 .warn{background:#fff8dc;color:#6b3d00;font-weight:800}
-@media(max-width:900px){.grid2,.grid4{grid-template-columns:1fr}}
+.bad{background:#fff2f2;color:#8a2f2f;font-weight:800}
+@media(max-width:900px){.grid2,.grid3,.grid4,.vendor-list{grid-template-columns:1fr}}
 </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="top">
     <div class="logo">FORESTFIT</div>
-    <div class="badge">케이디지 재고장 매칭</div>
+    <div class="badge">거래처별 재고장 통합 매칭</div>
   </div>
 
-  <h1>케이디지 재고장 매칭</h1>
+  <h1>거래처별 재고장 통합 매칭</h1>
   <div class="desc">
-    케이디지 베이스 파일과 재고장 파일을 업로드하면, 재고장 파일의 <b>D열 사입명</b>과 <b>F열 사이즈</b>를 기준으로 <b>G열</b>에 재고 수량을 자동 입력합니다.<br>
-    재고장 파일은 기존 <b>색상·글씨체·병합·테두리 양식</b>을 유지하고 G열 값만 변경합니다.
+    재고장 원본 파일은 한 번만 첨부하고, 거래처별 재고표를 각각 첨부해 해당 거래처 탭의 G열에 재고를 입력합니다.<br>
+    거래처명과 재고장 탭명은 <b>띄어쓰기만 제외하고 완전히 일치</b>해야 합니다.
   </div>
 
   <div class="card">
-    <label>1. 파일 업로드</label>
-    <div class="grid2">
-      <div>
-        <label>케이디지 베이스 파일</label>
-        <input type="file" id="baseFile" accept=".xlsx,.xls,.csv">
-        <div class="small">
-          사용 시트: 여성복(사계), 남성복(사계), 여성복(여름), 남성복(여름)<br>
-          기준: B열 품번 / D열 S / E열 M / F열 L / G열 XL / H열 2XL / I열 3XL<br>
-          재고장 사입명이 7로 시작하면 여성복(사계) 시트만 조회 / 품번·기장 + 사이즈 열 기준
-        </div>
-        <div class="notice">
-          베이스 파일에 위 4개 시트 외 다른 탭이 있으면 삭제 후 첨부해주세요.<br>
-          시트명이 다르면 해당 시트는 자동으로 제외됩니다.
-        </div>
-      </div>
-      <div>
-        <label>케이디지 재고장 파일</label>
-        <input type="file" id="stockFile" accept=".xlsx,.xls">
-        <div class="small">
-          기준: D열 사입명 / F열 사이즈 / G열에 재고 입력<br>
-          D열 병합 셀은 위에 적힌 사입명으로 자동 인식합니다.
-        </div>
-      </div>
+    <label>1. 재고장 원본 파일 첨부</label>
+    <input type="file" id="stockFile" accept=".xlsx,.xls">
+    <div class="small">
+      첫 번째 탭은 처리하지 않습니다.<br>
+      두 번째 탭부터 D열 사입명 / E열 기장 / F열 사이즈 / G열 재고 구조를 사용합니다.
     </div>
-    <button onclick="processMatch()">케이디지 재고 매칭 실행</button>
+  </div>
+
+  <div class="card">
+    <label>2. 거래처별 재고표 첨부</label>
+    <div id="fixedVendorList" class="vendor-list"></div>
+    <div class="notice">
+      고정 거래처: 케이디지 / 리자드 / 시나브로 / 리마인드 / 뉴행 / 신안어패럴 / 계란속노른자<br>
+      첨부하지 않은 거래처는 처리하지 않습니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <label>3. 추가 거래처</label>
+    <div class="grid3">
+      <input type="text" id="customVendorName" placeholder="거래처명 입력">
+      <input type="file" id="customVendorFile" accept=".xlsx,.xls,.csv">
+      <button type="button" onclick="addCustomVendor()">추가 거래처 등록</button>
+    </div>
+    <div class="small" style="margin-bottom:12px;">
+      추가 거래처는 현재 자동 구조 분석을 지원하지 않습니다. 등록은 가능하지만 전용 규칙이 없으면 처리하지 않고 안내합니다.
+    </div>
+    <div id="customVendorList" class="vendor-list"></div>
+  </div>
+
+  <div class="card">
+    <button onclick="processAll()">전체 거래처 재고 매칭 실행</button>
     <div id="status" class="status"></div>
   </div>
 
   <div class="card">
-    <label>2. 요약</label>
+    <label>4. 요약</label>
     <div class="grid4">
       <div class="summary"><b id="totalCnt">0</b><div class="small">처리 대상</div></div>
       <div class="summary"><b id="matchedCnt">0</b><div class="small">매칭 완료</div></div>
       <div class="summary"><b id="unmatchedCnt">0</b><div class="small">매칭안됨</div></div>
-      <div class="summary"><b id="lookupCnt">0</b><div class="small">재고표 키</div></div>
+      <div class="summary"><b id="vendorCnt">0</b><div class="small">처리 거래처</div></div>
     </div>
   </div>
 
   <div class="card">
-    <label>3. 결과 미리보기</label>
+    <label>5. 결과 미리보기</label>
     <button onclick="downloadModified()">양식 유지 재고장 다운로드</button>
     <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
-    <div class="small" style="margin:8px 0 12px;">다운로드 파일은 재고장 원본 양식을 유지하고 G열 재고만 입력됩니다.</div>
+    <div class="small" style="margin:8px 0 12px;">재고장 원본 서식은 유지하고 각 거래처 탭의 G열 값만 변경합니다.</div>
     <div class="table-wrap" id="resultTable"></div>
   </div>
 </div>
 
 <script>
-let baseWb=null;
+const FIXED_VENDORS=["케이디지","리자드","시나브로","리마인드","뉴행","신안어패럴","계란속노른자"];
+const vendorFiles=new Map();
+const customVendors=[];
 let stockWbExcel=null;
 let resultRows=[];
-let stockFileBuffer=null;
-
-const allowedSheets=["여성복(사계)","남성복(사계)","여성복(여름)","남성복(여름)"];
-const sizeCols={
-  "S":4,   // D
-  "M":5,   // E
-  "L":6,   // F
-  "XL":7,  // G
-  "2XL":8, // H
-  "3XL":9  // I
-};
 
 function txt(v){
   if(v==null)return "";
@@ -122,239 +132,505 @@ function txt(v){
 }
 function num(v){
   const s=txt(v).replace(/,/g,"");
-  if(s==="-" || s==="") return 0;
+  if(s==="" || s==="-")return 0;
   const n=Number(s);
   return Number.isFinite(n)?n:0;
 }
-function setStatus(msg){const el=document.getElementById("status");el.style.display="block";el.textContent=msg;}
+function setStatus(msg){
+  const el=document.getElementById("status");
+  el.style.display="block";
+  el.textContent=msg;
+}
+function escapeHtml(v){
+  return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
 function escapeCsv(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
+function normalizeVendorName(v){return String(v||"").replace(/\s+/g,"");}
+function normalizeSimple(v){return txt(v).toUpperCase().trim();}
 
-function parseItem(v){
-  let s=txt(v).toUpperCase();
-  s=s.replace(/\s+/g,"");
-  s=s.replace(/^S\.A\./,"");
-  s=s.replace(/^\d+\./,"");
+/*
+  미매칭 문구 판정
+  - 채우기 없음 / 흰색: "매칭안됨"
+  - 흰색 외 배경색: "거래처 재고"
+  정상 매칭된 경우에는 이 함수를 사용하지 않고 실제 재고 수량을 입력합니다.
+*/
+function isWhiteOrNoFill(cell){
+  const fill=cell?.fill;
 
-  let length="기본";
-
-  // 괄호 기장 인식: 7327(숏), 7327(롱)
-  const korLen=s.match(/\((숏|롱|기본)\)/);
-  if(korLen){
-    length=korLen[1];
-    s=s.replace(/\((숏|롱|기본)\)/g,"");
+  // 채우기가 없거나 ExcelJS 기본값인 경우
+  if(!fill || fill.type!=="pattern" || !fill.pattern || fill.pattern==="none"){
+    return true;
   }
 
-  // 숫자 앞 문자는 제거: FJ-7327 -> 7327
-  s=s.replace(/^[^0-9]+/,"");
-
-  // 케이디지 기장 접미사
-  if(s.endsWith("SH")){
-    length="숏";
-    s=s.slice(0,-2);
-  }else if(s.endsWith("LO")){
-    length="롱";
-    s=s.slice(0,-2);
+  // 단색 채우기가 아닌 패턴 채우기는 색상이 적용된 것으로 판단
+  if(fill.pattern!=="solid"){
+    return false;
   }
 
-  // 품번 자체는 절대 7327-1 -> 7327 로 줄이지 않음
-  // 케이디지는 한 행이 품번/기장이고 사이즈는 열 기준이기 때문
-  return {code:s, length};
+  const color=fill.fgColor || {};
+
+  // 색상 정보 자체가 없으면 채우기 없음으로 판단
+  if(color.argb==null && color.rgb==null && color.theme==null && color.indexed==null){
+    return true;
+  }
+
+  // ARGB/RGB 직접 지정 흰색
+  const rawArgb=String(color.argb || color.rgb || "").toUpperCase().replace(/^#/,"");
+  const rgb=rawArgb.length===8 ? rawArgb.slice(2) : rawArgb;
+  if(rgb==="FFFFFF"){
+    return true;
+  }
+
+  // Excel 테마 0(Light 1)은 기본 흰색
+  // 음수 tint가 있으면 회색 계열로 어두워진 색이므로 색상 적용으로 판단
+  if(Number(color.theme)===0){
+    const tint=Number(color.tint ?? 0);
+    return !Number.isFinite(tint) || tint>=0;
+  }
+
+  // Excel 색상 인덱스: 9=흰색, 64=자동색상
+  if(Number(color.indexed)===9 || Number(color.indexed)===64){
+    return true;
+  }
+
+  return false;
 }
 
-function normName(v){
-  const item=parseItem(v);
-  return item.code+"||"+item.length;
+function getUnmatchedText(cell){
+  return isWhiteOrNoFill(cell) ? "매칭안됨" : "거래처 재고";
 }
 
-function normSize(v){
-  let s=txt(v).toUpperCase().replace(/\s+/g,"");
-  if(s==="F1")return "S";
-  if(s==="F2")return "M";
-  if(s==="F3")return "L";
-  if(s==="F")return "FREE";
-  return s;
+function normalizeSinabroCode(v){
+  return txt(v)
+    .toUpperCase()
+    .replace(/\s+/g,"")
+    .replace(/^S\.A\./,"")
+    .replace(/^\d+\./,"");
 }
 
-function key(name,size){
-  const item=parseItem(name);
-  return item.code+"||"+item.length+"||"+normSize(size);
-}
-
-document.getElementById("baseFile").addEventListener("change",e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    baseWb=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,raw:false});
-    const found=baseWb.SheetNames.filter(n=>allowedSheets.includes(n));
-    setStatus(`${file.name} 업로드 완료 / 사용 가능 시트 ${found.length}개: ${found.join(", ") || "없음"}`);
+function normalizeSinabroSize(v){
+  const s=txt(v).toUpperCase().replace(/\s+/g,"");
+  const map={
+    "26":"S","26(S)":"S","S":"S",
+    "28":"M","28(M)":"M","M":"M",
+    "30":"L","30(L)":"L","L":"L",
+    "32":"XL","32(XL)":"XL","XL":"XL",
+    "34":"2XL","34(2XL)":"2XL","2XL":"2XL",
+    "36":"3XL","36(3XL)":"3XL","3XL":"3XL"
   };
-  reader.readAsArrayBuffer(file);
-});
+  return map[s] || s;
+}
+
+function renderFixedVendors(){
+  document.getElementById("fixedVendorList").innerHTML=FIXED_VENDORS.map((name,index)=>`
+    <div class="vendor-row">
+      <div class="vendor-head">
+        <div class="vendor-name">${name}</div>
+        <div class="vendor-state" id="state-${index}">미첨부</div>
+      </div>
+      <input type="file" accept=".xlsx,.xls,.csv" onchange="setFixedVendorFile(${index},this.files[0])">
+      <div class="file-name" id="file-${index}"></div>
+    </div>
+  `).join("");
+}
+function setFixedVendorFile(index,file){
+  const name=FIXED_VENDORS[index];
+  if(!file){
+    vendorFiles.delete(name);
+    document.getElementById(`state-${index}`).textContent="미첨부";
+    document.getElementById(`file-${index}`).textContent="";
+    return;
+  }
+  vendorFiles.set(name,file);
+  document.getElementById(`state-${index}`).textContent="첨부 완료";
+  document.getElementById(`file-${index}`).textContent=file.name;
+}
+function addCustomVendor(){
+  const name=document.getElementById("customVendorName").value.trim();
+  const file=document.getElementById("customVendorFile").files[0];
+  if(!name){alert("거래처명을 입력해주세요.");return;}
+  if(!file){alert("재고표 파일을 첨부해주세요.");return;}
+  if(FIXED_VENDORS.includes(name) || customVendors.some(v=>v.name===name)){alert("이미 등록된 거래처입니다.");return;}
+  customVendors.push({name,file});
+  vendorFiles.set(name,file);
+  document.getElementById("customVendorName").value="";
+  document.getElementById("customVendorFile").value="";
+  renderCustomVendors();
+}
+function removeCustomVendor(index){
+  const item=customVendors[index];
+  if(item)vendorFiles.delete(item.name);
+  customVendors.splice(index,1);
+  renderCustomVendors();
+}
+function renderCustomVendors(){
+  document.getElementById("customVendorList").innerHTML=customVendors.map((item,index)=>`
+    <div class="vendor-row">
+      <div class="vendor-head">
+        <div class="vendor-name">${escapeHtml(item.name)}</div>
+        <div class="vendor-state">첨부 완료</div>
+      </div>
+      <div class="file-name">${escapeHtml(item.file.name)}</div>
+      <button class="danger" onclick="removeCustomVendor(${index})">삭제</button>
+    </div>
+  `).join("");
+}
 
 document.getElementById("stockFile").addEventListener("change",async e=>{
   const file=e.target.files[0];
   if(!file)return;
-  stockFileBuffer=await file.arrayBuffer();
-  stockWbExcel=new ExcelJS.Workbook();
-  await stockWbExcel.xlsx.load(stockFileBuffer);
-  setStatus(`${file.name} 업로드 완료`);
+  try{
+    const buffer=await file.arrayBuffer();
+    stockWbExcel=new ExcelJS.Workbook();
+    await stockWbExcel.xlsx.load(buffer);
+    setStatus(`${file.name} 업로드 완료 / 전체 시트 ${stockWbExcel.worksheets.length}개`);
+  }catch(err){
+    console.error(err);
+    alert("재고장 파일을 불러오지 못했습니다.");
+  }
 });
 
-function sheetAoA(wb, sheetName){
+async function readWorkbook(file){
+  const buffer=await file.arrayBuffer();
+  return XLSX.read(new Uint8Array(buffer),{type:"array",cellDates:true,raw:false});
+}
+function sheetAoA(wb,sheetName){
   return XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
 }
+function findStockSheet(vendorName){
+  const target=normalizeVendorName(vendorName);
+  return stockWbExcel.worksheets.slice(1).find(ws=>normalizeVendorName(ws.name)===target) || null;
+}
 
-function buildLookup(){
-  const allMap=new Map();
+/* 케이디지 */
+function parseKdgItem(v){
+  let s=txt(v).toUpperCase().replace(/\s+/g,"").replace(/^S\.A\./,"").replace(/^\d+\./,"");
+  let length="기본";
+  const korLen=s.match(/\((숏|롱|기본)\)/);
+  if(korLen){length=korLen[1];s=s.replace(/\((숏|롱|기본)\)/g,"");}
+  s=s.replace(/^[^0-9]+/,"");
+  if(s.endsWith("SH")){length="숏";s=s.slice(0,-2);}
+  else if(s.endsWith("LO")){length="롱";s=s.slice(0,-2);}
+  return {code:s,length};
+}
+function kdgKey(name,size){
+  const item=parseKdgItem(name);
+  return `${item.code}||${item.length}||${normalizeSimple(size)}`;
+}
+function buildKdgLookup(wb){
+  const sheetNames=["여성복(사계)","여성복(겨울)","남성복(사계)","여성복(여름)","남성복(여름)","남녀공용(여름)","B상품","재고부족"];
+  const sizeCols={"S":4,"M":5,"L":6,"XL":7,"2XL":8,"3XL":9};
   const sheetMaps={};
-
-  allowedSheets.forEach(sheetName=>{
-    const sheetMap=new Map();
-
-    if(!baseWb.Sheets[sheetName]){
-      sheetMaps[sheetName]=sheetMap;
-      return;
-    }
-
-    const rows=sheetAoA(baseWb,sheetName);
-
+  sheetNames.forEach(sheetName=>{
+    if(!wb.Sheets[sheetName])return;
+    const map=new Map();
+    const rows=sheetAoA(wb,sheetName);
     for(let i=1;i<rows.length;i++){
       const r=rows[i]||[];
-      const item=txt(r[1]); // B열 품번/기장
-      if(!item) continue;
+      const item=txt(r[1]);
+      if(!item)continue;
+      Object.entries(sizeCols).forEach(([size,col])=>map.set(kdgKey(item,size),num(r[col-1])));
+    }
+    sheetMaps[sheetName]=map;
+  });
+  return {type:"kdg",sheetMaps};
+}
+function lookupKdg(lookup,name,size){
+  const item=parseKdgItem(name);
+  let search=[];
+  if(item.code.startsWith("7"))search=["여성복(사계)","여성복(겨울)","B상품","재고부족"];
+  else if(item.code.startsWith("0"))search=["남성복(사계)","B상품","재고부족"];
+  else if(item.code.startsWith("4"))search=["여성복(여름)","B상품","재고부족"];
+  else if(item.code.startsWith("5"))search=["남성복(여름)","남녀공용(여름)","B상품","재고부족"];
+  else search=["B상품","재고부족"];
+  const k=kdgKey(name,size);
+  for(const sheet of search){
+    const map=lookup.sheetMaps[sheet];
+    if(map && map.has(k))return {matched:true,value:map.get(k),sourceSheet:sheet};
+  }
+  return {matched:false};
+}
 
-      // 케이디지는 한 행에 품번/기장이 있고, 사이즈는 D~I 열로 가로 정렬
-      Object.entries(sizeCols).forEach(([size,colNum])=>{
-        const qty=num(r[colNum-1]); // D~I, 0-index
-        const k=key(item,size);
-        sheetMap.set(k,qty);
+/* 리자드 */
+function genericKey(name,size){return `${normalizeSimple(name).replace(/\s+/g,"").replace(/^S\.A\./,"").replace(/^\d+\./,"")}||${normalizeSimple(size)}`;}
+function buildLizardLookup(wb){
+  const rows=sheetAoA(wb,wb.SheetNames[0]);
+  const map=new Map();
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]||[];
+    if(txt(r[1])&&txt(r[2]))map.set(genericKey(r[1],r[2]),num(r[3]));
+    if(txt(r[12])&&txt(r[13]))map.set(genericKey(r[12],r[13]),num(r[14]));
+    if(txt(r[0])&&txt(r[2]))map.set(genericKey(r[0],r[2]),num(r[3]));
+  }
+  return {type:"map",map};
+}
 
-        // 전체 map은 먼저 읽힌 시트 값 우선 유지
-        if(!allMap.has(k)) allMap.set(k,qty);
+/* 리마인드 */
+function buildRemindLookup(wb){
+  const rows=sheetAoA(wb,wb.SheetNames[0]);
+  const map=new Map();
+  const sizes=["F","S","M","L","XL","2XL","3XL"];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const code=txt(r[2]);
+    if(!code)continue;
+    sizes.forEach((size,idx)=>map.set(`${code.trim()}||${size}`,num(r[3+idx])));
+  }
+  return {type:"rawMap",map};
+}
+
+/* 계란속노른자 */
+function buildEggYolkLookup(wb){
+  const rows=sheetAoA(wb,wb.SheetNames[0]);
+  const map=new Map();
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const code=txt(r[0]), size=txt(r[2]);
+    if(code&&size)map.set(`${code.trim()}||${size.trim()}`,num(r[4]));
+  }
+  return {type:"rawMap",map};
+}
+
+/* 뉴행 */
+function buildNewhaengLookup(wb){
+  const sheet=wb.Sheets["재고표"] ? "재고표" : wb.SheetNames[0];
+  const rows=sheetAoA(wb,sheet);
+  const map=new Map();
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const code=txt(r[0]), size=txt(r[2]);
+    if(code&&size)map.set(`${normalizeSimple(code)}||${normalizeSimple(size)}`,num(r[4]));
+  }
+  return {type:"upperMap",map};
+}
+
+/* 시나브로 */
+function parseSinabroQty(v){
+  const s=txt(v);
+  if(["일시품절","품절","완판"].includes(s))return 0;
+  return num(s);
+}
+function buildSinabroLookup(wb){
+  const targetSheets=["주메인품목","DF(봄 가을)","DW(겨울)","DM(여름)&DS"];
+  const sheetMaps={};
+  targetSheets.forEach(sheetName=>{
+    if(!wb.Sheets[sheetName])return;
+    const rows=sheetAoA(wb,sheetName);
+    const map=new Map();
+    const sizes=["S","M","L","XL","2XL","3XL"];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]||[];
+      const code=txt(r[0]);
+      if(!code)continue;
+      sizes.forEach((size,idx)=>map.set(`${normalizeSinabroCode(code)}||${size}`,parseSinabroQty(r[2+idx])));
+    }
+    sheetMaps[sheetName]=map;
+  });
+  return {type:"sinabro",sheetMaps};
+}
+function lookupSinabro(lookup,name,size){
+  const code=normalizeSinabroCode(name), sz=normalizeSinabroSize(size);
+  let search;
+  if(code.startsWith("DF"))search=["DF(봄 가을)","주메인품목"];
+  else if(code.startsWith("DW"))search=["DW(겨울)","주메인품목"];
+  else if(code.startsWith("DM"))search=["DM(여름)&DS","주메인품목"];
+  else if(code.startsWith("DS"))search=["주메인품목","DM(여름)&DS"];
+  else search=["주메인품목","DF(봄 가을)","DW(겨울)","DM(여름)&DS"];
+  const k=`${code}||${sz}`;
+  for(const sheet of search){
+    const map=lookup.sheetMaps[sheet];
+    if(map&&map.has(k))return {matched:true,value:map.get(k),sourceSheet:sheet};
+  }
+  return {matched:false};
+}
+
+/* 신안어패럴 */
+function parseShinanItem(v){
+  const source=txt(v);
+  const main=source.split("[")[0].trim();
+  const m=main.match(/^(.*?)\s*-\s*(F|S|M|L|XL|2XL|3XL|4XL|5XL)$/i);
+  if(!m)return null;
+  let part=m[1].trim();
+  const size=m[2].toUpperCase();
+  let length="단일기장";
+  const lm=part.match(/^(숏|기본|롱|일반)★(.*)$/);
+  if(lm){
+    length=lm[1]==="일반" ? "단일기장" : lm[1];
+    part=lm[2].trim();
+  }
+  const code=part.replace(/\s*\([^)]*\)\s*$/,"").trim();
+  return {code,length,size};
+}
+function buildShinanLookup(wb){
+  const sheet=wb.Sheets["재고현황"] ? "재고현황" : wb.SheetNames[0];
+  const rows=sheetAoA(wb,sheet);
+  const map=new Map();
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const parsed=parseShinanItem(r[1]);
+    if(!parsed)continue;
+    const k=`${normalizeSimple(parsed.code)}||${parsed.length}||${parsed.size}`;
+    map.set(k,num(r[2]));
+  }
+  return {type:"shinan",map};
+}
+
+function buildLookup(vendorName,wb){
+  switch(normalizeVendorName(vendorName)){
+    case "케이디지": return buildKdgLookup(wb);
+    case "리자드": return buildLizardLookup(wb);
+    case "리마인드": return buildRemindLookup(wb);
+    case "계란속노른자": return buildEggYolkLookup(wb);
+    case "뉴행": return buildNewhaengLookup(wb);
+    case "시나브로": return buildSinabroLookup(wb);
+    case "신안어패럴": return buildShinanLookup(wb);
+    default: return null;
+  }
+}
+function findInLookup(vendorName,lookup,name,length,size){
+  const vn=normalizeVendorName(vendorName);
+  if(vn==="케이디지")return lookupKdg(lookup,name,size);
+  if(vn==="시나브로")return lookupSinabro(lookup,name,size);
+  if(vn==="신안어패럴"){
+    const stockLength=txt(length).replace(/\s+/g,"") || "단일기장";
+    const k=`${normalizeSimple(name)}||${stockLength}||${normalizeSimple(size)}`;
+    return lookup.map.has(k)?{matched:true,value:lookup.map.get(k)}:{matched:false};
+  }
+  if(vn==="리마인드" || vn==="계란속노른자"){
+    const k=`${txt(name).trim()}||${txt(size).trim()}`;
+    return lookup.map.has(k)?{matched:true,value:lookup.map.get(k)}:{matched:false};
+  }
+  if(vn==="뉴행"){
+    const k=`${normalizeSimple(name)}||${normalizeSimple(size)}`;
+    return lookup.map.has(k)?{matched:true,value:lookup.map.get(k)}:{matched:false};
+  }
+  const k=genericKey(name,size);
+  return lookup.map.has(k)?{matched:true,value:lookup.map.get(k)}:{matched:false};
+}
+
+async function processAll(){
+  if(!stockWbExcel){alert("재고장 원본 파일을 첨부해주세요.");return;}
+  if(!vendorFiles.size){alert("거래처 재고표를 한 개 이상 첨부해주세요.");return;}
+
+  resultRows=[];
+  const messages=[];
+  let processedVendors=0;
+
+  try{
+    for(const [vendorName,file] of vendorFiles.entries()){
+      const stockSheet=findStockSheet(vendorName);
+      if(!stockSheet){
+        messages.push(`${vendorName}: 재고장 탭 없음`);
+        continue;
+      }
+
+      const wb=await readWorkbook(file);
+      const lookup=buildLookup(vendorName,wb);
+      if(!lookup){
+        messages.push(`${vendorName}: 전용 계산 규칙 없음`);
+        continue;
+      }
+
+      processedVendors++;
+      let currentName="", currentLength="";
+
+      stockSheet.eachRow({includeEmpty:false},(row,rowNumber)=>{
+        if(rowNumber===1)return;
+
+        const d=txt(row.getCell(4).value);
+        const e=txt(row.getCell(5).value);
+        const f=txt(row.getCell(6).value);
+        const g=row.getCell(7);
+
+        if(d)currentName=d;
+        if(e)currentLength=e;
+
+        const name=currentName;
+        const length=currentLength;
+        const size=f;
+        if(!name || !size)return;
+
+        const found=findInLookup(vendorName,lookup,name,length,size);
+        const unmatchedText=getUnmatchedText(g);
+        const outputValue=found.matched ? found.value : unmatchedText;
+        g.value=outputValue;
+
+        resultRows.push({
+          vendor:vendorName,
+          sheet:stockSheet.name,
+          sourceSheet:found.sourceSheet||"-",
+          rowNo:rowNumber,
+          name,
+          length:length||"-",
+          size,
+          stock:outputValue,
+          status:found.matched ? "매칭완료" : unmatchedText
+        });
       });
     }
 
-    sheetMaps[sheetName]=sheetMap;
-  });
-
-  return {allMap, sheetMaps};
-}
-
-function processMatch(){
-  if(!baseWb){alert("케이디지 베이스 파일을 업로드해주세요.");return;}
-  if(!stockWbExcel){alert("케이디지 재고장 파일을 업로드해주세요.");return;}
-
-  const lookupObj=buildLookup();
-  const lookup=lookupObj.allMap;
-  const womenAllSeasonMap=lookupObj.sheetMaps["여성복(사계)"] || new Map();
-  if(lookup.size===0){
-    alert("사용 가능한 시트를 찾지 못했습니다. 여성복(사계), 남성복(사계), 여성복(여름), 남성복(여름) 시트명을 확인해주세요.");
-    return;
+    renderResult(processedVendors);
+    const matched=resultRows.filter(r=>r.status==="매칭완료").length;
+    const unmatched=resultRows.filter(r=>r.status==="매칭안됨").length;
+    const vendorStock=resultRows.filter(r=>r.status==="거래처 재고").length;
+    setStatus(`완료: 거래처 ${processedVendors}개 처리 / 매칭 ${matched}건 / 매칭안됨 ${unmatched}건 / 거래처 재고 ${vendorStock}건${messages.length?`\n${messages.join("\n")}`:""}`);
+  }catch(err){
+    console.error(err);
+    setStatus("처리 중 오류가 발생했습니다.");
+    alert("처리 중 오류가 발생했습니다. 첨부 파일 형식과 시트 구성을 확인해주세요.");
   }
-
-  const ws=stockWbExcel.worksheets[0];
-  resultRows=[];
-  let currentName="";
-
-  ws.eachRow({includeEmpty:false}, (row, rowNumber)=>{
-    if(rowNumber===1)return;
-
-    const dCell=row.getCell(4); // D
-    const fCell=row.getCell(6); // F
-    const gCell=row.getCell(7); // G
-
-    const dVal=txt(dCell.value);
-    if(dVal) currentName=dVal;
-
-    const name=currentName;
-    const size=txt(fCell.value);
-
-    if(!name || !size) return;
-
-    const k=key(name,size);
-    const item=parseItem(name);
-
-    // 사입명이 7로 시작하면 여성복(사계) 탭만 조회
-    // 단, 7327-1을 7327로 줄이는 식의 메인코드 매칭은 하지 않음
-    const useWomenAllSeason=/^7/.test(item.code);
-
-    let has=false;
-    let val="매칭안됨";
-    let matchedBy="";
-
-    if(useWomenAllSeason){
-      if(womenAllSeasonMap.has(k)){
-        has=true;
-        val=womenAllSeasonMap.get(k);
-        matchedBy="여성복사계";
-      }
-    }else if(lookup.has(k)){
-      has=true;
-      val=lookup.get(k);
-      matchedBy="전체";
-    }
-
-    gCell.value=val;
-
-    resultRows.push({
-      rowNo:rowNumber,
-      name,
-      size,
-      stock:val,
-      status:has ? (matchedBy==="여성복사계" ? "매칭완료(여성복사계)" : "매칭완료") : "매칭안됨"
-    });
-  });
-
-  renderResult(lookup.size);
-  setStatus(`완료: 매칭 ${resultRows.filter(r=>r.status==="매칭완료").length}건 / 매칭안됨 ${resultRows.filter(r=>r.status==="매칭안됨").length}건`);
 }
 
-function renderResult(lookupSize){
+function renderResult(vendorCount){
   const total=resultRows.length;
   const matched=resultRows.filter(r=>r.status==="매칭완료").length;
-  const unmatched=total-matched;
-
   document.getElementById("totalCnt").textContent=total;
   document.getElementById("matchedCnt").textContent=matched;
-  document.getElementById("unmatchedCnt").textContent=unmatched;
-  document.getElementById("lookupCnt").textContent=lookupSize;
+  document.getElementById("unmatchedCnt").textContent=total-matched;
+  document.getElementById("vendorCnt").textContent=vendorCount;
 
   let html="<table><thead><tr>";
-  ["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"].forEach(h=>html+=`<th>${h}</th>`);
+  ["상태","거래처","재고장 탭","조회 시트","행번호","사입명(D열)","기장(E열)","사이즈(F열)","G열 입력 재고"].forEach(h=>html+=`<th>${h}</th>`);
   html+="</tr></thead><tbody>";
-  resultRows.slice(0,300).forEach(r=>{
-    const cls=r.status==="매칭완료"?"ok":"warn";
-    html+=`<tr><td class="${cls}">${r.status}</td><td>${r.rowNo}</td><td>${r.name}</td><td>${r.size}</td><td>${r.stock}</td></tr>`;
+  resultRows.slice(0,1000).forEach(r=>{
+    html+=`<tr>
+      <td class="${r.status==="매칭완료"?"ok":"warn"}">${escapeHtml(r.status)}</td>
+      <td>${escapeHtml(r.vendor)}</td>
+      <td>${escapeHtml(r.sheet)}</td>
+      <td>${escapeHtml(r.sourceSheet)}</td>
+      <td>${r.rowNo}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.length)}</td>
+      <td>${escapeHtml(r.size)}</td>
+      <td>${escapeHtml(r.stock)}</td>
+    </tr>`;
   });
   html+="</tbody></table>";
   document.getElementById("resultTable").innerHTML=html;
 }
 
 async function downloadModified(){
-  if(!stockWbExcel || !resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
-
+  if(!stockWbExcel || !resultRows.length){alert("먼저 전체 거래처 재고 매칭을 실행해주세요.");return;}
   const buffer=await stockWbExcel.xlsx.writeBuffer();
   const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="케이디지_재고장_G열입력_양식유지.xlsx";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  a.download="거래처별_재고장_G열입력_양식유지.xlsx";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
-
 function downloadResultCsv(){
-  if(!resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
-  const rows=[["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"]];
-  resultRows.forEach(r=>rows.push([r.status,r.rowNo,r.name,r.size,r.stock]));
+  if(!resultRows.length){alert("먼저 전체 거래처 재고 매칭을 실행해주세요.");return;}
+  const rows=[["상태","거래처","재고장 탭","조회 시트","행번호","사입명","기장","사이즈","입력 재고"]];
+  resultRows.forEach(r=>rows.push([r.status,r.vendor,r.sheet,r.sourceSheet,r.rowNo,r.name,r.length,r.size,r.stock]));
   const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="케이디지_재고장_매칭결과.csv";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  a.download="거래처별_재고장_매칭결과.csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
+
+renderFixedVendors();
 </script>
 </body>
 </html>
