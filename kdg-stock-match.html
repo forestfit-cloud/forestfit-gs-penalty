@@ -7,6 +7,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <style>
 *{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
@@ -109,9 +110,9 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
 
   <div class="card">
     <label>5. 결과 미리보기</label>
-    <button onclick="downloadModified()">양식 유지 재고장 다운로드</button>
+    <button onclick="downloadModified()">첫 번째 탭 유지 재고장 다운로드</button>
     <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
-    <div class="small" style="margin:8px 0 12px;">재고장 원본 서식은 유지하고 각 거래처 탭의 G열 값만 변경합니다.</div>
+    <div class="small" style="margin:8px 0 12px;">첫 번째 탭을 포함한 원본 양식은 그대로 유지하고, 매칭된 거래처 탭의 G열 값만 직접 변경합니다.</div>
     <div class="table-wrap" id="resultTable"></div>
   </div>
 </div>
@@ -121,6 +122,8 @@ const FIXED_VENDORS=["케이디지","리자드","시나브로","리마인드","�
 const vendorFiles=new Map();
 const customVendors=[];
 let stockWbExcel=null;
+let originalStockBuffer=null;
+let originalStockFileName="";
 let resultRows=[];
 
 function txt(v){
@@ -281,6 +284,8 @@ document.getElementById("stockFile").addEventListener("change",async e=>{
   if(!file)return;
   try{
     const buffer=await file.arrayBuffer();
+    originalStockBuffer=buffer.slice(0);
+    originalStockFileName=file.name;
     stockWbExcel=new ExcelJS.Workbook();
     await stockWbExcel.xlsx.load(buffer);
     setStatus(`${file.name} 업로드 완료 / 전체 시트 ${stockWbExcel.worksheets.length}개`);
@@ -609,14 +614,168 @@ function renderResult(vendorCount){
   document.getElementById("resultTable").innerHTML=html;
 }
 
+const XML_NS="http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+const REL_NS="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+
+function parseXml(xmlText,label){
+  const doc=new DOMParser().parseFromString(xmlText,"application/xml");
+  const err=doc.getElementsByTagName("parsererror")[0];
+  if(err)throw new Error(`${label||"XML"} 파싱 오류: ${err.textContent}`);
+  return doc;
+}
+
+function normalizeZipPath(baseDir,target){
+  let path=String(target||"").replace(/\\/g,"/");
+  if(path.startsWith("/"))return path.slice(1);
+  const parts=(baseDir+"/"+path).split("/");
+  const out=[];
+  for(const part of parts){
+    if(!part || part===".")continue;
+    if(part==="..")out.pop();
+    else out.push(part);
+  }
+  return out.join("/");
+}
+
+async function getWorksheetPathMap(zip){
+  const workbookFile=zip.file("xl/workbook.xml");
+  const relsFile=zip.file("xl/_rels/workbook.xml.rels");
+  if(!workbookFile || !relsFile)throw new Error("통합문서 구조를 찾지 못했습니다.");
+
+  const workbookDoc=parseXml(await workbookFile.async("string"),"workbook.xml");
+  const relsDoc=parseXml(await relsFile.async("string"),"workbook.xml.rels");
+  const relMap=new Map();
+  Array.from(relsDoc.getElementsByTagName("Relationship")).forEach(rel=>{
+    relMap.set(rel.getAttribute("Id"),rel.getAttribute("Target"));
+  });
+
+  const map=new Map();
+  Array.from(workbookDoc.getElementsByTagNameNS(XML_NS,"sheet")).forEach(sheet=>{
+    const name=sheet.getAttribute("name");
+    const rid=sheet.getAttributeNS(REL_NS,"id") || sheet.getAttribute("r:id");
+    const target=relMap.get(rid);
+    if(name && target)map.set(name,normalizeZipPath("xl",target));
+  });
+  return map;
+}
+
+function columnNumber(ref){
+  const letters=String(ref).match(/^[A-Z]+/i)?.[0]?.toUpperCase()||"";
+  let n=0;
+  for(const ch of letters)n=n*26+(ch.charCodeAt(0)-64);
+  return n;
+}
+
+function findDirectChildByTag(parent,localName){
+  return Array.from(parent.childNodes).find(n=>n.nodeType===1 && n.localName===localName) || null;
+}
+
+function setWorksheetCellValue(xmlText,cellRef,value){
+  const doc=parseXml(xmlText,"worksheet.xml");
+  const sheetData=doc.getElementsByTagNameNS(XML_NS,"sheetData")[0];
+  if(!sheetData)throw new Error("워크시트의 sheetData를 찾지 못했습니다.");
+
+  const rowNo=Number(String(cellRef).match(/\d+$/)?.[0]);
+  if(!rowNo)throw new Error(`잘못된 셀 주소입니다: ${cellRef}`);
+
+  let row=Array.from(sheetData.getElementsByTagNameNS(XML_NS,"row"))
+    .find(r=>Number(r.getAttribute("r"))===rowNo);
+
+  if(!row){
+    row=doc.createElementNS(XML_NS,"row");
+    row.setAttribute("r",String(rowNo));
+    const next=Array.from(sheetData.children).find(r=>Number(r.getAttribute("r"))>rowNo);
+    sheetData.insertBefore(row,next||null);
+  }
+
+  let cell=Array.from(row.getElementsByTagNameNS(XML_NS,"c"))
+    .find(c=>c.getAttribute("r").toUpperCase()===cellRef.toUpperCase());
+
+  if(!cell){
+    cell=doc.createElementNS(XML_NS,"c");
+    cell.setAttribute("r",cellRef.toUpperCase());
+    const targetCol=columnNumber(cellRef);
+    const next=Array.from(row.children).find(c=>c.localName==="c" && columnNumber(c.getAttribute("r"))>targetCol);
+    row.insertBefore(cell,next||null);
+  }
+
+  while(cell.firstChild)cell.removeChild(cell.firstChild);
+
+  const isNumber=typeof value==="number" && Number.isFinite(value);
+  if(isNumber){
+    cell.removeAttribute("t");
+    const v=doc.createElementNS(XML_NS,"v");
+    v.textContent=String(value);
+    cell.appendChild(v);
+  }else{
+    cell.setAttribute("t","inlineStr");
+    const is=doc.createElementNS(XML_NS,"is");
+    const t=doc.createElementNS(XML_NS,"t");
+    const str=String(value??"");
+    if(/^\s|\s$/.test(str))t.setAttributeNS("http://www.w3.org/XML/1998/namespace","xml:space","preserve");
+    t.textContent=str;
+    is.appendChild(t);
+    cell.appendChild(is);
+  }
+
+  return new XMLSerializer().serializeToString(doc);
+}
+
+async function buildOriginalPreservedWorkbook(){
+  if(!originalStockBuffer)throw new Error("원본 재고장 파일이 없습니다.");
+  const zip=await JSZip.loadAsync(originalStockBuffer);
+  const pathMap=await getWorksheetPathMap(zip);
+
+  const updatesBySheet=new Map();
+  resultRows.forEach(item=>{
+    if(!updatesBySheet.has(item.sheet))updatesBySheet.set(item.sheet,[]);
+    updatesBySheet.get(item.sheet).push({rowNo:item.rowNo,value:item.stock});
+  });
+
+  for(const [sheetName,updates] of updatesBySheet.entries()){
+    const sheetPath=pathMap.get(sheetName);
+    if(!sheetPath)throw new Error(`${sheetName} 탭의 XML 경로를 찾지 못했습니다.`);
+    const sheetFile=zip.file(sheetPath);
+    if(!sheetFile)throw new Error(`${sheetName} 탭 파일을 찾지 못했습니다.`);
+
+    let xml=await sheetFile.async("string");
+    updates.sort((a,b)=>a.rowNo-b.rowNo).forEach(update=>{
+      xml=setWorksheetCellValue(xml,`G${update.rowNo}`,update.value);
+    });
+    zip.file(sheetPath,xml);
+  }
+
+  return zip.generateAsync({
+    type:"blob",
+    mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    compression:"DEFLATE",
+    compressionOptions:{level:6}
+  });
+}
+
 async function downloadModified(){
-  if(!stockWbExcel || !resultRows.length){alert("먼저 전체 거래처 재고 매칭을 실행해주세요.");return;}
-  const buffer=await stockWbExcel.xlsx.writeBuffer();
-  const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="거래처별_재고장_G열입력_양식유지.xlsx";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  if(!stockWbExcel || !originalStockBuffer || !resultRows.length){
+    alert("먼저 전체 거래처 재고 매칭을 실행해주세요.");
+    return;
+  }
+
+  try{
+    setStatus("원본 양식을 유지한 결과 파일을 생성하고 있습니다...");
+    const blob=await buildOriginalPreservedWorkbook();
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    const base=(originalStockFileName||"재고장.xlsx").replace(/\.(xlsx|xls)$/i,"");
+    a.download=`${base}_G열재고반영.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    setStatus("다운로드 완료: 첫 번째 탭과 원본 양식은 수정하지 않고 거래처 탭 G열 값만 반영했습니다.");
+  }catch(err){
+    console.error(err);
+    setStatus(`다운로드 생성 오류: ${err.message}`);
+    alert("결과 파일 생성 중 오류가 발생했습니다. 개발자 도구의 오류 내용을 확인해주세요.");
+  }
 }
 function downloadResultCsv(){
   if(!resultRows.length){alert("먼저 전체 거래처 재고 매칭을 실행해주세요.");return;}
