@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>포레스트핏 리자드 재고장 매칭</title>
+<title>포레스트핏 셀메이트 가용재고 입력</title>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+
 <style>
 *{box-sizing:border-box;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif}
 body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#1f2a24}
@@ -14,63 +17,72 @@ body{margin:0;background:linear-gradient(135deg,#f7f3eb 0%,#edf3ef 100%);color:#
 .logo{font-size:22px;font-weight:850;letter-spacing:.08em;color:#244734}
 .badge{padding:9px 15px;border-radius:999px;background:#ffffffcc;color:#486052;font-size:13px;font-weight:750}
 h1{font-size:38px;letter-spacing:-.05em;color:#173d2b;margin:0 0 10px;font-weight:900}
-.desc{font-size:15px;color:#6d776f;line-height:1.6;margin-bottom:22px;font-weight:600}
+.desc{font-size:15px;color:#6d776f;line-height:1.7;margin-bottom:22px;font-weight:600}
 .card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:0 14px 35px rgba(38,49,43,.07)}
 label{display:block;font-size:16px;font-weight:850;margin-bottom:9px;color:#173d2b}
-input,select,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
+input,button{width:100%;padding:12px 14px;border:1px solid #d8dfdb;border-radius:12px;font-size:14px;background:#fff;margin-bottom:12px}
 button{border:0;background:#244734;color:#fff;font-weight:850;cursor:pointer}
 button.secondary{background:#7b8b82}
 .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.small{font-size:13px;color:#7c867f;line-height:1.55}
-.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none}
+.small{font-size:13px;color:#7c867f;line-height:1.6}
+.notice{background:#fff8dc;border:1px solid #efd894;color:#6b3d00;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;line-height:1.65;margin-top:8px}
+.status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none;white-space:pre-line}
 .summary{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px}
 .summary b{font-size:26px;color:#244734}
-.table-wrap{max-height:420px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
+.table-wrap{max-height:470px;overflow:auto;background:#fff;border:1px solid #d9e1dd;border-radius:16px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{border:1px solid #e6ece9;padding:8px 10px;white-space:nowrap;text-align:center;vertical-align:middle}
 th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-index:2}
 .ok{background:#eefaf3;color:#177245;font-weight:800}
 .warn{background:#fff8dc;color:#6b3d00;font-weight:800}
-.bad{background:#fff2f2;color:#8a2f2f;font-weight:800}
+.own{background:#edf7ff;color:#25516b;font-weight:800}
 @media(max-width:900px){.grid2,.grid4{grid-template-columns:1fr}}
 </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="top">
     <div class="logo">FORESTFIT</div>
-    <div class="badge">리자드 재고장 매칭</div>
+    <div class="badge">셀메이트 가용재고 입력</div>
   </div>
 
-  <h1>리자드 재고장 매칭</h1>
+  <h1>셀메이트 가용재고 입력</h1>
   <div class="desc">
-    리자드 전체 재고표와 재고장 파일을 업로드하면, 재고장 파일의 <b>D열 사입명</b>과 <b>F열 사이즈</b>를 기준으로 <b>G열</b>에 재고 수량을 자동 입력합니다.<br>
-    재고장 파일은 <b>기존 색상·글씨체·병합·테두리 양식을 유지</b>하고 G열 값만 변경합니다.
+    포레스트핏 재고장과 셀메이트 기본 양식 파일을 첨부하면, 공급처·상품·옵션을 매칭하여
+    재고장 거래처 탭의 <b>H열에 셀메이트 가용재고</b>를 입력합니다.
   </div>
 
   <div class="card">
     <label>1. 파일 업로드</label>
+
     <div class="grid2">
       <div>
-        <label>리자드 전체 재고표 베이스 파일</label>
-        <input type="file" id="baseFile" accept=".xlsx,.xls,.csv">
+        <label>포레스트핏 재고장 파일</label>
+        <input type="file" id="stockFile" accept=".xlsx">
         <div class="small">
-          기준: 첫 번째 탭만 사용 / B열 사입명 + C열 사이즈 → D열 재고<br>
-          추가 기준: M열 사입명 + N열 사이즈 → O열 재고
+          첫 번째 탭은 제외하고 두 번째 탭부터 처리합니다.<br>
+          B열 상품명 / C열 컬러 / E열 기장 / F열 사이즈 / H열 가용재고 입력
         </div>
       </div>
+
       <div>
-        <label>재고장 파일</label>
-        <input type="file" id="stockFile" accept=".xlsx,.xls">
-        <select id="stockSheet"></select>
+        <label>셀메이트 가용재고 파일</label>
+        <input type="file" id="sellmateFile" accept=".csv">
         <div class="small">
-          기준: D열 사입명 / F열 사이즈 / G열에 재고 입력<br>
-          D열 병합 셀은 위에 적힌 사입명으로 자동 인식합니다.
+          B열 공급처 / I열 상품명 / R열 옵션 / AT열 가용재고 기준
         </div>
       </div>
     </div>
-    <button onclick="processMatch()">리자드 재고 매칭 실행</button>
+
+    <div class="notice">
+      <b>셀메이트 파일 다운로드 방법</b><br>
+      셀메이트 → 재고장 → 공급처 상세에 포레스트핏 재고장에 있는 거래처만 입력 및 추가 →
+      ‘재고 있는 상품만 표시’ 조건 설정 → 검색 → 셀메이트 기본 양식으로 다운로드
+    </div>
+
+    <button onclick="processMatch()">셀메이트 가용재고 매칭 실행</button>
     <div id="status" class="status"></div>
   </div>
 
@@ -80,7 +92,7 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
       <div class="summary"><b id="totalCnt">0</b><div class="small">처리 대상</div></div>
       <div class="summary"><b id="matchedCnt">0</b><div class="small">매칭 완료</div></div>
       <div class="summary"><b id="unmatchedCnt">0</b><div class="small">매칭안됨</div></div>
-      <div class="summary"><b id="lookupCnt">0</b><div class="small">재고표 키</div></div>
+      <div class="summary"><b id="ownCnt">0</b><div class="small">당사 가용재고</div></div>
     </div>
   </div>
 
@@ -88,18 +100,72 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
     <label>3. 결과 미리보기</label>
     <button onclick="downloadModified()">양식 유지 재고장 다운로드</button>
     <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
-    <div class="small" style="margin:8px 0 12px;">다운로드 파일은 재고장 원본 양식을 유지하고 G열 재고만 입력됩니다.</div>
+    <div class="small" style="margin:8px 0 12px;">
+      원본 XLSX 구조를 유지한 상태에서 H열 셀 값만 직접 변경합니다. E열이 기본 또는 단일기장이면 셀메이트 옵션에서는 기장을 생략합니다. I열 상품명에 판매종료가 포함된 행은 제외하며, 동일 상품의 옵션이 셀메이트 파일에 하나라도 존재하면, 파일에 없는 다른 색상·기장·사이즈 옵션은 모두 H열에 0을 입력합니다. 아이보리·아이보리(화이트)·화이트는 동일 색상으로 처리합니다.
+    </div>
     <div class="table-wrap" id="resultTable"></div>
   </div>
 </div>
 
 <script>
-let baseWb=null;
 let stockWbExcel=null;
-let stockFileBuffer=null;
+let originalStockBuffer=null;
+let pendingHChanges=[];
+let sellmateRows=[];
 let resultRows=[];
-let modifiedSheetName="";
-let lookupMap=null;
+let originalStockFileName="";
+
+const IGNORED_PRODUCT_LINES=new Set([
+  "(리오더종료)",
+  "(품절)",
+  "(판매종료)",
+  "(리오더중)",
+  "(진행종료)",
+  "(단종)"
+]);
+
+// 셀메이트 작업에서 자동 제외할 재고장 탭
+const EXCLUDED_SHEETS=new Set([
+  "중국생산",
+  "오더건(재고표X)"
+]);
+
+// 실제 표기 차이가 확인된 색상만 명시적으로 통일
+const COLOR_ALIAS_MAP=new Map([
+  // 아이보리·화이트 계열은 동일 색상으로 처리
+  ["아이보리","아이보리"],
+  ["아이보리(화이트)","아이보리"],
+  ["화이트(아이보리)","아이보리"],
+  ["화이트","아이보리"],
+  ["IVORY","아이보리"],
+  ["WHITE","아이보리"],
+  ["IVORY(WHITE)","아이보리"],
+  ["WHITE(IVORY)","아이보리"],
+
+  ["SANDBLUE","샌드블루"],
+  ["SAND BLUE","샌드블루"],
+  ["샌드 BLUE","샌드블루"]
+]);
+
+const VENDOR_ALIAS_MAP=new Map([
+  ["케이디지","케이디지"],
+  ["(주)케이디지","케이디지"],
+  ["㈜케이디지","케이디지"],
+
+  ["리마인드","리마인드"],
+  ["리마인드((주)디투어패럴)","리마인드"],
+  ["리마인드(주)디투어패럴","리마인드"],
+
+  ["신안","신안"],
+  ["신안어패럴","신안"],
+
+  ["리자드","리자드"],
+  ["리자드스탠다드","리자드"],
+
+  ["시나브로","시나브로"],
+  ["뉴행","뉴행"],
+  ["계란속노른자","계란속노른자"]
+]);
 
 function txt(v){
   if(v==null)return "";
@@ -108,183 +174,841 @@ function txt(v){
   if(typeof v==="object" && v.result!=null)return String(v.result).trim();
   return String(v).trim();
 }
-function num(v){
-  const s=txt(v).replace(/,/g,"");
-  // 재고표에서 빈칸/하이픈은 재고 없음으로 보고 0 입력
-  if(s==="-" || s==="") return 0;
-  const n=Number(s);
-  return Number.isFinite(n)?n:0;
-}
-function setStatus(msg){const el=document.getElementById("status");el.style.display="block";el.textContent=msg;}
-function escapeCsv(v){return `"${String(v??"").replace(/"/g,'""')}"`;}
 
-function normName(v){
-  let s=txt(v).toUpperCase();
-  s=s.replace(/\s+/g,"");
-  s=s.replace(/^S\.A\./,"");
-  s=s.replace(/^\d+\./,"");
-  return s;
+function escapeHtml(v){
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
-function normSize(v){
-  let s=txt(v).toUpperCase().replace(/\s+/g,"");
-  if(s==="F1")return "S";
-  if(s==="F2")return "M";
-  if(s==="F3")return "L";
-  if(s==="F")return "FREE";
-  return s;
-}
-function key(name,size){return normName(name)+"||"+normSize(size);}
 
-document.getElementById("baseFile").addEventListener("change",e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=evt=>{
-    baseWb=XLSX.read(new Uint8Array(evt.target.result),{type:"array",cellDates:true,raw:false});
-    setStatus(`${file.name} 업로드 완료: 베이스 파일은 첫 번째 탭(${baseWb.SheetNames[0]})만 사용합니다.`);
-  };
-  reader.readAsArrayBuffer(file);
-});
+function escapeCsv(v){
+  return `"${String(v??"").replace(/"/g,'""')}"`;
+}
+
+function setStatus(msg){
+  const el=document.getElementById("status");
+  el.style.display="block";
+  el.textContent=msg;
+}
+
+function cleanVendorName(value){
+  return String(value||"")
+    .trim()
+    .replace(/\s+/g,"")
+    .replace(/\(주\)/g,"")
+    .replace(/㈜/g,"")
+    .replace(/주식회사/g,"");
+}
+
+function normalizeVendorName(value){
+  const raw=String(value||"").trim();
+  if(VENDOR_ALIAS_MAP.has(raw))return VENDOR_ALIAS_MAP.get(raw);
+
+  const cleaned=cleanVendorName(raw);
+
+  for(const [alias,standard] of VENDOR_ALIAS_MAP.entries()){
+    if(cleanVendorName(alias)===cleaned)return standard;
+  }
+
+  return cleaned;
+}
+
+function isSameVendor(sheetName,sellmateVendorName){
+  const sheet=normalizeVendorName(sheetName);
+  const vendor=normalizeVendorName(sellmateVendorName);
+
+  if(sheet===vendor)return true;
+
+  // 완전일치가 되지 않을 때만 탭명이 공급처명에 포함되는지 보조 확인
+  if(sheet.length>=3 && vendor.includes(sheet))return true;
+
+  return false;
+}
+
+function normalizeProductName(value){
+  const lines=String(value||"")
+    .split(/\r?\n/)
+    .map(line=>line.trim())
+    .filter(Boolean)
+    .filter(line=>{
+      const compact=line.replace(/\s+/g,"").toUpperCase();
+      return !IGNORED_PRODUCT_LINES.has(compact);
+    });
+
+  return lines.join("")
+    .replace(/\s+/g,"")
+    .toUpperCase();
+}
+
+function isSameProduct(stockProduct,sellmateProduct){
+  const stock=normalizeProductName(stockProduct);
+  const sellmate=normalizeProductName(sellmateProduct);
+
+  if(!stock || !sellmate)return false;
+  if(stock===sellmate)return true;
+
+  // 품번이 양쪽에서 동일하게 확인되면 우선 일치
+  if(hasSameProductCode(stockProduct,sellmateProduct))return true;
+
+  // 여름찐스판1탄, 찐스판17탄처럼 재고장명이 전체 상품명에 포함되는 경우
+  return sellmate.includes(stock);
+}
+
+function normalizeOptionPart(value){
+  return String(value||"")
+    .trim()
+    .replace(/\s+/g,"")
+    .toUpperCase();
+}
+
+function normalizeColor(value){
+  const original=String(value||"").trim();
+  const compact=original.replace(/\s+/g,"").toUpperCase();
+
+  // 공백이 있는 영문 별칭도 확인하기 위한 값
+  const upperSpaced=original.toUpperCase();
+
+  if(COLOR_ALIAS_MAP.has(compact))return COLOR_ALIAS_MAP.get(compact);
+  if(COLOR_ALIAS_MAP.has(upperSpaced))return COLOR_ALIAS_MAP.get(upperSpaced);
+
+  return compact;
+}
+
+function buildStockOption(color,length,size){
+  const c=normalizeColor(color);
+  const l=normalizeOptionPart(length);
+  const s=normalizeOptionPart(size);
+
+  if(!c || !s)return "";
+
+  // 단일기장은 셀메이트 옵션명에서 생략
+  if(l==="" || l==="단일기장" || l==="기본"){
+    return `${c},${s}`;
+  }
+
+  return `${c},${l},${s}`;
+}
+
+function normalizeSellmateOption(value){
+  const parts=String(value||"")
+    .split(",")
+    .map(v=>String(v||"").trim())
+    .filter(Boolean);
+
+  if(!parts.length)return "";
+
+  // 첫 번째 항목은 컬러이므로 색상 별칭 적용
+  parts[0]=normalizeColor(parts[0]);
+
+  return parts
+    .map((v,index)=>index===0 ? v : normalizeOptionPart(v))
+    .join(",");
+}
+
+// 상품명에서 비교에 도움이 되는 품번 후보 추출
+// 예: J2617, SK2504, J2524, BA-1025-1, P2651
+function extractProductCodes(value){
+  const normalized=normalizeProductName(value);
+  const matches=normalized.match(/[A-Z가-힣]*[A-Z]+[-]?[A-Z0-9#-]*\d+[A-Z0-9#-]*/g) || [];
+
+  return [...new Set(
+    matches
+      .map(v=>v.replace(/^[\[\]()]+|[\[\]()]+$/g,""))
+      .filter(v=>/[0-9]/.test(v))
+      .filter(v=>v.length>=3)
+  )];
+}
+
+function hasSameProductCode(a,b){
+  const aCodes=extractProductCodes(a);
+  const bCodes=extractProductCodes(b);
+
+  if(!aCodes.length || !bCodes.length)return false;
+
+  return aCodes.some(code=>bCodes.includes(code));
+}
+
+function isWhiteOrNoFill(cell){
+  const fill=cell?.fill;
+
+  if(!fill || fill.type!=="pattern" || !fill.pattern || fill.pattern==="none"){
+    return true;
+  }
+
+  if(fill.pattern!=="solid"){
+    return false;
+  }
+
+  const color=fill.fgColor||{};
+
+  if(color.argb==null && color.rgb==null && color.theme==null && color.indexed==null){
+    return true;
+  }
+
+  const raw=String(color.argb||color.rgb||"").toUpperCase().replace(/^#/,"");
+  const rgb=raw.length===8 ? raw.slice(2) : raw;
+
+  if(rgb==="FFFFFF")return true;
+
+  // Excel 기본 흰색 테마
+  if(Number(color.theme)===0){
+    const tint=Number(color.tint??0);
+    return !Number.isFinite(tint) || tint>=0;
+  }
+
+  // Excel 흰색 / 자동 색상 인덱스
+  if(Number(color.indexed)===9 || Number(color.indexed)===64){
+    return true;
+  }
+
+  return false;
+}
+
+function getUnmatchedText(cell){
+  return isWhiteOrNoFill(cell) ? "매칭안됨" : "당사 가용재고";
+}
+
+// 병합된 셀인 경우 병합영역의 마스터 셀 값을 반환
+function getMergedCellValue(ws,rowNumber,colNumber){
+  const cell=ws.getCell(rowNumber,colNumber);
+
+  if(cell.isMerged && cell.master){
+    return txt(cell.master.value);
+  }
+
+  return txt(cell.value);
+}
+
+function isHeaderOrGuideRow(product,color,length,size){
+  const values=[product,color,length,size]
+    .map(v=>normalizeOptionPart(v));
+
+  const headerWords=new Set([
+    "상품명","품명","상품","컬러","색상","COLOR",
+    "기장","사이즈","SIZE","옵션","당사가용재고",
+    "거래처재고","매칭안됨"
+  ]);
+
+  const headerHit=values.filter(v=>headerWords.has(v)).length;
+
+  // 제목행은 여러 열에 헤더 문구가 함께 나타남
+  return headerHit>=2;
+}
+
+async function decodeCsvFile(file){
+  const buffer=await file.arrayBuffer();
+
+  // 셀메이트 CSV는 일반적으로 CP949로 내려받아짐
+  for(const encoding of ["euc-kr","utf-8"]){
+    try{
+      const decoder=new TextDecoder(encoding,{fatal:true});
+      return decoder.decode(buffer);
+    }catch(e){}
+  }
+
+  // 마지막 fallback
+  return new TextDecoder("euc-kr").decode(buffer);
+}
+
+function parseCsvText(csvText){
+  // SheetJS를 이용해 따옴표·쉼표·줄바꿈이 포함된 CSV를 안전하게 파싱
+  const wb=XLSX.read(csvText,{type:"string",raw:false});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(ws,{
+    header:1,
+    raw:false,
+    defval:"",
+    blankrows:false
+  });
+}
 
 document.getElementById("stockFile").addEventListener("change",async e=>{
   const file=e.target.files[0];
   if(!file)return;
 
-  stockFileBuffer=await file.arrayBuffer();
-  stockWbExcel=new ExcelJS.Workbook();
-  await stockWbExcel.xlsx.load(stockFileBuffer);
-
-  const sel=document.getElementById("stockSheet");
-  sel.innerHTML="";
-  stockWbExcel.worksheets.forEach((ws,i)=>{
-    sel.add(new Option(ws.name,ws.name));
-    if(i===0) sel.value=ws.name;
-  });
-  setStatus(`${file.name} 업로드 완료`);
+  try{
+    const buffer=await file.arrayBuffer();
+    originalStockBuffer=buffer.slice(0);
+    stockWbExcel=new ExcelJS.Workbook();
+    await stockWbExcel.xlsx.load(buffer);
+    originalStockFileName=file.name;
+    setStatus(`${file.name} 업로드 완료 / 시트 ${stockWbExcel.worksheets.length}개`);
+  }catch(err){
+    console.error(err);
+    stockWbExcel=null;
+    alert("포레스트핏 재고장 파일을 불러오지 못했습니다. xlsx 파일인지 확인해주세요.");
+  }
 });
 
-function sheetAoA(wb, sheetName){
-  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:false,defval:"",blankrows:false});
-}
+document.getElementById("sellmateFile").addEventListener("change",async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
 
-function buildLookup(){
-  const sheetName=baseWb.SheetNames[0];
-  const rows=sheetAoA(baseWb,sheetName);
+  try{
+    const csvText=await decodeCsvFile(file);
+    const rows=parseCsvText(csvText);
+
+    if(!rows.length || rows[0].length<46){
+      throw new Error("셀메이트 기본 양식 열 구성이 아닙니다.");
+    }
+
+    sellmateRows=rows.slice(1)
+      .filter(r=>{
+        const vendor=String(r[1]||"").trim();
+        const product=String(r[8]||"").trim();
+        const option=String(r[17]||"").trim();
+
+        if(!vendor || !product || !option)return false;
+
+        // 셀메이트 I열 상품명에 판매종료가 포함된 상품은 전체 매칭 대상에서 제외
+        if(product.replace(/\s+/g,"").includes("판매종료"))return false;
+
+        return true;
+      })
+      .map((r,index)=>({
+        csvRow:index+2,
+        vendor:String(r[1]||"").trim(),      // B
+        product:String(r[8]||"").trim(),     // I
+        option:String(r[17]||"").trim(),     // R
+        stock:Number(String(r[45]||"").replace(/,/g,"")) // AT
+      }));
+
+    const invalid=sellmateRows.find(r=>!Number.isFinite(r.stock));
+    if(invalid){
+      throw new Error(`AT열 숫자 변환 실패: CSV ${invalid.csvRow}행`);
+    }
+
+    setStatus(`${file.name} 업로드 완료 / 셀메이트 데이터 ${sellmateRows.length}건`);
+  }catch(err){
+    console.error(err);
+    sellmateRows=[];
+    alert(`셀메이트 CSV를 불러오지 못했습니다.\n${err.message||""}`);
+  }
+});
+
+function buildSellmateVendorIndex(){
   const map=new Map();
 
-  for(let i=1;i<rows.length;i++){
-    const r=rows[i]||[];
-
-    // B열 사입명 + C열 사이즈 -> D열 재고
-    const name1=txt(r[1]);
-    const size1=txt(r[2]);
-    const qty1=num(r[3]);
-    if(name1 && size1) map.set(key(name1,size1),qty1);
-
-    // M열 사입명 + N열 사이즈 -> O열 재고
-    const name2=txt(r[12]);
-    const size2=txt(r[13]);
-    const qty2=num(r[14]);
-    if(name2 && size2) map.set(key(name2,size2),qty2);
-
-    // 보조: A열 사입명 + C열 사이즈
-    const name0=txt(r[0]);
-    if(name0 && size1) map.set(key(name0,size1),qty1);
-  }
-  return map;
-}
-
-function processMatch(){
-  if(!baseWb){alert("리자드 전체 재고표 베이스 파일을 업로드해주세요.");return;}
-  if(!stockWbExcel){alert("재고장 파일을 업로드해주세요.");return;}
-
-  lookupMap=buildLookup();
-  modifiedSheetName=document.getElementById("stockSheet").value || stockWbExcel.worksheets[0].name;
-  const ws=stockWbExcel.getWorksheet(modifiedSheetName);
-
-  resultRows=[];
-  let currentName="";
-
-  ws.eachRow({includeEmpty:false}, (row, rowNumber)=>{
-    if(rowNumber===1)return;
-
-    const dCell=row.getCell(4); // D
-    const fCell=row.getCell(6); // F
-    const gCell=row.getCell(7); // G
-
-    const dVal=txt(dCell.value);
-    if(dVal) currentName=dVal;
-
-    const name=currentName;
-    const size=txt(fCell.value);
-
-    if(!name || !size)return;
-
-    const k=key(name,size);
-    const has=lookupMap.has(k);
-    const val=has ? lookupMap.get(k) : "매칭안됨";
-
-    // G열 값만 수정. 기존 G열 스타일은 그대로 유지.
-    // 매칭 성공 + 재고 0 또는 빈칸 = 0 입력 / 매칭 실패 = 매칭안됨 입력
-    gCell.value=val;
-
-    resultRows.push({
-      rowNo:rowNumber,
-      name,
-      size,
-      stock:val,
-      status:has ? "매칭완료" : "매칭안됨"
+  sellmateRows.forEach(row=>{
+    const vendorKey=normalizeVendorName(row.vendor);
+    if(!map.has(vendorKey))map.set(vendorKey,[]);
+    map.get(vendorKey).push({
+      ...row,
+      productNorm:normalizeProductName(row.product),
+      optionNorm:normalizeSellmateOption(row.option)
     });
   });
 
-  renderResult(lookupMap.size);
-  setStatus(`완료: 매칭 ${resultRows.filter(r=>r.status==="매칭완료").length}건 / 매칭안됨 ${resultRows.filter(r=>r.status==="매칭안됨").length}건`);
+  return map;
 }
 
-function renderResult(lookupSize){
+function findVendorRows(sheetName,vendorIndex){
+  // 1차: 정규화된 이름으로 직접 조회
+  const key=normalizeVendorName(sheetName);
+  if(vendorIndex.has(key))return vendorIndex.get(key);
+
+  // 2차: 별칭/포함 조건으로 조회
+  const found=[];
+  for(const [vendorKey,rows] of vendorIndex.entries()){
+    const originalVendor=rows[0]?.vendor||vendorKey;
+    if(isSameVendor(sheetName,originalVendor)){
+      found.push(...rows);
+    }
+  }
+  return found;
+}
+
+function getOptionColor(optionNorm){
+  return String(optionNorm||"").split(",")[0]||"";
+}
+
+function findSellmateMatch(vendorRows,stockProduct,stockOption){
+  if(!vendorRows.length){
+    return {
+      matched:false,
+      fillZero:false,
+      reason:"공급처 데이터 없음",
+      row:null,
+      candidate:null
+    };
+  }
+
+  const productCandidates=vendorRows.filter(row=>
+    isSameProduct(stockProduct,row.product)
+  );
+
+  if(!productCandidates.length){
+    return {
+      matched:false,
+      fillZero:false,
+      reason:"상품명 또는 품번 불일치",
+      row:null,
+      candidate:null
+    };
+  }
+
+  const exact=productCandidates.find(row=>row.optionNorm===stockOption);
+
+  if(exact){
+    return {
+      matched:true,
+      fillZero:false,
+      reason:"",
+      row:exact,
+      candidate:exact
+    };
+  }
+
+  // 셀메이트 파일에는 재고가 있거나 마이너스인 옵션만 포함됨.
+  // 동일 상품의 옵션이 하나라도 존재하면, 파일에 없는 다른 색상·기장·사이즈는 모두 0으로 판단.
+  return {
+    matched:false,
+    fillZero:true,
+    reason:"상품 일치 / 셀메이트 옵션 없음 → 0",
+    row:null,
+    candidate:productCandidates[0]
+  };
+}
+
+async function processMatch(){
+  if(!stockWbExcel){
+    alert("포레스트핏 재고장 파일을 첨부해주세요.");
+    return;
+  }
+  if(!sellmateRows.length){
+    alert("셀메이트 가용재고 CSV 파일을 첨부해주세요.");
+    return;
+  }
+
+  resultRows=[];
+  pendingHChanges=[];
+  const vendorIndex=buildSellmateVendorIndex();
+  const sheetMessages=[];
+
+  try{
+    // 첫 번째 탭 제외
+    for(const ws of stockWbExcel.worksheets.slice(1)){
+      const compactSheetName=normalizeVendorName(ws.name);
+
+      if(EXCLUDED_SHEETS.has(compactSheetName)){
+        sheetMessages.push(`${ws.name}: 처리 제외`);
+        continue;
+      }
+
+      const vendorRows=findVendorRows(ws.name,vendorIndex);
+
+      if(!vendorRows.length){
+        sheetMessages.push(`${ws.name}: 셀메이트 공급처 데이터 없음`);
+      }
+
+      // 실제 헤더는 5행, 데이터는 6행부터
+      ws.eachRow({includeEmpty:false},(row,rowNumber)=>{
+        if(rowNumber<6)return;
+
+        // B/C/E 병합영역은 마스터 셀 값을 직접 읽음
+        const product=getMergedCellValue(ws,rowNumber,2);
+        const color=getMergedCellValue(ws,rowNumber,3);
+        const length=getMergedCellValue(ws,rowNumber,5);
+        const size=getMergedCellValue(ws,rowNumber,6);
+
+        if(isHeaderOrGuideRow(product,color,length,size))return;
+
+        // 사이즈가 없는 행은 상품 데이터 행이 아니므로 건너뜀
+        if(!product || !color || !size)return;
+
+        const stockOption=buildStockOption(color,length,size);
+        if(!stockOption)return;
+
+        const hCell=row.getCell(8);
+        const matchResult=findSellmateMatch(vendorRows,product,stockOption);
+        const match=matchResult.row;
+
+        let outputValue;
+        let status;
+
+        if(matchResult.matched && match){
+          // 음수·0·양수 모두 AT열 숫자 그대로 입력
+          outputValue=match.stock;
+          status="매칭완료";
+        }else if(matchResult.fillZero){
+          // 상품명과 색상까지 일치했으나 셀메이트에 해당 옵션이 없음
+          // 셀메이트 파일 특성상 가용재고 0으로 판단
+          outputValue=0;
+          status="옵션없음→0";
+        }else{
+          outputValue=getUnmatchedText(hCell);
+          status=outputValue;
+        }
+
+        // 다운로드 시 원본 XLSX 구조를 그대로 유지하기 위해 변경값만 별도로 기록
+        pendingHChanges.push({
+          sheetName:ws.name,
+          rowNumber,
+          value:outputValue,
+          styleId:Number(hCell.styleId||0)
+        });
+
+        // 화면 미리보기용 메모리 워크북에도 H열 값만 반영
+        hCell.value=outputValue;
+
+        resultRows.push({
+          status,
+          reason:matchResult.reason||"-",
+          sheet:ws.name,
+          rowNo:rowNumber,
+          product,
+          color,
+          length:length||"-",
+          size,
+          option:stockOption,
+          sellmateVendor:match?.vendor||matchResult.candidate?.vendor||"-",
+          sellmateProduct:match?.product||matchResult.candidate?.product||"-",
+          sellmateOption:match?.option||matchResult.candidate?.option||"-",
+          stock:outputValue
+        });
+      });
+    }
+
+    renderResult();
+
+    const matched=resultRows.filter(r=>r.status==="매칭완료").length;
+    const zeroFilled=resultRows.filter(r=>r.status==="옵션없음→0").length;
+    const unmatched=resultRows.filter(r=>r.status==="매칭안됨").length;
+    const own=resultRows.filter(r=>r.status==="당사 가용재고").length;
+
+    setStatus(
+      `완료: 처리 ${resultRows.length}건 / 매칭 ${matched}건 / 옵션없음→0 ${zeroFilled}건 / 매칭안됨 ${unmatched}건 / 당사 가용재고 ${own}건` +
+      (sheetMessages.length ? `\n${sheetMessages.join("\n")}` : "")
+    );
+  }catch(err){
+    console.error(err);
+    setStatus("처리 중 오류가 발생했습니다.");
+    alert(`처리 중 오류가 발생했습니다.\n${err.message||""}`);
+  }
+}
+
+function renderResult(){
   const total=resultRows.length;
-  const matched=resultRows.filter(r=>r.status==="매칭완료").length;
-  const unmatched=total-matched;
+  const exactMatched=resultRows.filter(r=>r.status==="매칭완료").length;
+  const zeroFilled=resultRows.filter(r=>r.status==="옵션없음→0").length;
+  const unmatched=resultRows.filter(r=>r.status==="매칭안됨").length;
+  const own=resultRows.filter(r=>r.status==="당사 가용재고").length;
 
   document.getElementById("totalCnt").textContent=total;
-  document.getElementById("matchedCnt").textContent=matched;
+  document.getElementById("matchedCnt").textContent=exactMatched+zeroFilled;
   document.getElementById("unmatchedCnt").textContent=unmatched;
-  document.getElementById("lookupCnt").textContent=lookupSize;
+  document.getElementById("ownCnt").textContent=own;
 
   let html="<table><thead><tr>";
-  ["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"].forEach(h=>html+=`<th>${h}</th>`);
+  [
+    "상태","화면 확인 사유","거래처 탭","행번호","상품명(B열)","컬러(C열)",
+    "기장(E열)","사이즈(F열)","비교 옵션",
+    "셀메이트 공급처","셀메이트 후보 상품명","셀메이트 후보 옵션","H열 입력값"
+  ].forEach(h=>html+=`<th>${h}</th>`);
   html+="</tr></thead><tbody>";
-  resultRows.slice(0,300).forEach(r=>{
-    const cls=r.status==="매칭완료"?"ok":"warn";
-    html+=`<tr><td class="${cls}">${r.status}</td><td>${r.rowNo}</td><td>${r.name}</td><td>${r.size}</td><td>${r.stock}</td></tr>`;
+
+  resultRows.slice(0,1500).forEach(r=>{
+    const cls=(r.status==="매칭완료" || r.status==="옵션없음→0")
+      ?"ok"
+      :(r.status==="당사 가용재고"?"own":"warn");
+
+    html+=`<tr>
+      <td class="${cls}">${escapeHtml(r.status)}</td>
+      <td>${escapeHtml(r.reason||"-")}</td>
+      <td>${escapeHtml(r.sheet)}</td>
+      <td>${r.rowNo}</td>
+      <td>${escapeHtml(r.product)}</td>
+      <td>${escapeHtml(r.color)}</td>
+      <td>${escapeHtml(r.length)}</td>
+      <td>${escapeHtml(r.size)}</td>
+      <td>${escapeHtml(r.option)}</td>
+      <td>${escapeHtml(r.sellmateVendor)}</td>
+      <td>${escapeHtml(r.sellmateProduct)}</td>
+      <td>${escapeHtml(r.sellmateOption)}</td>
+      <td>${escapeHtml(r.stock)}</td>
+    </tr>`;
   });
+
   html+="</tbody></table>";
   document.getElementById("resultTable").innerHTML=html;
 }
 
-async function downloadModified(){
-  if(!stockWbExcel || !resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
 
-  const buffer=await stockWbExcel.xlsx.writeBuffer();
-  const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="리자드_재고장_G열입력_양식유지.xlsx";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+function getXmlParser(){
+  return new DOMParser();
+}
+
+function getXmlSerializer(){
+  return new XMLSerializer();
+}
+
+function findDirectChildByLocalName(parent,localName){
+  return Array.from(parent.childNodes||[]).find(
+    node=>node.nodeType===1 && node.localName===localName
+  ) || null;
+}
+
+function createSpreadsheetElement(doc,localName){
+  return doc.createElementNS(
+    "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    localName
+  );
+}
+
+function columnLettersToNumber(letters){
+  let result=0;
+  for(const ch of letters){
+    result=result*26+(ch.charCodeAt(0)-64);
+  }
+  return result;
+}
+
+function getCellColumnNumber(cellRef){
+  const match=String(cellRef||"").toUpperCase().match(/^([A-Z]+)/);
+  return match ? columnLettersToNumber(match[1]) : 0;
+}
+
+function setWorksheetCellValue(doc,rowNode,rowNumber,value,styleId){
+  const cellRef=`H${rowNumber}`;
+  let cell=Array.from(rowNode.childNodes||[]).find(
+    node=>node.nodeType===1 &&
+      node.localName==="c" &&
+      node.getAttribute("r")===cellRef
+  ) || null;
+
+  if(!cell){
+    cell=createSpreadsheetElement(doc,"c");
+    cell.setAttribute("r",cellRef);
+
+    if(styleId>0){
+      cell.setAttribute("s",String(styleId));
+    }
+
+    const targetColumn=8;
+    const cells=Array.from(rowNode.childNodes||[]).filter(
+      node=>node.nodeType===1 && node.localName==="c"
+    );
+    const nextCell=cells.find(
+      node=>getCellColumnNumber(node.getAttribute("r"))>targetColumn
+    );
+
+    if(nextCell)rowNode.insertBefore(cell,nextCell);
+    else rowNode.appendChild(cell);
+  }
+
+  // 기존 수식/값/인라인 문자열만 제거하고 셀의 스타일 속성은 유지
+  Array.from(cell.childNodes||[]).forEach(node=>{
+    if(
+      node.nodeType===1 &&
+      ["f","v","is"].includes(node.localName)
+    ){
+      cell.removeChild(node);
+    }
+  });
+
+  if(typeof value==="number" && Number.isFinite(value)){
+    cell.removeAttribute("t");
+    const valueNode=createSpreadsheetElement(doc,"v");
+    valueNode.textContent=String(value);
+    cell.appendChild(valueNode);
+    return;
+  }
+
+  cell.setAttribute("t","inlineStr");
+  const inlineString=createSpreadsheetElement(doc,"is");
+  const textNode=createSpreadsheetElement(doc,"t");
+  textNode.setAttributeNS(
+    "http://www.w3.org/XML/1998/namespace",
+    "xml:space",
+    "preserve"
+  );
+  textNode.textContent=String(value??"");
+  inlineString.appendChild(textNode);
+  cell.appendChild(inlineString);
+}
+
+async function buildPatchedWorkbook(){
+  if(!originalStockBuffer){
+    throw new Error("원본 재고장 버퍼가 없습니다.");
+  }
+
+  const zip=await JSZip.loadAsync(originalStockBuffer);
+
+  const workbookXmlText=await zip.file("xl/workbook.xml").async("string");
+  const workbookRelsText=await zip.file("xl/_rels/workbook.xml.rels").async("string");
+
+  const parser=getXmlParser();
+  const serializer=getXmlSerializer();
+
+  const workbookDoc=parser.parseFromString(workbookXmlText,"application/xml");
+  const relsDoc=parser.parseFromString(workbookRelsText,"application/xml");
+
+  const relationMap=new Map();
+  Array.from(relsDoc.getElementsByTagNameNS("*","Relationship")).forEach(rel=>{
+    relationMap.set(
+      rel.getAttribute("Id"),
+      rel.getAttribute("Target")
+    );
+  });
+
+  const sheetPathMap=new Map();
+  Array.from(workbookDoc.getElementsByTagNameNS("*","sheet")).forEach(sheet=>{
+    const name=sheet.getAttribute("name");
+    const relId=
+      sheet.getAttributeNS(
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+        "id"
+      ) ||
+      sheet.getAttribute("r:id");
+
+    let target=relationMap.get(relId)||"";
+    target=target.replace(/^\/+/,"");
+
+    if(!target.startsWith("xl/")){
+      target=`xl/${target}`;
+    }
+
+    sheetPathMap.set(name,target);
+  });
+
+  const changesBySheet=new Map();
+  pendingHChanges.forEach(change=>{
+    if(!changesBySheet.has(change.sheetName)){
+      changesBySheet.set(change.sheetName,[]);
+    }
+    changesBySheet.get(change.sheetName).push(change);
+  });
+
+  for(const [sheetName,changes] of changesBySheet.entries()){
+    const sheetPath=sheetPathMap.get(sheetName);
+
+    if(!sheetPath || !zip.file(sheetPath)){
+      throw new Error(`${sheetName} 시트 XML을 찾지 못했습니다.`);
+    }
+
+    const xmlText=await zip.file(sheetPath).async("string");
+    const doc=parser.parseFromString(xmlText,"application/xml");
+
+    const parserError=doc.getElementsByTagName("parsererror")[0];
+    if(parserError){
+      throw new Error(`${sheetName} 시트 XML 파싱에 실패했습니다.`);
+    }
+
+    let sheetData=doc.getElementsByTagNameNS("*","sheetData")[0];
+
+    if(!sheetData){
+      sheetData=createSpreadsheetElement(doc,"sheetData");
+      const worksheet=doc.documentElement;
+      worksheet.appendChild(sheetData);
+    }
+
+    const rowMap=new Map();
+    Array.from(sheetData.getElementsByTagNameNS("*","row")).forEach(row=>{
+      rowMap.set(Number(row.getAttribute("r")),row);
+    });
+
+    changes.forEach(change=>{
+      let rowNode=rowMap.get(change.rowNumber);
+
+      if(!rowNode){
+        rowNode=createSpreadsheetElement(doc,"row");
+        rowNode.setAttribute("r",String(change.rowNumber));
+
+        const rows=Array.from(sheetData.childNodes||[]).filter(
+          node=>node.nodeType===1 && node.localName==="row"
+        );
+        const nextRow=rows.find(
+          node=>Number(node.getAttribute("r"))>change.rowNumber
+        );
+
+        if(nextRow)sheetData.insertBefore(rowNode,nextRow);
+        else sheetData.appendChild(rowNode);
+
+        rowMap.set(change.rowNumber,rowNode);
+      }
+
+      setWorksheetCellValue(
+        doc,
+        rowNode,
+        change.rowNumber,
+        change.value,
+        change.styleId
+      );
+    });
+
+    const outputXml=serializer.serializeToString(doc);
+    zip.file(sheetPath,outputXml);
+  }
+
+  return zip.generateAsync({
+    type:"arraybuffer",
+    compression:"DEFLATE",
+    compressionOptions:{level:6}
+  });
+}
+
+async function downloadModified(){
+  if(!originalStockBuffer || !resultRows.length || !pendingHChanges.length){
+    alert("먼저 셀메이트 가용재고 매칭을 실행해주세요.");
+    return;
+  }
+
+  try{
+    const buffer=await buildPatchedWorkbook();
+    const blob=new Blob(
+      [buffer],
+      {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+    );
+
+    const baseName=originalStockFileName
+      ? originalStockFileName.replace(/\.xlsx$/i,"")
+      : "포레스트핏_재고장";
+
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`${baseName}_셀메이트가용재고_H열입력.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }catch(err){
+    console.error(err);
+    alert(`결과 파일 생성 중 오류가 발생했습니다.\n${err.message||""}`);
+  }
 }
 
 function downloadResultCsv(){
-  if(!resultRows.length){alert("먼저 매칭 실행을 해주세요.");return;}
-  const rows=[["상태","행번호","사입명(D열)","사이즈(F열)","G열 입력 재고"]];
-  resultRows.forEach(r=>rows.push([r.status,r.rowNo,r.name,r.size,r.stock]));
-  const csv="\uFEFF"+rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n");
+  if(!resultRows.length){
+    alert("먼저 셀메이트 가용재고 매칭을 실행해주세요.");
+    return;
+  }
+
+  const rows=[[
+    "상태","거래처 탭","행번호","상품명(B열)","컬러(C열)",
+    "기장(E열)","사이즈(F열)","비교 옵션",
+    "셀메이트 공급처","셀메이트 상품명","셀메이트 옵션","H열 입력값"
+  ]];
+
+  resultRows.forEach(r=>rows.push([
+    r.status,r.sheet,r.rowNo,r.product,r.color,r.length,r.size,r.option,
+    r.sellmateVendor,r.sellmateProduct,r.sellmateOption,r.stock
+  ]));
+
+  const csv="\uFEFF"+rows
+    .map(row=>row.map(escapeCsv).join(","))
+    .join("\r\n");
+
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="리자드_재고장_매칭결과.csv";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  a.download="셀메이트_가용재고_매칭결과.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
