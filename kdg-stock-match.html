@@ -30,6 +30,20 @@ button.danger{background:#a45c5c}
 .small{font-size:13px;color:#7c867f;line-height:1.6}
 .notice{background:#fff8dc;border:1px solid #efd894;color:#6b3d00;border-radius:14px;padding:12px 14px;font-size:13px;font-weight:800;line-height:1.6;margin-top:8px}
 .status{padding:12px 14px;border-radius:12px;background:#edf7ff;color:#25516b;font-weight:800;margin-top:8px;display:none;white-space:pre-line}
+.progress-box{display:none;margin-top:14px;padding:16px;border:1px solid #d9e5df;border-radius:16px;background:#f8fbf9}
+.progress-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;font-size:14px;font-weight:850;color:#173d2b}
+.progress-track{height:16px;border-radius:999px;background:#e5ebe8;overflow:hidden}
+.progress-bar{height:100%;width:0%;background:#244734;transition:width .18s ease}
+.progress-detail{margin-top:9px;font-size:13px;color:#617068;font-weight:700;white-space:pre-line}
+.step-card{position:relative}
+.step-card.locked{opacity:.55}
+.step-number{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#244734;color:#fff;font-size:13px;font-weight:900;margin-right:8px}
+button:disabled,input:disabled{cursor:not-allowed;opacity:.55}
+.drop-zone{border:2px dashed #c6d4cc;border-radius:14px;padding:14px;background:#fbfdfc;transition:.18s ease;margin-bottom:10px}
+.drop-zone.dragover{border-color:#244734;background:#eef7f1;box-shadow:0 0 0 3px rgba(36,71,52,.08)}
+.drop-zone input[type=file]{margin-bottom:6px}
+.drop-guide{font-size:12px;color:#66756d;font-weight:750;line-height:1.5;text-align:center}
+.drop-guide strong{color:#244734}
 .summary{background:#fff;border:1px solid #e5ebe8;border-radius:16px;padding:16px}
 .summary b{font-size:26px;color:#244734}
 .vendor-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -62,44 +76,42 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
     거래처명과 재고장 탭명은 <b>띄어쓰기만 제외하고 완전히 일치</b>해야 합니다.
   </div>
 
-  <div class="card">
-    <label>1. 재고장 원본 파일 첨부</label>
-    <input type="file" id="stockFile" accept=".xlsx,.xls">
+  <div class="card step-card" id="step1Card">
+    <label><span class="step-number">1</span>재고장 원본 파일 첨부</label>
+    <div class="drop-zone" id="stockDropZone">
+      <input type="file" id="stockFile" accept=".xlsx,.xls">
+      <div class="drop-guide"><strong>PC에 저장된 엑셀 파일을 이 영역으로 끌어놓거나</strong> 파일 선택 버튼을 이용해 주세요.</div>
+    </div>
     <div class="small">
       첫 번째 탭은 처리하지 않습니다.<br>
       두 번째 탭부터 D열 사입명 / E열 기장 / F열 사이즈 / G열 재고 구조를 사용합니다.
     </div>
   </div>
 
-  <div class="card">
-    <label>2. 거래처별 재고표 첨부</label>
+  <div class="card step-card locked" id="step2Card">
+    <label><span class="step-number">2</span>거래처별 재고표 첨부</label>
     <div id="fixedVendorList" class="vendor-list"></div>
     <div class="notice">
       고정 거래처: 케이디지 / 리자드 / 시나브로 / 리마인드 / 뉴행 / 신안어패럴 / 계란속노른자<br>
-      첨부하지 않은 거래처는 처리하지 않습니다.
+      첨부하지 않은 거래처는 제외 후 계산을 실행합니다.<br>
+      카카오톡으로 전달받은 엑셀 파일은 PC에 저장한 후, 각 거래처 영역으로 끌어놓거나 파일 선택 버튼을 이용해 첨부해 주세요.
     </div>
   </div>
 
-  <div class="card">
-    <label>3. 추가 거래처</label>
-    <div class="grid3">
-      <input type="text" id="customVendorName" placeholder="거래처명 입력">
-      <input type="file" id="customVendorFile" accept=".xlsx,.xls,.csv">
-      <button type="button" onclick="addCustomVendor()">추가 거래처 등록</button>
+  <div class="card step-card locked" id="step3Card">
+    <label><span class="step-number">3</span>전체 거래처 재고 매칭</label>
+    <div class="small" style="margin-bottom:12px;">첨부하지 않은 거래처는 제외 후 계산을 실행합니다.</div>
+    <button id="processBtn" onclick="processAll()" disabled>전체 거래처 재고 매칭 실행</button>
+    <div id="matchProgressBox" class="progress-box">
+      <div class="progress-head"><span id="matchProgressTitle">매칭 준비 중</span><span id="matchProgressPct">0%</span></div>
+      <div class="progress-track"><div id="matchProgressBar" class="progress-bar"></div></div>
+      <div id="matchProgressDetail" class="progress-detail"></div>
     </div>
-    <div class="small" style="margin-bottom:12px;">
-      추가 거래처는 현재 자동 구조 분석을 지원하지 않습니다. 등록은 가능하지만 전용 규칙이 없으면 처리하지 않고 안내합니다.
-    </div>
-    <div id="customVendorList" class="vendor-list"></div>
-  </div>
-
-  <div class="card">
-    <button onclick="processAll()">전체 거래처 재고 매칭 실행</button>
     <div id="status" class="status"></div>
   </div>
 
-  <div class="card">
-    <label>4. 요약</label>
+  <div class="card step-card locked" id="step4Card">
+    <label><span class="step-number">4</span>요약</label>
     <div class="grid4">
       <div class="summary"><b id="totalCnt">0</b><div class="small">처리 대상</div></div>
       <div class="summary"><b id="matchedCnt">0</b><div class="small">매칭 완료</div></div>
@@ -108,10 +120,15 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
     </div>
   </div>
 
-  <div class="card">
-    <label>5. 결과 미리보기</label>
-    <button onclick="downloadModified()">첫 번째 탭 유지 재고장 다운로드</button>
-    <button class="secondary" onclick="downloadResultCsv()">매칭 결과 CSV 다운로드</button>
+  <div class="card step-card locked" id="step5Card">
+    <label><span class="step-number">5</span>결과 미리보기 및 다운로드</label>
+    <button id="downloadExcelBtn" onclick="downloadModified()" disabled>첫 번째 탭 유지 재고장 다운로드</button>
+    <button id="downloadCsvBtn" class="secondary" onclick="downloadResultCsv()" disabled>매칭 결과 CSV 다운로드</button>
+    <div id="downloadProgressBox" class="progress-box">
+      <div class="progress-head"><span id="downloadProgressTitle">결과 파일 생성 준비 중</span><span id="downloadProgressPct">0%</span></div>
+      <div class="progress-track"><div id="downloadProgressBar" class="progress-bar"></div></div>
+      <div id="downloadProgressDetail" class="progress-detail"></div>
+    </div>
     <div class="small" style="margin:8px 0 12px;">첫 번째 탭을 포함한 원본 양식은 그대로 유지하고, 매칭된 거래처 탭의 G열 값만 직접 변경합니다.</div>
     <div class="table-wrap" id="resultTable"></div>
   </div>
@@ -120,7 +137,6 @@ th{background:#e6f5ec;color:#173d2b;font-weight:850;position:sticky;top:0;z-inde
 <script>
 const FIXED_VENDORS=["케이디지","리자드","시나브로","리마인드","뉴행","신안어패럴","계란속노른자"];
 const vendorFiles=new Map();
-const customVendors=[];
 let stockWbExcel=null;
 let originalStockBuffer=null;
 let originalStockFileName="";
@@ -143,6 +159,36 @@ function setStatus(msg){
   const el=document.getElementById("status");
   el.style.display="block";
   el.textContent=msg;
+}
+
+function nextPaint(){
+  return new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+}
+
+function setStepEnabled(stepNo,enabled){
+  const card=document.getElementById(`step${stepNo}Card`);
+  if(card)card.classList.toggle("locked",!enabled);
+}
+
+function refreshStepState(){
+  const hasStock=!!stockWbExcel;
+  const hasVendor=vendorFiles.size>0;
+  setStepEnabled(2,hasStock);
+  setStepEnabled(3,hasStock&&hasVendor);
+  document.querySelectorAll('#step2Card input').forEach(el=>el.disabled=!hasStock);
+  const processBtn=document.getElementById("processBtn");
+  if(processBtn)processBtn.disabled=!(hasStock&&hasVendor);
+}
+
+function updateProgress(kind,pct,title,detail){
+  const safe=Math.max(0,Math.min(100,Math.round(pct)));
+  const prefix=kind==="download"?"download":"match";
+  const box=document.getElementById(`${prefix}ProgressBox`);
+  if(box)box.style.display="block";
+  document.getElementById(`${prefix}ProgressBar`).style.width=`${safe}%`;
+  document.getElementById(`${prefix}ProgressPct`).textContent=`${safe}%`;
+  document.getElementById(`${prefix}ProgressTitle`).textContent=title||"진행 중";
+  document.getElementById(`${prefix}ProgressDetail`).textContent=detail||"";
 }
 function escapeHtml(v){
   return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
@@ -224,64 +270,55 @@ function normalizeSinabroSize(v){
   return map[s] || s;
 }
 
-function renderFixedVendors(){
-  document.getElementById("fixedVendorList").innerHTML=FIXED_VENDORS.map((name,index)=>`
-    <div class="vendor-row">
-      <div class="vendor-head">
-        <div class="vendor-name">${name}</div>
-        <div class="vendor-state" id="state-${index}">미첨부</div>
-      </div>
-      <input type="file" accept=".xlsx,.xls,.csv" onchange="setFixedVendorFile(${index},this.files[0])">
-      <div class="file-name" id="file-${index}"></div>
-    </div>
-  `).join("");
-}
-function setFixedVendorFile(index,file){
-  const name=FIXED_VENDORS[index];
-  if(!file){
-    vendorFiles.delete(name);
-    document.getElementById(`state-${index}`).textContent="미첨부";
-    document.getElementById(`file-${index}`).textContent="";
-    return;
-  }
-  vendorFiles.set(name,file);
-  document.getElementById(`state-${index}`).textContent="첨부 완료";
-  document.getElementById(`file-${index}`).textContent=file.name;
-}
-function addCustomVendor(){
-  const name=document.getElementById("customVendorName").value.trim();
-  const file=document.getElementById("customVendorFile").files[0];
-  if(!name){alert("거래처명을 입력해주세요.");return;}
-  if(!file){alert("재고표 파일을 첨부해주세요.");return;}
-  if(FIXED_VENDORS.includes(name) || customVendors.some(v=>v.name===name)){alert("이미 등록된 거래처입니다.");return;}
-  customVendors.push({name,file});
-  vendorFiles.set(name,file);
-  document.getElementById("customVendorName").value="";
-  document.getElementById("customVendorFile").value="";
-  renderCustomVendors();
-}
-function removeCustomVendor(index){
-  const item=customVendors[index];
-  if(item)vendorFiles.delete(item.name);
-  customVendors.splice(index,1);
-  renderCustomVendors();
-}
-function renderCustomVendors(){
-  document.getElementById("customVendorList").innerHTML=customVendors.map((item,index)=>`
-    <div class="vendor-row">
-      <div class="vendor-head">
-        <div class="vendor-name">${escapeHtml(item.name)}</div>
-        <div class="vendor-state">첨부 완료</div>
-      </div>
-      <div class="file-name">${escapeHtml(item.file.name)}</div>
-      <button class="danger" onclick="removeCustomVendor(${index})">삭제</button>
-    </div>
-  `).join("");
-}
 
-document.getElementById("stockFile").addEventListener("change",async e=>{
-  const file=e.target.files[0];
+function isAllowedExcelFile(file,allowCsv=true){
+  if(!file)return false;
+  const ext=(file.name.split(".").pop()||"").toLowerCase();
+  return allowCsv ? ["xlsx","xls","csv"].includes(ext) : ["xlsx","xls"].includes(ext);
+}
+function extractDroppedFile(e){
+  const dt=e.dataTransfer;
+  if(!dt)return null;
+  if(dt.files && dt.files.length)return dt.files[0];
+  if(dt.items){
+    for(const item of dt.items){
+      if(item.kind==="file"){
+        const file=item.getAsFile();
+        if(file)return file;
+      }
+    }
+  }
+  return null;
+}
+function bindDropZone(el,onFile,allowCsv=true){
+  if(!el)return;
+  ["dragenter","dragover"].forEach(type=>el.addEventListener(type,e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.dataTransfer)e.dataTransfer.dropEffect="copy";
+    el.classList.add("dragover");
+  }));
+  ["dragleave","drop"].forEach(type=>el.addEventListener(type,e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    el.classList.remove("dragover");
+  }));
+  el.addEventListener("drop",async e=>{
+    const file=extractDroppedFile(e);
+    if(!file){
+      alert("드래그한 항목에서 실제 파일 정보를 읽지 못했습니다. PC에 저장된 엑셀 파일을 다시 끌어놓거나 파일 선택 버튼을 이용해 주세요.");
+      return;
+    }
+    if(!isAllowedExcelFile(file,allowCsv)){
+      alert(allowCsv ? "엑셀 또는 CSV 파일만 첨부할 수 있습니다." : "엑셀 파일(.xlsx, .xls)만 첨부할 수 있습니다.");
+      return;
+    }
+    await onFile(file);
+  });
+}
+async function loadStockFile(file){
   if(!file)return;
+  if(!isAllowedExcelFile(file,false)){alert("엑셀 파일(.xlsx, .xls)만 첨부할 수 있습니다.");return;}
   try{
     const buffer=await file.arrayBuffer();
     originalStockBuffer=buffer.slice(0);
@@ -289,11 +326,49 @@ document.getElementById("stockFile").addEventListener("change",async e=>{
     stockWbExcel=new ExcelJS.Workbook();
     await stockWbExcel.xlsx.load(buffer);
     setStatus(`${file.name} 업로드 완료 / 전체 시트 ${stockWbExcel.worksheets.length}개`);
+    refreshStepState();
   }catch(err){
     console.error(err);
     alert("재고장 파일을 불러오지 못했습니다.");
   }
-});
+}
+
+function renderFixedVendors(){
+  document.getElementById("fixedVendorList").innerHTML=FIXED_VENDORS.map((name,index)=>`
+    <div class="vendor-row">
+      <div class="vendor-head">
+        <div class="vendor-name">${name}</div>
+        <div class="vendor-state" id="state-${index}">미첨부</div>
+      </div>
+      <div class="drop-zone" id="vendor-drop-${index}">
+        <input type="file" id="vendor-input-${index}" accept=".xlsx,.xls,.csv" onchange="setFixedVendorFile(${index},this.files[0])">
+        <div class="drop-guide"><strong>PC에 저장된 엑셀 파일을 여기에 끌어놓기</strong></div>
+      </div>
+      <div class="file-name" id="file-${index}"></div>
+    </div>
+  `).join("");
+  FIXED_VENDORS.forEach((name,index)=>{
+    bindDropZone(document.getElementById(`vendor-drop-${index}`),file=>{
+      setFixedVendorFile(index,file);
+    },true);
+  });
+}
+function setFixedVendorFile(index,file){
+  const name=FIXED_VENDORS[index];
+  if(!file){
+    vendorFiles.delete(name);
+    document.getElementById(`state-${index}`).textContent="미첨부";
+    document.getElementById(`file-${index}`).textContent="";
+    refreshStepState();
+    return;
+  }
+  vendorFiles.set(name,file);
+  document.getElementById(`state-${index}`).textContent="첨부 완료";
+  document.getElementById(`file-${index}`).textContent=file.name;
+  refreshStepState();
+}
+document.getElementById("stockFile").addEventListener("change",e=>loadStockFile(e.target.files[0]));
+bindDropZone(document.getElementById("stockDropZone"),loadStockFile,false);
 
 async function readWorkbook(file){
   const buffer=await file.arrayBuffer();
@@ -520,28 +595,52 @@ async function processAll(){
   resultRows=[];
   const messages=[];
   let processedVendors=0;
+  const processBtn=document.getElementById("processBtn");
+  processBtn.disabled=true;
+  processBtn.textContent="재고 매칭 진행 중...";
+  document.getElementById("downloadExcelBtn").disabled=true;
+  document.getElementById("downloadCsvBtn").disabled=true;
+  setStepEnabled(5,false);
+  setStepEnabled(6,false);
+  updateProgress("match",0,"처리 대상 확인 중","첨부하지 않은 거래처는 제외 후 계산을 실행합니다.");
+  await nextPaint();
 
   try{
+    const jobs=[];
     for(const [vendorName,file] of vendorFiles.entries()){
       const stockSheet=findStockSheet(vendorName);
       if(!stockSheet){
         messages.push(`${vendorName}: 재고장 탭 없음`);
         continue;
       }
+      const rowNumbers=[];
+      stockSheet.eachRow({includeEmpty:false},(row,rowNumber)=>{
+        if(rowNumber>1)rowNumbers.push(rowNumber);
+      });
+      jobs.push({vendorName,file,stockSheet,rowNumbers});
+    }
+
+    const totalRows=jobs.reduce((sum,j)=>sum+j.rowNumbers.length,0) || 1;
+    let completedRows=0;
+
+    for(let vendorIndex=0;vendorIndex<jobs.length;vendorIndex++){
+      const {vendorName,file,stockSheet,rowNumbers}=jobs[vendorIndex];
+      updateProgress("match",completedRows/totalRows*100,`${vendorName} 재고표 읽는 중`,`거래처 ${vendorIndex+1} / ${jobs.length}`);
+      await nextPaint();
 
       const wb=await readWorkbook(file);
       const lookup=buildLookup(vendorName,wb);
       if(!lookup){
         messages.push(`${vendorName}: 전용 계산 규칙 없음`);
+        completedRows+=rowNumbers.length;
         continue;
       }
 
       processedVendors++;
       let currentName="", currentLength="";
-
-      stockSheet.eachRow({includeEmpty:false},(row,rowNumber)=>{
-        if(rowNumber===1)return;
-
+      for(let i=0;i<rowNumbers.length;i++){
+        const rowNumber=rowNumbers[i];
+        const row=stockSheet.getRow(rowNumber);
         const d=txt(row.getCell(4).value);
         const e=txt(row.getCell(5).value);
         const f=txt(row.getCell(6).value);
@@ -553,36 +652,53 @@ async function processAll(){
         const name=currentName;
         const length=currentLength;
         const size=f;
-        if(!name || !size)return;
+        if(name && size){
+          const found=findInLookup(vendorName,lookup,name,length,size);
+          const unmatchedText=getUnmatchedText(g);
+          const outputValue=found.matched ? found.value : unmatchedText;
+          g.value=outputValue;
+          resultRows.push({
+            vendor:vendorName,
+            sheet:stockSheet.name,
+            sourceSheet:found.sourceSheet||"-",
+            rowNo:rowNumber,
+            name,
+            length:length||"-",
+            size,
+            stock:outputValue,
+            status:found.matched ? "매칭완료" : unmatchedText
+          });
+        }
 
-        const found=findInLookup(vendorName,lookup,name,length,size);
-        const unmatchedText=getUnmatchedText(g);
-        const outputValue=found.matched ? found.value : unmatchedText;
-        g.value=outputValue;
-
-        resultRows.push({
-          vendor:vendorName,
-          sheet:stockSheet.name,
-          sourceSheet:found.sourceSheet||"-",
-          rowNo:rowNumber,
-          name,
-          length:length||"-",
-          size,
-          stock:outputValue,
-          status:found.matched ? "매칭완료" : unmatchedText
-        });
-      });
+        completedRows++;
+        if(i%100===0 || i===rowNumbers.length-1){
+          updateProgress("match",completedRows/totalRows*100,`${vendorName} 매칭 중`,`거래처 ${vendorIndex+1} / ${jobs.length} · 행 ${i+1} / ${rowNumbers.length}
+전체 ${completedRows.toLocaleString()} / ${totalRows.toLocaleString()}행`);
+          await nextPaint();
+        }
+      }
     }
 
+    updateProgress("match",99,"결과 화면 정리 중","매칭 결과를 표로 정리하고 있습니다.");
+    await nextPaint();
     renderResult(processedVendors);
     const matched=resultRows.filter(r=>r.status==="매칭완료").length;
     const unmatched=resultRows.filter(r=>r.status==="매칭안됨").length;
     const vendorStock=resultRows.filter(r=>r.status==="거래처 재고").length;
+    updateProgress("match",100,"재고 매칭 완료",`거래처 ${processedVendors}개 · 매칭 ${matched.toLocaleString()}건 · 매칭안됨 ${unmatched.toLocaleString()}건 · 거래처 재고 ${vendorStock.toLocaleString()}건`);
     setStatus(`완료: 거래처 ${processedVendors}개 처리 / 매칭 ${matched}건 / 매칭안됨 ${unmatched}건 / 거래처 재고 ${vendorStock}건${messages.length?`\n${messages.join("\n")}`:""}`);
+    setStepEnabled(5,true);
+    setStepEnabled(6,true);
+    document.getElementById("downloadExcelBtn").disabled=false;
+    document.getElementById("downloadCsvBtn").disabled=false;
   }catch(err){
     console.error(err);
+    updateProgress("match",0,"처리 오류 발생",err.message||"첨부 파일 형식과 시트 구성을 확인해주세요.");
     setStatus("처리 중 오류가 발생했습니다.");
     alert("처리 중 오류가 발생했습니다. 첨부 파일 형식과 시트 구성을 확인해주세요.");
+  }finally{
+    processBtn.textContent="전체 거래처 재고 매칭 실행";
+    refreshStepState();
   }
 }
 
@@ -732,19 +848,34 @@ async function buildOriginalPreservedWorkbook(){
     updatesBySheet.get(item.sheet).push({rowNo:item.rowNo,value:item.stock});
   });
 
-  for(const [sheetName,updates] of updatesBySheet.entries()){
+  const sheetEntries=Array.from(updatesBySheet.entries());
+  let completedUpdates=0;
+  const totalUpdates=sheetEntries.reduce((sum,[,updates])=>sum+updates.length,0) || 1;
+  for(let sheetIndex=0;sheetIndex<sheetEntries.length;sheetIndex++){
+    const [sheetName,updates]=sheetEntries[sheetIndex];
+    updateProgress("download",5+(completedUpdates/totalUpdates)*85,`${sheetName} 탭 반영 중`,`탭 ${sheetIndex+1} / ${sheetEntries.length} · ${completedUpdates.toLocaleString()} / ${totalUpdates.toLocaleString()}셀`);
+    await nextPaint();
     const sheetPath=pathMap.get(sheetName);
     if(!sheetPath)throw new Error(`${sheetName} 탭의 XML 경로를 찾지 못했습니다.`);
     const sheetFile=zip.file(sheetPath);
     if(!sheetFile)throw new Error(`${sheetName} 탭 파일을 찾지 못했습니다.`);
 
     let xml=await sheetFile.async("string");
-    updates.sort((a,b)=>a.rowNo-b.rowNo).forEach(update=>{
+    updates.sort((a,b)=>a.rowNo-b.rowNo);
+    for(let i=0;i<updates.length;i++){
+      const update=updates[i];
       xml=setWorksheetCellValue(xml,`G${update.rowNo}`,update.value);
-    });
+      completedUpdates++;
+      if(i%200===0 || i===updates.length-1){
+        updateProgress("download",5+(completedUpdates/totalUpdates)*85,`${sheetName} 탭 반영 중`,`탭 ${sheetIndex+1} / ${sheetEntries.length} · ${completedUpdates.toLocaleString()} / ${totalUpdates.toLocaleString()}셀`);
+        await nextPaint();
+      }
+    }
     zip.file(sheetPath,xml);
   }
 
+  updateProgress("download",92,"엑셀 파일 압축 중","원본 양식을 유지한 결과 파일을 생성하고 있습니다.");
+  await nextPaint();
   return zip.generateAsync({
     type:"blob",
     mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -759,6 +890,11 @@ async function downloadModified(){
     return;
   }
 
+  const btn=document.getElementById("downloadExcelBtn");
+  btn.disabled=true;
+  btn.textContent="결과 파일 생성 중...";
+  updateProgress("download",0,"결과 파일 생성 준비 중","원본 파일 구조를 확인하고 있습니다.");
+  await nextPaint();
   try{
     setStatus("원본 양식을 유지한 결과 파일을 생성하고 있습니다...");
     const blob=await buildOriginalPreservedWorkbook();
@@ -770,11 +906,16 @@ async function downloadModified(){
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+    updateProgress("download",100,"결과 파일 다운로드 완료","첫 번째 탭과 원본 양식을 유지하고 거래처 탭 G열 값만 반영했습니다.");
     setStatus("다운로드 완료: 첫 번째 탭과 원본 양식은 수정하지 않고 거래처 탭 G열 값만 반영했습니다.");
   }catch(err){
     console.error(err);
     setStatus(`다운로드 생성 오류: ${err.message}`);
+    updateProgress("download",0,"결과 파일 생성 오류",err.message||"개발자 도구의 오류 내용을 확인해주세요.");
     alert("결과 파일 생성 중 오류가 발생했습니다. 개발자 도구의 오류 내용을 확인해주세요.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="첫 번째 탭 유지 재고장 다운로드";
   }
 }
 function downloadResultCsv(){
@@ -790,6 +931,7 @@ function downloadResultCsv(){
 }
 
 renderFixedVendors();
+refreshStepState();
 </script>
 </body>
 </html>
