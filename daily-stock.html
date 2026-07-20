@@ -742,7 +742,7 @@ function buildWorksheetXml(originalText,desiredWs,shared){const doc=xmlParse(ori
       const ref=colName(c)+(r+1),cell=desiredWs[ref];let style=styles[c]??(c===13?styles[12]??'':'');style=semanticStyleFor(tmpl,desiredWs,b,r,c,style);let out;
       if(header){out=makeInlineCell(doc,ref,style,cell?.v??'')}
       else if(c===9){out=makeFormulaCell(doc,ref,style,`G${r+1}+H${r+1}+I${r+1}`)}
-      else if(c===10){out=makeFormulaCell(doc,ref,style,`IF(J${r+1}>=50,400,0)`)}
+      else if(c===10){out=makeFormulaCell(doc,ref,style,`IF(J${r+1}>=50,400,MAX(0,H${r+1}))`)}
       else if(c===11){out=makeFormulaCell(doc,ref,style,`IF(K${r+1}="",MAX(0,FLOOR(K${r+1}/5,1)),IF(J${r+1}>=50,80,MAX(0,FLOOR(J${r+1}/5,1))))`)}
       else if(c===12){
         const bMerge=(desiredWs['!merges']||[]).find(m=>m.s.c===1&&m.e.c===1&&r>=m.s.r&&r<=m.e.r);
