@@ -123,7 +123,10 @@ function extractOptionParts(v){
   if(!source)return {ok:false,raw:'',reason:'미들웨어 C열 옵션값이 비어 있음'};
 
   let raw='';
-  const labeled=source.match(/옵션\s*정보\s*[:：=\-]?\s*([^\)\]\r\n]+)/i);
+  // 옵션정보 뒤의 전체 문자열을 먼저 가져옵니다.
+  // 색상 안에 괄호가 포함된 아이보리(화이트), 화이트(아이보리)도
+  // 닫는 괄호에서 잘리지 않고 색상 별칭으로 함께 분석되도록 처리합니다.
+  const labeled=source.match(/옵션\s*정보\s*[:：=\-]?\s*([\s\S]*)$/i);
   if(labeled&&labeled[1]) raw=labeled[1].trim();
 
   // 옵션정보 라벨이 없더라도 마지막 괄호 또는 전체 문자열 안에 / 구분 옵션이 있으면 분석합니다.
