@@ -1000,8 +1000,17 @@ function cleanLegacyTopFormulaCells(rows){
   }
   return rows;
 }
-function buildWorksheetXml(originalText,desiredWs,shared){const doc=xmlParse(originalText),sheetData=localEls(doc,'sheetData')[0];if(!sheetData)throw new Error('sheetData가 없습니다.');const tmpl=templateFromOriginal(doc,shared);const originalRows=localEls(sheetData,'row');const preserved=cleanLegacyTopFormulaCells(originalRows.filter(r=>Number(r.getAttribute('r'))<=4).map(r=>r.cloneNode(true)));while(sheetData.firstChild)sheetData.removeChild(sheetData.firstChild);for(const r of preserved)sheetData.appendChild(r);
+function buildWorksheetXml(originalText,desiredWs,shared,sheetName,noFillStyleMap,tableBorderStyle){const doc=xmlParse(originalText),sheetData=localEls(doc,'sheetData')[0];if(!sheetData)throw new Error('sheetData가 없습니다.');const tmpl=templateFromOriginal(doc,shared);const originalRows=localEls(sheetData,'row');const preserved=cleanLegacyTopFormulaCells(originalRows.filter(r=>Number(r.getAttribute('r'))<=4).map(r=>r.cloneNode(true)));while(sheetData.firstChild)sheetData.removeChild(sheetData.firstChild);for(const r of preserved)sheetData.appendChild(r);
   const state=parseTargetSheetForWs(desiredWs);const blockByRow=new Map();for(const b of state.blocks)for(let r=b.startRow;r<=b.endRow;r++)blockByRow.set(r,b);const end=Math.max(3,lastMeaningfulDataRow(desiredWs));const anchors=mergeAnchorSet(desiredWs);
+  // 각 '상품 분류명 헤더 + 상품 데이터' 구간을 하나의 표로 판단합니다.
+  // 표 외곽은 일반 실선(thin), 표 내부 셀 경계는 촘촘한 점선(dotted)으로 통일합니다.
+  const tableRangeByRow=new Map();
+  const headerRows=[];
+  for(let rr=4;rr<=end;rr++)if(isHeaderRow(sheetRows(desiredWs)[rr]))headerRows.push(rr);
+  for(let i=0;i<headerRows.length;i++){
+    const start=headerRows[i],finish=(i+1<headerRows.length?headerRows[i+1]-1:end);
+    for(let rr=start;rr<=finish;rr++)tableRangeByRow.set(rr,{start,finish});
+  }
   for(let r=4;r<=end;r++){
     const row=doc.createElementNS(MAIN_NS,'row');row.setAttribute('r',String(r+1));row.setAttribute('spans','2:14');cloneAttrs(isHeaderRow(sheetRows(desiredWs)[r])?tmpl.headerRowAttrs:tmpl.dataRowAttrs,row,['r','spans']);
     const header=isHeaderRow(sheetRows(desiredWs)[r]);const b=blockByRow.get(r);const firstData=b&&r===b.dataStart,lastData=b&&r===b.endRow;const styles=header?tmpl.headerStyles:(firstData?tmpl.firstStyles:(lastData?tmpl.lastStyles:tmpl.middleStyles));
@@ -1012,8 +1021,37 @@ function buildWorksheetXml(originalText,desiredWs,shared){const doc=xmlParse(ori
       if(c===13&&!header){
         style=lastData?tmpl.rightEdgeStyles.last:(firstData?tmpl.rightEdgeStyles.first:tmpl.rightEdgeStyles.middle);
       }
-      style=semanticStyleFor(tmpl,desiredWs,b,r,c,style);let out;
-      if(header){out=makeInlineCell(doc,ref,style,cell?.v??'')}
+      style=semanticStyleFor(tmpl,desiredWs,b,r,c,style);
+      // 신규 등록 상품의 B열 상품명 셀은 기존 상품의 배경색을 복제하지 않습니다.
+      // 글꼴·테두리·정렬은 유지하고 채우기만 제거한 스타일을 사용합니다.
+      if(c===TARGET_COL_PRODUCT&&!header&&b&&r===b.dataStart&&isNewlyRegisteredProduct(sheetName,desiredWs,b)){
+        style=noFillStyleMap?.get(String(style))??style;
+      }
+      // 테두리 표시 기준:
+      // - 상품 분류명(헤더) 행 B~L: 일반 실선(thin)
+      // - 각 상품 블록의 바깥쪽(B~L, 상품 시작~끝): 일반 실선(thin)
+      // - 각 상품 블록 내부 구분선: 촘촘한 선(hair)
+      // - M열과 N열: 테두리 없음
+      const tableRange=tableRangeByRow.get(r);
+      if(tableRange&&typeof tableBorderStyle==='function'){
+        let borderMode;
+        if(c>=12)borderMode='none';
+        else if(header)borderMode='header';
+        else if(b){
+          borderMode={
+            top:r===b.dataStart,
+            right:c===11,
+            bottom:r===b.endRow,
+            left:c===1
+          };
+        }else borderMode='dense';
+        style=tableBorderStyle(String(style),borderMode);
+      }
+      let out;
+      // 상품 분류명(헤더) 행의 M/N열은 이전 결과 파일에 남아 있는 수식 결과나 문자열을
+      // 절대 다시 복사하지 않고 항상 빈 셀로 생성합니다.
+      // 이를 통해 이전 상품의 M열 요약 문구가 다음 분류명 행 사이에 표시되는 현상을 방지합니다.
+      if(header){out=c>=12?makeNumberCell(doc,ref,style,''):makeInlineCell(doc,ref,style,cell?.v??'')}
       else if(c===9){out=b?makeFormulaCell(doc,ref,style,`IFERROR(VALUE(G${r+1}),0)+IFERROR(VALUE(H${r+1}),0)+IFERROR(VALUE(I${r+1}),0)`):makeNumberCell(doc,ref,style,'')}
       else if(c===10){out=b?makeFormulaCell(doc,ref,style,`IF(J${r+1}>=50,400,MAX(0,IFERROR(VALUE(H${r+1}),0)))`):makeNumberCell(doc,ref,style,'')}
       else if(c===11){out=b?makeFormulaCell(doc,ref,style,`IF(J${r+1}>=50,80,MAX(0,TRUNC(IFERROR(VALUE(H${r+1}),0)/5,0)))`):makeNumberCell(doc,ref,style,'')}
@@ -1022,6 +1060,7 @@ function buildWorksheetXml(originalText,desiredWs,shared){const doc=xmlParse(ori
         // 기존 B열 병합 정보가 누락되었더라도 상품 첫 데이터 행에는 수식이 들어갑니다.
         const isMAnchor=!!b&&r===b.dataStart;
         if(isMAnchor)out=makeFormulaCell(doc,ref,style,worksheetBlockMFormula(desiredWs,b));
+        else if(b&&r===end)out=makeNumberCell(doc,ref,style,''); // 마지막 병합 범위의 하단 테두리 보존용 셀
         else if(b)continue; // 동일 상품 블록의 첫 행 외 M셀은 병합 범위이므로 생성하지 않습니다.
         else out=makeNumberCell(doc,ref,style,'');
       }
@@ -1068,6 +1107,121 @@ async function addNewSheetToPackage(zip,wbDoc,relDoc,ctDoc,pathMap,name,sourceNa
   const ov=ctDoc.createElementNS(ctDoc.documentElement.namespaceURI,'Override');ov.setAttribute('PartName',`/xl/worksheets/sheet${sheetNo}.xml`);ov.setAttribute('ContentType','application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml');ctDoc.documentElement.appendChild(ov);
   pathMap.set(name,newPath);
 }
+function buildNoFillStyleMap(stylesDoc){
+  const cellXfs=localEls(stylesDoc,'cellXfs')[0];
+  if(!cellXfs)return new Map();
+  const original=localEls(cellXfs,'xf').slice();
+  const map=new Map();
+  for(let i=0;i<original.length;i++){
+    const xf=original[i];
+    const fillId=Number(xf.getAttribute('fillId')||0);
+    if(!fillId){map.set(String(i),String(i));continue;}
+    const copy=xf.cloneNode(true);
+    copy.setAttribute('fillId','0');
+    copy.setAttribute('applyFill','0');
+    const newId=cellXfs.children.length;
+    cellXfs.appendChild(copy);
+    map.set(String(i),String(newId));
+  }
+  cellXfs.setAttribute('count',String(cellXfs.children.length));
+  return map;
+}
+function buildBottomBorderStyleMap(stylesDoc){
+  const cellXfs=localEls(stylesDoc,'cellXfs')[0],borders=localEls(stylesDoc,'borders')[0];
+  if(!cellXfs||!borders)return new Map();
+  const original=localEls(cellXfs,'xf').slice();
+  const map=new Map();
+  const borderKey=new Map();
+  const serializeBorder=b=>xmlText(b);
+  for(let i=0;i<localEls(borders,'border').length;i++)borderKey.set(serializeBorder(localEls(borders,'border')[i]),i);
+  for(let i=0;i<original.length;i++){
+    const xf=original[i],borderId=Number(xf.getAttribute('borderId')||0);
+    const source=localEls(borders,'border')[borderId]||localEls(borders,'border')[0];
+    if(!source){map.set(String(i),String(i));continue;}
+    const existingBottom=localEls(source,'bottom')[0];
+    if(existingBottom&&(existingBottom.getAttribute('style')||'')){
+      map.set(String(i),String(i));continue;
+    }
+    const borderCopy=source.cloneNode(true);
+    let bottom=localEls(borderCopy,'bottom')[0];
+    if(!bottom){
+      bottom=stylesDoc.createElementNS(MAIN_NS,'bottom');
+      const before=[...borderCopy.children].find(x=>['diagonal','vertical','horizontal'].includes(x.localName));
+      borderCopy.insertBefore(bottom,before||null);
+    }
+    bottom.setAttribute('style','thin');
+    while(bottom.firstChild)bottom.removeChild(bottom.firstChild);
+    const color=stylesDoc.createElementNS(MAIN_NS,'color');color.setAttribute('indexed','64');bottom.appendChild(color);
+    const key=serializeBorder(borderCopy);
+    let newBorderId=borderKey.get(key);
+    if(newBorderId===undefined){
+      newBorderId=borders.children.length;borders.appendChild(borderCopy);borderKey.set(key,newBorderId);
+    }
+    const xfCopy=xf.cloneNode(true);xfCopy.setAttribute('borderId',String(newBorderId));xfCopy.setAttribute('applyBorder','1');
+    const newStyleId=cellXfs.children.length;cellXfs.appendChild(xfCopy);map.set(String(i),String(newStyleId));
+  }
+  borders.setAttribute('count',String(borders.children.length));
+  cellXfs.setAttribute('count',String(cellXfs.children.length));
+  return map;
+}
+function buildTableBorderStyleResolver(stylesDoc){
+  const cellXfs=localEls(stylesDoc,'cellXfs')[0],borders=localEls(stylesDoc,'borders')[0];
+  if(!cellXfs||!borders)return(style)=>style;
+  const cache=new Map(),borderKey=new Map();
+  const serializeBorder=b=>xmlText(b);
+  for(let i=0;i<localEls(borders,'border').length;i++)borderKey.set(serializeBorder(localEls(borders,'border')[i]),i);
+  const setSide=(border,sideName,sideMode)=>{
+    let side=localEls(border,sideName)[0];
+    if(!side){
+      side=stylesDoc.createElementNS(MAIN_NS,sideName);
+      const order=['left','right','top','bottom','diagonal','vertical','horizontal'];
+      const pos=order.indexOf(sideName);
+      const before=[...border.children].find(x=>order.indexOf(x.localName)>pos);
+      border.insertBefore(side,before||null);
+    }
+    while(side.firstChild)side.removeChild(side.firstChild);
+    if(sideMode==='none'){
+      side.removeAttribute('style');
+      return;
+    }
+    // 상품 외곽은 thin, 상품 내부는 Excel의 가장 촘촘한 hair 선을 사용합니다.
+    side.setAttribute('style',sideMode==='thin'?'thin':'hair');
+    const color=stylesDoc.createElementNS(MAIN_NS,'color');color.setAttribute('indexed','64');side.appendChild(color);
+  };
+  return(styleId,mode='dense')=>{
+    const sid=String(styleId??'');
+    const modeKey=typeof mode==='object'?['top','right','bottom','left'].map(k=>mode[k]?'1':'0').join(''):String(mode);
+    const key=sid+'|'+modeKey;if(cache.has(key))return cache.get(key);
+    const xf=localEls(cellXfs,'xf')[Number(sid)]||localEls(cellXfs,'xf')[0];
+    if(!xf){cache.set(key,sid);return sid;}
+    const borderId=Number(xf.getAttribute('borderId')||0);
+    const source=localEls(borders,'border')[borderId]||localEls(borders,'border')[0];
+    if(!source){cache.set(key,sid);return sid;}
+    const borderCopy=source.cloneNode(true);
+    if(mode==='none'){
+      for(const sideName of ['top','right','bottom','left'])setSide(borderCopy,sideName,'none');
+    }else if(mode==='header'){
+      for(const sideName of ['top','right','bottom','left'])setSide(borderCopy,sideName,'thin');
+    }else if(typeof mode==='object'){
+      for(const sideName of ['top','right','bottom','left'])setSide(borderCopy,sideName,mode[sideName]?'thin':'hair');
+    }else{
+      for(const sideName of ['top','right','bottom','left'])setSide(borderCopy,sideName,'hair');
+    }
+    const bKey=serializeBorder(borderCopy);
+    let newBorderId=borderKey.get(bKey);
+    if(newBorderId===undefined){newBorderId=borders.children.length;borders.appendChild(borderCopy);borderKey.set(bKey,newBorderId);}
+    const xfCopy=xf.cloneNode(true);xfCopy.setAttribute('borderId',String(newBorderId));xfCopy.setAttribute('applyBorder','1');
+    const newStyleId=cellXfs.children.length;cellXfs.appendChild(xfCopy);
+    borders.setAttribute('count',String(borders.children.length));cellXfs.setAttribute('count',String(cellXfs.children.length));
+    const result=String(newStyleId);cache.set(key,result);return result;
+  };
+}
+function isNewlyRegisteredProduct(sheetName,desiredWs,block){
+  if(!block)return false;
+  const product=clean(desiredWs[XLSX.utils.encode_cell({r:block.dataStart,c:TARGET_COL_PRODUCT})]?.v);
+  if(!product)return false;
+  return differences.some(d=>d.applied&&norm(d.targetSheet||d.company)===norm(sheetName)&&norm(d.product)===norm(product));
+}
 function validateWorkbookPackage(wbDoc,relDoc,ctDoc,pathMap){
   const relIds=new Set(localEls(relDoc,'Relationship').map(r=>r.getAttribute('Id')).filter(Boolean));
   const sheetNames=new Set();
@@ -1097,7 +1251,7 @@ function validateWorksheetXmlText(xml,name){
   const mc=localEls(doc,'mergeCells')[0];if(mc&&Number(mc.getAttribute('count'))!==refs.length)throw new Error(`${name} 탭 mergeCells count가 실제 병합 수와 다릅니다.`);
   return doc;
 }
-async function safeDownloadV2(shouldDownload=true){if(!workbook||!originalArrayBuffer)throw new Error('원본 파일을 다시 선택해주세요.');if(typeof JSZip==='undefined')throw new Error('JSZip 라이브러리를 불러오지 못했습니다.');const zip=await JSZip.loadAsync(originalArrayBuffer);const wbDoc=xmlParse(await zip.file('xl/workbook.xml').async('string'));const relDoc=xmlParse(await zip.file('xl/_rels/workbook.xml.rels').async('string'));const ct=xmlParse(await zip.file('[Content_Types].xml').async('string'));const pathMap=sheetPathMap(wbDoc,relDoc);let shared=[];if(zip.file('xl/sharedStrings.xml'))shared=getSharedStrings(xmlParse(await zip.file('xl/sharedStrings.xml').async('string')));
+async function safeDownloadV2(shouldDownload=true){if(!workbook||!originalArrayBuffer)throw new Error('원본 파일을 다시 선택해주세요.');if(typeof JSZip==='undefined')throw new Error('JSZip 라이브러리를 불러오지 못했습니다.');const zip=await JSZip.loadAsync(originalArrayBuffer);const wbDoc=xmlParse(await zip.file('xl/workbook.xml').async('string'));const relDoc=xmlParse(await zip.file('xl/_rels/workbook.xml.rels').async('string'));const ct=xmlParse(await zip.file('[Content_Types].xml').async('string'));const pathMap=sheetPathMap(wbDoc,relDoc);let shared=[];if(zip.file('xl/sharedStrings.xml'))shared=getSharedStrings(xmlParse(await zip.file('xl/sharedStrings.xml').async('string')));const stylesPath='xl/styles.xml';if(!zip.file(stylesPath))throw new Error('엑셀 스타일 정보를 찾지 못했습니다.');const stylesDoc=xmlParse(await zip.file(stylesPath).async('string'));const noFillStyleMap=buildNoFillStyleMap(stylesDoc);const tableBorderStyle=buildTableBorderStyleResolver(stylesDoc);
   for(const name of workbook.SheetNames.slice(1)){
     if(!pathMap.has(name))await addNewSheetToPackage(zip,wbDoc,relDoc,ct,pathMap,name,newSheetTemplateSources.get(name)||findTemplateSheetName());
   }
@@ -1106,9 +1260,11 @@ async function safeDownloadV2(shouldDownload=true){if(!workbook||!originalArrayB
     const path=pathMap.get(name);if(!path||!zip.file(path))throw new Error(`${name} 탭의 XML 경로를 만들지 못했습니다.`);
     const original=await zip.file(path).async('string');
     // 첫 번째 업무요청서 탭은 원본 그대로 유지합니다.
-    const next=name===workbook.SheetNames[0]?original:setA1FormulaXml(buildWorksheetXml(original,workbook.Sheets[name],shared));
+    const next=name===workbook.SheetNames[0]?original:setA1FormulaXml(buildWorksheetXml(original,workbook.Sheets[name],shared,name,noFillStyleMap,tableBorderStyle));
     validateWorksheetXmlText(next,name);zip.file(path,next)
   }
+  // 표 테두리 변형 스타일이 모든 탭 처리 중 동적으로 추가되므로 처리 완료 후 저장합니다.
+  zip.file(stylesPath,xmlText(stylesDoc));
   // 계산 체인 제거 후 Excel에서 전체 재계산. calcPr는 DOM으로 안전하게 수정합니다.
   if(zip.file('xl/calcChain.xml'))zip.remove('xl/calcChain.xml');for(const rel of localEls(relDoc,'Relationship'))if((rel.getAttribute('Type')||'').endsWith('/calcChain'))rel.remove();zip.file('xl/_rels/workbook.xml.rels',xmlText(relDoc));let calc=localEls(wbDoc,'calcPr')[0];if(!calc){calc=wbDoc.createElementNS(MAIN_NS,'calcPr');wbDoc.documentElement.appendChild(calc)}calc.setAttribute('calcMode','auto');calc.setAttribute('fullCalcOnLoad','1');calc.setAttribute('forceFullCalc','1');zip.file('xl/workbook.xml',xmlText(wbDoc));
   for(const o of localEls(ct,'Override'))if(o.getAttribute('PartName')==='/xl/calcChain.xml')o.remove();zip.file('[Content_Types].xml',xmlText(ct));
