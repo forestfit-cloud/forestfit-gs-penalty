@@ -90,27 +90,40 @@ function buildStockIndex(wb){const exact=new Map(), productMap=new Map();let row
 function extractProductName(v){
   const s=text(v);
   if(!s)return '';
-  // 1순위: 문장 앞쪽의 [상품명]
   const square=s.match(/^\s*\[([^\]]+)\]/);
   if(square&&square[1])return square[1].trim();
-  // 2순위: 옵션정보가 아닌 (상품명)
   const matches=[...s.matchAll(/\(([^()]*)\)/g)]
     .map(m=>m[1].trim())
     .filter(x=>x&&!/^옵션\s*정보/i.test(x));
   if(matches.length)return matches[0];
-  // 괄호 상품명이 없으면 옵션정보 부분을 제거한 본문을 반환
   return s.replace(/\(?\s*옵션\s*정보\s*[:：=\-]?[^)\]\r\n]*[)\]]?/ig,'').trim();
+}
+function productCode(v){
+  const m=text(v).match(/\(?([A-Za-z]+\d{3,})\)?/i);
+  return m?normProduct(m[1]):'';
+}
+function productTokens(v){
+  const s=text(v).replace(/\(?\s*옵션\s*정보\s*[:：=\-]?[\s\S]*$/ig,'');
+  const tokens=new Set();
+  const cleaned=normProduct(s);
+  if(cleaned)tokens.add(cleaned);
+  const code=productCode(s);
+  if(code)tokens.add(code);
+  const names=[...s.matchAll(/\(([^()]*)\)/g)].map(m=>m[1]).filter(x=>x);
+  names.forEach(x=>{const n=normProduct(x);if(n)tokens.add(n)});
+  return [...tokens];
 }
 function middlewareProductBody(v){
   return normProduct(text(v).replace(/\(?\s*옵션\s*정보\s*[:：=\-]?[^)\]\r\n]*[)\]]?/ig,''));
 }
 function resolveProductFromCandidates(raw,candidateMap){
-  const explicit=normProduct(extractProductName(raw));
-  if(explicit&&candidateMap.has(explicit))return {status:'ok',key:explicit,name:candidateMap.get(explicit),method:'exact'};
   const body=middlewareProductBody(raw);
-  if(!body)return {status:'none',key:'',name:'',method:''};
+  const tokens=productTokens(raw);
+  for(const token of tokens){
+    if(candidateMap.has(token))return {status:'ok',key:token,name:candidateMap.get(token),method:'token'};
+  }
   const candidates=[...candidateMap.entries()]
-    .filter(([key])=>key&&body.includes(key))
+    .filter(([key])=>key&&((body&&body.includes(key))||tokens.some(t=>key.includes(t)||t.includes(key))))
     .sort((a,b)=>b[0].length-a[0].length);
   if(!candidates.length)return {status:'none',key:'',name:'',method:''};
   const longest=candidates[0][0].length;
