@@ -3,705 +3,548 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>재고장 자동 편집기 v2 - XML 직접 편집 검증본</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<title>포레스트핏 CS 교환·반품·맞교환 파일 정리</title>
 <style>
-:root{--green:#173d2b;--green2:#4d8b5b;--cream:#f7f3eb;--gold:#d8a84e;--red:#d94c4c;--blue:#3478d4;--line:#e5e2dc;--muted:#737373;--orange:#e58b3e}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--green);font-family:Pretendard,"Malgun Gothic",sans-serif}.wrap{max-width:1440px;margin:auto;padding:34px 28px 70px}h1{margin:0 0 8px;font-size:30px}.subtitle{color:#777;margin-bottom:24px}.toolbar,.panel{background:#fff;border-radius:18px;box-shadow:0 10px 25px rgba(0,0,0,.07);padding:22px;margin-bottom:18px}.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.file-label{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;padding:12px 18px;border-radius:11px;font-weight:700;cursor:pointer}.file-label input{display:none}button{border:0;border-radius:10px;padding:11px 17px;font-weight:700;cursor:pointer;font-size:14px}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--gold);color:#fff}.download{background:var(--green2);color:#fff}.secondary{background:#eef2ef;color:var(--green)}.sort-btn{background:var(--orange);color:#fff}.file-name{color:#666;font-size:14px}.status{margin-left:auto;color:#666;font-size:14px}.hidden{display:none!important}.info{background:#faf8f3;border-radius:12px;padding:14px 16px;color:#666;line-height:1.7}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px}.summary div{background:#f6f8f6;border-radius:12px;padding:16px}.summary b{font-size:24px;display:block;margin-top:4px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:1020px}th,td{border-bottom:1px solid var(--line);padding:11px 12px;text-align:center;font-size:14px}th{background:#f5f7f5;position:sticky;top:0;z-index:1}td.left{text-align:left}.action-btn{background:var(--red);color:#fff;min-width:112px}.action-btn.applied{background:var(--blue)}tr.applied-row{background:#f3f7ff}tr.applied-row td{color:#49647f}.action-status{display:block;font-size:12px;margin-top:5px;color:#3478d4;font-weight:700}.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-weight:700;font-size:12px}.badge.add{background:#fff0f0;color:#bd3737}.badge.del{background:#eef4ff;color:#2d68b6}.badge.dup{background:#fff2df;color:#a96514}.empty{text-align:center;color:#999;padding:35px}.editor-head{display:flex;justify-content:space-between;align-items:center;gap:15px}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:18px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:13px;font-weight:800}.field input,.field textarea,.field select{border:1px solid #d8d8d8;border-radius:10px;padding:11px 12px;font:inherit}.field textarea{min-height:130px;resize:vertical}.inline{display:flex;gap:8px;align-items:flex-end}.inline .field{flex:1}.color-area{margin-top:16px}.color-row{display:grid;grid-template-columns:220px 1fr;gap:12px;align-items:center;margin-bottom:8px}.color-key{background:#f5f7f5;border-radius:9px;padding:11px;font-weight:700}.color-row input{width:100%;border:1px solid #d8d8d8;border-radius:9px;padding:10px}.mini-note{font-size:12px;color:#777;line-height:1.55}.result-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}.result-table input{width:100%;min-width:90px;border:1px solid #ddd;border-radius:7px;padding:7px}
-/* 등록 전 미리보기: 실제 재고장 엑셀 양식과 유사한 색상·테두리 */
-#generatedPanel .table-wrap{border:1px solid #222;border-radius:0;background:#fff}
-.result-table{min-width:920px;border-collapse:collapse;table-layout:fixed;background:#fff;color:#111}
-.result-table th,
-.result-table td{padding:0;border:1px dotted #777;height:27px;font-size:14px;font-weight:400;background:#fff}
-.result-table thead th{position:static;background:#ffffc9;color:#111;border:1px solid #222;height:30px;font-weight:700;padding:4px 6px}
-.result-table td[rowspan]{vertical-align:middle}
-.result-table td.preview-product{background:#fffec5;font-weight:500;min-width:190px;border-left:1px solid #222}
-.result-table td.preview-color{min-width:105px;background:#fff}
-.result-table td.preview-stock{min-width:125px;background:#fff}
-.result-table td.preview-length{min-width:80px;background:#fff}
-.result-table td.preview-company{min-width:110px;background:#fffec5;border-left:1px solid #222}
-.result-table td:last-child{border-right:1px solid #222}
-.result-table tr:last-child td{border-bottom:1px solid #222}
-.result-table input{display:block;width:100%;height:100%;min-width:0;border:0;border-radius:0;padding:4px 6px;text-align:center;font:inherit;color:#111;background:transparent;outline:none}
-.result-table input:hover{background:rgba(255,244,169,.35)}
-.result-table input:focus{background:#fff8ba;box-shadow:inset 0 0 0 2px #d8a84e}
-.result-table td.preview-product input,
-.result-table td.preview-company input{font-weight:500}
-#generatedPanel .mini-note::after{content:" · 노란색 셀은 실제 재고장 양식의 상품 영역을 참고해 표시했습니다."}
-.action-btn.restore{background:#3478d4}
-.delete-confirm{display:block;margin-top:5px;color:#3478d4;font-size:12px;font-weight:800}.log{background:#13261d;color:#d7eadf;border-radius:12px;padding:15px 18px;white-space:pre-wrap;font-family:Consolas,"Malgun Gothic",monospace;font-size:13px;line-height:1.65;max-height:300px;overflow:auto}.warning{background:#fff7e8;color:#8b5b11;border:1px solid #f0d59f;border-radius:10px;padding:11px 13px;margin-top:12px}.ok{color:#3478d4;font-weight:700}.danger{color:#c54141;font-weight:700}
-
-/* 단계별 진행 UI */
-.step-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}.step-item{background:#fff;border:1px solid #dedbd4;border-radius:14px;padding:15px 18px;color:#898989;font-weight:800;box-shadow:0 6px 15px rgba(0,0,0,.04)}.step-item span{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;margin-right:8px;background:#ececec;color:#777}.step-item.active{border-color:var(--gold);color:var(--green);background:#fffaf0}.step-item.active span{background:var(--gold);color:#fff}.step-item.done{border-color:#94b29d;color:var(--green);background:#f4f8f5}.step-item.done span{background:var(--green2);color:#fff}.step-title{display:flex;align-items:center;gap:10px;margin-bottom:14px}.step-title .number{display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:50%;background:var(--green);color:#fff;font-weight:900}.next-stage-area{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.pending-text{color:#777;font-size:13px}.stage-highlight{outline:3px solid rgba(216,168,78,.22);outline-offset:2px}
-@media(max-width:900px){.step-nav{grid-template-columns:1fr}.summary,.editor-grid{grid-template-columns:1fr}.status{width:100%;margin-left:0}.color-row{grid-template-columns:1fr}.wrap{padding:22px 14px}}
+:root{
+  --bg:#f3f5f7;--card:#fff;--text:#1f2937;--muted:#6b7280;
+  --line:#dce1e8;--green:#1f6f54;--green2:#15513e;
+  --soft:#edf7f3;--blue:#315f9f;--blueSoft:#eef4fb;--danger:#b42318;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+font-family:"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif}
+.wrap{width:min(1240px,calc(100% - 32px));margin:38px auto}
+h1{margin:0 0 8px;font-size:28px;letter-spacing:-.8px}
+.desc{margin:0 0 22px;color:var(--muted);line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+padding:22px;box-shadow:0 8px 28px rgba(31,41,55,.06)}
+.card h2{margin:0 0 6px;font-size:20px}
+.sub{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.55}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;
+font-weight:800;margin-bottom:10px}
+.exchange .badge{background:var(--soft);color:var(--green)}
+.return .badge{background:var(--blueSoft);color:var(--blue)}
+.dropzone{display:block;width:100%;border:2px dashed #aeb8c5;border-radius:13px;padding:27px 16px;
+text-align:center;background:#fbfcfd;cursor:pointer;transition:.2s}
+.dropzone.dragover{border-color:var(--green);background:var(--soft)}
+.return .dropzone.dragover{border-color:var(--blue);background:var(--blueSoft)}
+.dropzone strong{display:block;font-size:16px;margin-bottom:7px;word-break:break-all}
+.dropzone span{font-size:12px;color:var(--muted)}
+input[type=file]{display:none}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:9px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer}
+button:disabled{opacity:.42;cursor:not-allowed}
+.btn-ex{background:var(--green);color:#fff}
+.btn-ex:hover:not(:disabled){background:var(--green2)}
+.btn-ret{background:var(--blue);color:#fff}
+.btn-ret:hover:not(:disabled){filter:brightness(.9)}
+.btn-sub{background:#eef1f5;color:#26313f}
+.status{margin-top:13px;padding:12px 13px;border-radius:9px;background:#f7f8fa;
+font-size:13px;line-height:1.5;white-space:pre-line;min-height:44px}
+.status.ok{background:var(--soft);color:#14553f}
+.return .status.ok{background:var(--blueSoft);color:#234f89}
+.status.error{background:#fff1f0;color:var(--danger)}
+.metrics{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.metric{border:1px solid var(--line);border-radius:10px;padding:10px}
+.metric .label{font-size:11px;color:var(--muted)}
+.metric .value{font-size:19px;font-weight:800;margin-top:3px}
+.bottom{margin-top:18px}
+.all-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;
+background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.all-actions p{margin:0;color:var(--muted);font-size:13px}
+.preview{display:none;margin-top:18px;background:#fff;border:1px solid var(--line);
+border-radius:14px;padding:18px}
+.preview h3{margin:0 0 10px;font-size:16px}
+.tabs{display:flex;gap:7px;margin-bottom:10px}
+.tab{background:#eef1f5;color:#374151}
+.tab.active{background:#26313f;color:#fff}
+.tablebox{overflow:auto;max-height:430px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:max-content;min-width:100%;font-size:10pt}
+th,td{padding:7px 9px;border-bottom:1px solid #e7eaf0;border-right:1px solid #edf0f3;
+white-space:nowrap;max-width:390px;overflow:hidden;text-overflow:ellipsis;text-align:left}
+th{position:sticky;top:0;background:#f4f6f8;z-index:1}
+.note{margin:9px 0 0;color:var(--muted);font-size:11px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}.all-actions{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>📦 재고장 자동 편집기 v2</h1>
-  <div class="subtitle">원본 XLSX의 1~4행과 패키지 구조를 유지하고, 거래처 탭 5행 이후 상품 영역만 직접 편집하는 검증 버전입니다.</div>
+  <h1>CS 교환·반품·맞교환 파일 완전정리</h1>
+  <p class="desc">셀메이트 교환완료·반품완료 파일은 필수, 맞교환완료 파일은 선택으로 첨부해 정리 후 하나의 통합 Excel 파일로 생성할 수 있습니다.</p>
 
-  <div class="step-nav" aria-label="진행 단계">
-    <div id="stepNav1" class="step-item active"><span>1</span>파일 선택 및 분석</div>
-    <div id="stepNav2" class="step-item"><span>2</span>등록·삭제 업무 반영</div>
-    <div id="stepNav3" class="step-item"><span>3</span>순위 정렬 및 다운로드</div>
+  <div class="grid">
+    <section class="card exchange">
+      <span class="badge">셀메이트 교환완료</span>
+      <h2>교환 파일</h2>
+      <p class="sub">메모의 「 」 안 문구만 추출하며, 빈 CS종류명·메모는 ‘단순교환’으로 입력합니다.</p>
+      <label class="dropzone" id="exchangeDrop" for="exchangeInput">
+        <strong id="exchangeLabel">교환완료 CSV 파일 첨부</strong>
+        <span>클릭하거나 파일을 끌어다 놓으세요</span>
+      </label>
+      <input id="exchangeInput" type="file" accept=".csv,text/csv">
+      <div class="actions">
+        <button class="btn-ex" id="exchangeProcess" disabled>교환 파일 정리</button>
+        <button class="btn-sub" id="exchangeDownload" disabled>교환 CSV 다운로드</button>
+      </div>
+      <div class="status" id="exchangeStatus">교환완료 파일을 선택해 주세요.</div>
+      <div class="metrics" id="exchangeMetrics">
+        <div class="metric"><div class="label">데이터</div><div class="value" id="exchangeRows">0</div></div>
+        <div class="metric"><div class="label">메모 추출</div><div class="value" id="exchangeExtract">0</div></div>
+        <div class="metric"><div class="label">단순교환 입력</div><div class="value" id="exchangeFill">0</div></div>
+      </div>
+    </section>
+
+    <section class="card return">
+      <span class="badge">셀메이트 반품완료</span>
+      <h2>반품 파일</h2>
+      <p class="sub">메모에서 [반품정보] 이후를 제거하며, 빈 CS종류명·메모는 ‘단순반품’으로 입력합니다.</p>
+      <label class="dropzone" id="returnDrop" for="returnInput">
+        <strong id="returnLabel">반품완료 CSV 파일 첨부</strong>
+        <span>클릭하거나 파일을 끌어다 놓으세요</span>
+      </label>
+      <input id="returnInput" type="file" accept=".csv,text/csv">
+      <div class="actions">
+        <button class="btn-ret" id="returnProcess" disabled>반품 파일 정리</button>
+        <button class="btn-sub" id="returnDownload" disabled>반품 CSV 다운로드</button>
+      </div>
+      <div class="status" id="returnStatus">반품완료 파일을 선택해 주세요.</div>
+      <div class="metrics" id="returnMetrics">
+        <div class="metric"><div class="label">데이터</div><div class="value" id="returnRows">0</div></div>
+        <div class="metric"><div class="label">메모 정리</div><div class="value" id="returnExtract">0</div></div>
+        <div class="metric"><div class="label">단순반품 입력</div><div class="value" id="returnFill">0</div></div>
+      </div>
+    </section>
+
+
+    <section class="card exchange">
+      <span class="badge">셀메이트 맞교환완료</span>
+      <h2>맞교환 파일</h2>
+      <p class="sub">교환완료 파일과 동일하게 메모의 「 」 안 문구만 추출하며, 빈 CS종류명·메모는 ‘단순교환’으로 입력합니다.</p>
+      <label class="dropzone" id="swapDrop" for="swapInput">
+        <strong id="swapLabel">맞교환완료 CSV 파일 첨부</strong>
+        <span>클릭하거나 파일을 끌어다 놓으세요</span>
+      </label>
+      <input id="swapInput" type="file" accept=".csv,text/csv">
+      <div class="actions">
+        <button class="btn-ex" id="swapProcess" disabled>맞교환 파일 정리</button>
+        <button class="btn-sub" id="swapDownload" disabled>맞교환 CSV 다운로드</button>
+      </div>
+      <div class="status" id="swapStatus">맞교환완료 파일을 선택해 주세요.</div>
+      <div class="metrics" id="swapMetrics">
+        <div class="metric"><div class="label">데이터</div><div class="value" id="swapRows">0</div></div>
+        <div class="metric"><div class="label">메모 추출</div><div class="value" id="swapExtract">0</div></div>
+        <div class="metric"><div class="label">단순교환 입력</div><div class="value" id="swapFill">0</div></div>
+      </div>
+    </section>
   </div>
 
-  <section id="step1Panel" class="toolbar stage-highlight">
-    <div class="step-title" style="width:100%"><span class="number">1</span><div><b>원본 엑셀 선택 후 분석</b><div class="mini-note">파일을 선택한 뒤 분석 시작 버튼을 눌러주세요.</div></div></div>
-    <label class="file-label">📁 엑셀 파일 선택<input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm"></label>
-    <span id="fileName" class="file-name">선택된 파일 없음</span>
-    <button id="analyzeBtn" class="primary" disabled>🔍 분석 시작</button>
-    <span id="loadStatus" class="status">파일을 선택해주세요.</span>
-  </section>
-
-  <section class="panel">
-    <div class="info">
-      <b>확정 조건</b><br>
-      첫 번째 탭: A열 순위 · B열 거래처명 · C열 상품명 · D열 사입명, 20행부터 최소 100행까지 검사<br>
-      거래처 매칭: 업무요청서 B열과 탭 이름을 띄어쓰기 제거 후 완전 일치<br>
-      상품 매칭: 띄어쓰기 제거 후 완전 일치를 우선하며, 완전 일치가 없으면 양방향 포함 여부로 일치<br>
-      거래처 탭 상품 단위: <b>상품 바로 위 분류명 행 + 상품 전체 옵션 행</b><br>거래처 사입명: 영문 컬러·사이즈·숏/롱 기장을 자동 추출하고, 사이즈 뒤의 [상품 설명]은 삭제
+  <div class="bottom">
+    <div class="all-actions">
+      <p>교환완료·반품완료 파일은 필수이며, 맞교환완료 파일은 선택입니다. 통합 후 GS·판매처 추가 정리 규칙까지 자동 적용합니다.</p>
+      <div class="actions" style="margin:0">
+        <button class="btn-ex" id="processAll" disabled>전체 정리 및 통합파일 생성</button>
+        <button class="btn-sub" id="downloadMerged" disabled>통합 Excel 다운로드</button>
+        <button class="btn-sub" id="resetAll">전체 초기화</button>
+      </div>
     </div>
-    <div id="analysisSummary" class="summary hidden">
-      <div>전체 차이<b id="totalCount">0</b></div><div>등록 대상<b id="addCount">0</b></div><div>삭제 대상<b id="deleteCount">0</b></div><div>중복 삭제<b id="duplicateCount">0</b></div><div>탭 오류<b id="errorCount">0</b></div>
+  </div>
+
+  <section class="preview" id="preview">
+    <h3>정리 결과 미리보기</h3>
+    <div class="tabs">
+      <button class="tab active" id="tabExchange">교환 파일</button>
+      <button class="tab" id="tabReturn">반품 파일</button>
+      <button class="tab" id="tabSwap">맞교환 파일</button>
     </div>
-  </section>
-
-  <section id="analysisLogPanel" class="panel hidden">
-    <div class="editor-head"><h2 style="margin:0">분석 로그</h2><button id="clearLog" class="secondary">로그 지우기</button></div>
-    <div id="analysisLog" class="log">파일을 선택한 뒤 분석 시작을 눌러주세요.</div>
-  </section>
-
-  <section id="workPanel" class="panel hidden">
-    <div class="step-title"><span class="number">2</span><div><h2 style="margin:0">업무 반영 목록</h2><div class="mini-note">위에서 아래로 등록·삭제 항목을 모두 반영한 뒤 다음 단계로 이동하세요.</div></div></div>
-    <div class="table-wrap"><table><thead><tr><th>No.</th><th>순위</th><th>거래처</th><th>셀메이트 상품명</th><th>업무요청서 사입명</th><th>대상 탭</th><th>구분</th><th>처리</th></tr></thead><tbody id="diffBody"><tr><td colspan="8" class="empty">분석 결과가 표시됩니다.</td></tr></tbody></table></div>
-    <div class="next-stage-area"><span id="pendingStatus" class="pending-text">분석 후 진행 상태가 표시됩니다.</span><button id="goFinalBtn" class="primary" disabled>다음 단계 · 정렬 및 다운로드 →</button></div>
-  </section>
-
-  <section id="registerEditor" class="panel hidden">
-    <div class="editor-head"><div><h2 style="margin:0">등록 정보 입력</h2><div class="mini-note">거래처명과 셀메이트 상품명은 자동 입력되며 직접 수정할 수 있습니다.</div></div><button id="closeEditor" class="secondary">닫기</button></div>
-    <div class="editor-grid">
-      <div class="field"><label>거래처명</label><input id="editCompany"></div>
-      <div class="field"><label>셀메이트 상품명</label><input id="editProduct"></div>
-      <div class="field full"><label>사입 상품명 · 한 줄에 하나씩 입력</label><textarea id="stockCodes" placeholder="예)&#10;4090-1SH&#10;4090-1&#10;4090-1LO&#10;4090-2SH&#10;4090-2&#10;4090-2LO"></textarea></div>
-      <div class="field full inline"><div class="field"><label>사이즈 · 사입명에 포함된 사이즈는 자동 추출되며 직접 수정 가능</label><input id="sizeInput" placeholder="예) S    M    L    XL    2XL"></div><button id="detectColorBtn" class="primary">색상/기장 인식</button></div>
-    </div>
-    <div id="colorArea" class="color-area hidden"><h3>색상 입력</h3><div class="mini-note">사입명에서 추출된 영문 컬러가 자동 입력됩니다. 필요한 경우 한글 색상명으로 직접 수정해주세요.</div><div id="colorRows"></div></div>
-    <div class="result-actions"><button id="makeRowsBtn" class="download" disabled>입력값으로 표 만들기</button></div>
-  </section>
-
-  <section id="generatedPanel" class="panel hidden">
-    <div class="editor-head"><div><h2 style="margin:0">등록 데이터 미리보기</h2><div class="mini-note">표 안의 값도 직접 수정할 수 있습니다.</div></div><button id="applyRegisterBtn" class="primary">등록 반영</button></div>
-    <div class="table-wrap" style="margin-top:16px"><table class="result-table"><thead><tr><th>거래처명</th><th>셀메이트 상품명</th><th>컬러</th><th>사입상품명</th><th>기장</th><th>사이즈</th></tr></thead><tbody id="generatedBody"></tbody></table></div>
-  </section>
-
-  <section id="finalPanel" class="panel hidden">
-    <div class="editor-head"><div><div class="step-title"><span class="number">3</span><div><h2 style="margin:0">마지막 단계 · 정렬 및 파일 저장</h2><div class="mini-note">등록·삭제 반영을 모두 확인한 뒤 순위 정렬을 적용하고 파일을 다운로드하세요.</div></div></div></div></div>
-    <div class="result-actions" style="justify-content:flex-start;flex-wrap:wrap;margin-top:18px">
-      <button id="sortBtn" class="sort-btn" disabled>↕ 1. 순위 정렬 반영</button>
-      <button id="undoBtn" class="secondary" disabled>↶ 마지막 작업 되돌리기</button>
-      <button id="downloadBtn" class="download" disabled>📥 2. 반영 파일 다운로드</button>
-    </div>
-    <div id="lastActionStatus" class="info" style="margin-top:14px">아직 반영된 작업이 없습니다.</div>
+    <div class="tablebox"><table id="previewTable"></table></div>
+    <p class="note">미리보기는 최대 100행까지 표시되며, 다운로드 파일에는 전체 데이터가 포함됩니다.</p>
   </section>
 </div>
+
 <script>
-'use strict';
-let workbook=null, originalFileName='', originalArrayBuffer=null;
-let requestSheetName='', requestItems=[], requestByCompany=new Map();
-let sheetStates=new Map(), differences=[], errors=[];
-let activeDiffId=null, detectedCodes=[], actionSeq=1, previewRows=[];
-let undoStack=[];
-const $=s=>document.querySelector(s);
-const clean=v=>String(v??'').trim();
-const norm=v=>clean(v).replace(/\s+/g,'').toLowerCase();
-function setStage(stage){
-  [1,2,3].forEach(n=>{const el=$('#stepNav'+n);if(!el)return;el.classList.toggle('active',n===stage);el.classList.toggle('done',n<stage)});
-  $('#step1Panel')?.classList.toggle('stage-highlight',stage===1);
-  $('#workPanel')?.classList.toggle('stage-highlight',stage===2);
-  $('#finalPanel')?.classList.toggle('stage-highlight',stage===3);
-}
-function resetStageUi(){
-  setStage(1);
-  $('#analysisSummary')?.classList.add('hidden');
-  $('#analysisLogPanel')?.classList.add('hidden');
-  $('#workPanel')?.classList.add('hidden');
-  $('#finalPanel')?.classList.add('hidden');
-  const g=$('#goFinalBtn');if(g)g.disabled=true;
-  const p=$('#pendingStatus');if(p)p.textContent='분석 후 진행 상태가 표시됩니다.';
-}
-function updateStageControls(){
-  const g=$('#goFinalBtn'),p=$('#pendingStatus');if(!g||!p)return;
-  const pending=differences.filter(d=>!d.applied).length;
-  if(!differences.length){g.disabled=false;p.textContent='반영할 차이가 없습니다. 다음 단계로 이동할 수 있습니다.';return;}
-  g.disabled=pending>0;
-  p.textContent=pending>0?`미반영 업무 ${pending}건이 남아 있습니다.`:'모든 등록·삭제 업무가 반영되었습니다.';
-}
-function revealAnalysisStage(){
-  $('#analysisSummary')?.classList.remove('hidden');
-  $('#analysisLogPanel')?.classList.remove('hidden');
-  $('#workPanel')?.classList.remove('hidden');
-  $('#finalPanel')?.classList.add('hidden');
-  setStage(2);updateStageControls();
-  setTimeout(()=>$('#workPanel')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
-}
+(() => {
+  const KEEP = ["CS유형이름","CS종류명","메모","판매처명","판매처주문번호","공급처명","판매처상품명","상품옵션"];
+  const OUT_HEADER = ["CS유형","CS종류명","메모","판매처명","판매처주문번호","공급처명","판매처상품명","상품옵션"];
 
-// 상품명 비교: ① 완전 일치 우선 ② 한쪽 문자열이 다른 쪽에 온전히 포함되면 일치
-// 예) 여름노컷진7탄 ↔ 여름노컷진7탄(J2522) = 일치
-//     여름노컷진7탄 ↔ 여름컷진7탄 / 여름노컷진77탄 = 불일치
-function productMatchScore(a,b){
-  const x=norm(a),y=norm(b);
-  if(!x||!y)return 0;
-  if(x===y)return 2;
-  return (x.includes(y)||y.includes(x))?1:0;
-}
-function productMatches(a,b){return productMatchScore(a,b)>0;}
-function bestRequestForProduct(items,product){
-  let best=null,bestScore=0;
-  for(const item of items){
-    const score=productMatchScore(item.product,product);
-    if(score>bestScore){best=item;bestScore=score;}
-    else if(score===bestScore&&score>0&&best&&item.rank<best.rank){best=item;}
-  }
-  return best;
-}
-function bestBlockForProduct(blocks,product){
-  let best=null,bestScore=0;
-  for(const block of blocks){
-    const score=productMatchScore(block.product,product);
-    if(score>bestScore){best=block;bestScore=score;}
-  }
-  return best;
-}
-const clone=o=>o?JSON.parse(JSON.stringify(o)):o;
-const REQUEST_START_ROW=20; // 1-based
-const REQUEST_MIN_END_ROW=100;
-const PRODUCT_START_ROW=5; // 1-based
-const COL_RANK=0, COL_COMPANY=1, COL_PRODUCT=2, COL_REQUEST_STOCK=3;
-const TARGET_COL_PRODUCT=1, TARGET_COL_COLOR=2, TARGET_COL_STOCK=3, TARGET_COL_LENGTH=4, TARGET_COL_SIZE=5;
+  const state = {
+    exchange:{file:null,rows:null,name:"교환완료_정리완료.csv"},
+    return:{file:null,rows:null,name:"반품완료_정리완료.csv"},
+    swap:{file:null,rows:null,name:"맞교환완료_정리완료.csv"},
+    merged:{rows:null,name:"CS_교환반품_통합완료.csv"}
+  };
 
-function log(msg, reset=false){const el=$('#analysisLog');if(reset)el.textContent='';el.textContent+=(el.textContent?'\n':'')+msg;el.scrollTop=el.scrollHeight;}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-function attr(v){return esc(v).replace(/`/g,'&#096;');}
-function cloneWorkbook(wb){return typeof structuredClone==='function'?structuredClone(wb):JSON.parse(JSON.stringify(wb));}
-function updateUndoUi(){const b=$('#undoBtn');if(!b)return;b.disabled=!undoStack.length;const s=$('#lastActionStatus');if(!undoStack.length){s.textContent='아직 반영된 작업이 없습니다.';return;}s.innerHTML=`최근 작업: <b>${esc(undoStack[undoStack.length-1].label)}</b><br>필요하면 마지막 작업을 되돌릴 수 있습니다.`;}
-function pushUndo(label,diffId=null,editorState=null){undoStack.push({label,diffId,editorState,workbook:cloneWorkbook(workbook),differences:clone(differences)});if(undoStack.length>20)undoStack.shift();updateUndoUi();}
-function undoLastAction(reopen=false){const x=undoStack.pop();if(!x)return alert('되돌릴 작업이 없습니다.');workbook=x.workbook;differences=x.differences;renderDifferences();renderSummary();$('#sortBtn').textContent='↕ 1. 순위 정렬 반영';$('#sortBtn').style.background='';log(`[되돌리기] ${x.label}`);updateUndoUi();updateStageControls();$('#downloadBtn').disabled=true;if(reopen&&x.diffId){const d=differences.find(v=>v.id===x.diffId);if(d)openRegisterEditor(d,x.editorState||null);}}
+  const $ = id => document.getElementById(id);
 
-function sheetRows(ws){return XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:true});}
-function usedEndRow(ws){if(!ws||!ws['!ref'])return 0;return XLSX.utils.decode_range(ws['!ref']).e.r+1;}
-function isHeaderRow(row){
-  const p=norm(row?.[TARGET_COL_PRODUCT]);
-  const c=norm(row?.[TARGET_COL_COLOR]);
-  const s=norm(row?.[TARGET_COL_STOCK]);
-  const z=norm(row?.[TARGET_COL_SIZE]);
-  return p==='상품명' && (c==='컬러'||c==='색상') && (s==='사입명'||s==='사입상품명') && z==='사이즈';
-}
-function cellValue(ws,r,c){const a=XLSX.utils.encode_cell({r,c});return ws[a]?.v??'';}
-function getMergedValue(ws,r,c){
-  const direct=cellValue(ws,r,c);if(clean(direct))return clean(direct);
-  for(const m of (ws['!merges']||[])){
-    if(r>=m.s.r&&r<=m.e.r&&c>=m.s.c&&c<=m.e.c)return clean(cellValue(ws,m.s.r,m.s.c));
+  function setStatus(type,msg,kind=""){
+    const el=$(type+"Status");
+    el.textContent=msg;
+    el.className="status"+(kind?" "+kind:"");
   }
-  return '';
-}
-function parseRequest(){
-  const ws=workbook.Sheets[requestSheetName];
-  const end=Math.max(REQUEST_MIN_END_ROW,usedEndRow(ws));
-  const items=[];const seen=new Map();
-  for(let row1=REQUEST_START_ROW;row1<=end;row1++){
-    const r=row1-1;
-    const rankRaw=cellValue(ws,r,COL_RANK);
-    const company=clean(cellValue(ws,r,COL_COMPANY));
-    const product=clean(cellValue(ws,r,COL_PRODUCT));
-    const requestStock=clean(cellValue(ws,r,COL_REQUEST_STOCK));
-    if(!company&&!product&&!clean(rankRaw))continue;
-    if(!company||!product)continue;
-    const rankNum=Number(String(rankRaw).replace(/,/g,''));
-    if(!Number.isFinite(rankNum)){errors.push(`업무요청서 ${row1}행: 순위값 '${rankRaw}'을 숫자로 읽지 못해 제외했습니다.`);continue;}
-    const key=norm(company)+'||'+norm(product);
-    const item={rank:rankNum,company,product,requestStock,row1,key};
-    if(seen.has(key)){
-      const old=seen.get(key);
-      if(rankNum<old.rank){items.splice(items.indexOf(old),1,item);seen.set(key,item);errors.push(`업무요청서 중복: ${company} / ${product} — 더 높은 순위 ${rankNum}번만 유지합니다.`)}
-      else errors.push(`업무요청서 중복: ${company} / ${product} — ${rankNum}번 행은 제외합니다.`);
-    }else{seen.set(key,item);items.push(item)}
+
+  function updateAllButton(){
+    $("processAll").disabled=!(state.exchange.file && state.return.file);
+    if(!(state.exchange.file && state.return.file)) $("downloadMerged").disabled=true;
   }
-  items.sort((a,b)=>a.rank-b.rank||a.row1-b.row1);
-  return items;
-}
-function buildRequestGroups(){
-  requestByCompany=new Map();
-  for(const it of requestItems){const k=norm(it.company);if(!requestByCompany.has(k))requestByCompany.set(k,[]);requestByCompany.get(k).push(it)}
-  requestByCompany.forEach(arr=>arr.sort((a,b)=>a.rank-b.rank));
-}
-function findExactCompanySheet(company){
-  const key=norm(company);
-  return workbook.SheetNames.slice(1).find(n=>norm(n)===key)||null;
-}
-function parseTargetSheet(name){
-  const ws=workbook.Sheets[name];const rows=sheetRows(ws);const blocks=[];const headers=[];
-  const start=PRODUCT_START_ROW-1;
-  for(let r=start;r<rows.length;r++)if(isHeaderRow(rows[r]))headers.push(r);
-  for(let i=0;i<headers.length;i++){
-    const headerRow=headers[i];const dataStart=headerRow+1;const nextHeader=headers[i+1]??rows.length;
-    let product='';
-    for(let r=dataStart;r<nextHeader;r++){product=getMergedValue(ws,r,TARGET_COL_PRODUCT);if(product)break;}
-    if(!product)continue;
-    blocks.push({sheet:name,product,key:norm(product),headerRow,dataStart,endRow:nextHeader-1,startRow:headerRow});
-  }
-  return {name,ws,rows,headers,blocks};
-}
-function analyzeWorkbook(){
-  if(!workbook)return;
-  try{
-    differences=[];errors=[];sheetStates=new Map();actionSeq=1;
-    requestSheetName=workbook.SheetNames[0];
-    log(`[1] 업무요청서 탭: ${requestSheetName}`,true);
-    requestItems=parseRequest();buildRequestGroups();
-    log(`[2] 업무요청서 유효 상품: ${requestItems.length}개`);
-    log(`[3] 거래처 그룹: ${requestByCompany.size}개`);
-    requestByCompany.forEach((items,companyKey)=>{
-      const company=items[0].company;const sheetName=findExactCompanySheet(company);
-      if(!sheetName){errors.push(`거래처 탭 없음: '${company}'와 띄어쓰기 제외 완전 일치하는 탭이 없습니다.`);return;}
-      const state=parseTargetSheet(sheetName);sheetStates.set(sheetName,state);
-      // 요청 상품별로 완전 일치 → 포함 일치 순서로 현재 상품 블록을 연결합니다.
-      const assigned=new Map(items.map(it=>[it,[]]));
-      const unassigned=[];
-      state.blocks.forEach(block=>{
-        const req=bestRequestForProduct(items,block.product);
-        if(req)assigned.get(req).push(block);else unassigned.push(block);
-      });
-      items.forEach(it=>{
-        const arr=assigned.get(it)||[];
-        if(arr.length===0){
-          differences.push({id:actionSeq++,type:'add',rank:it.rank,company:it.company,product:it.product,requestStock:it.requestStock||'',targetSheet:sheetName,applied:false});
-        }else if(arr.length>1){
-          // 정확히 일치하는 블록을 우선 유지하고, 나머지는 중복 삭제 대상으로 표시합니다.
-          arr.sort((a,b)=>productMatchScore(it.product,b.product)-productMatchScore(it.product,a.product)||a.startRow-b.startRow);
-          arr.slice(1).forEach(b=>differences.push({id:actionSeq++,type:'duplicate',rank:it.rank,company,product:b.product,requestProduct:it.product,requestStock:it.requestStock||'',targetSheet:sheetName,block:b,applied:false}));
-        }
-      });
-      unassigned.forEach(b=>differences.push({id:actionSeq++,type:'delete',rank:'-',company,product:b.product,requestStock:'',targetSheet:sheetName,block:b,applied:false}));
-      log(`  • ${company} → ${sheetName}: 요청 ${items.length}개 / 현재 ${state.blocks.length}개`);
+
+  function bindDrop(type){
+    const input=$(type+"Input"), drop=$(type+"Drop"), label=$(type+"Label");
+    const choose=file=>{
+      if(!file)return;
+      if(!file.name.toLowerCase().endsWith(".csv")){
+        setStatus(type,"CSV 파일만 선택할 수 있습니다.","error"); return;
+      }
+      state[type].file=file; state[type].rows=null;
+      state.merged.rows=null;
+      $("downloadMerged").disabled=true;
+      label.textContent=file.name;
+      $(type+"Process").disabled=false;
+      $(type+"Download").disabled=true;
+      $(type+"Metrics").style.display="none";
+      setStatus(type,"파일이 선택되었습니다. 정리 버튼을 눌러 주세요.");
+      updateAllButton();
+    };
+    input.addEventListener("change",e=>choose(e.target.files[0]));
+    drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("dragover")});
+    drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
+    drop.addEventListener("drop",e=>{
+      e.preventDefault();drop.classList.remove("dragover");choose(e.dataTransfer.files[0]);
     });
-    // 요청서에 없는 거래처 탭은 삭제 판단하지 않음: 안전장치
-    differences.sort((a,b)=>String(a.company).localeCompare(String(b.company),'ko')||(Number(a.rank)||999999)-(Number(b.rank)||999999));
-    renderDifferences();renderSummary();revealAnalysisStage();
-    $('#sortBtn').disabled=false;$('#downloadBtn').disabled=true;
-    $('#loadStatus').textContent=`분석 완료: 등록 ${differences.filter(d=>d.type==='add').length}건, 삭제 ${differences.filter(d=>d.type==='delete').length}건, 중복 ${differences.filter(d=>d.type==='duplicate').length}건`;
-    if(errors.length){log('\n[주의/오류]');errors.forEach(e=>log('  - '+e));}
-    else log('\n[완료] 오류 없이 분석했습니다.');
-  }catch(err){console.error(err);alert('분석 중 오류가 발생했습니다.\n'+err.message);log('[치명적 오류] '+err.stack);$('#loadStatus').textContent='분석 실패';}
-}
-function renderSummary(){
-  $('#totalCount').textContent=differences.length;$('#addCount').textContent=differences.filter(d=>d.type==='add').length;$('#deleteCount').textContent=differences.filter(d=>d.type==='delete').length;$('#duplicateCount').textContent=differences.filter(d=>d.type==='duplicate').length;$('#errorCount').textContent=errors.length;
-}
-function renderDifferences(){
-  const body=$('#diffBody');if(!differences.length){body.innerHTML='<tr><td colspan="8" class="empty">차이가 없습니다.</td></tr>';updateStageControls();return;}
-  body.innerHTML=differences.map((d,i)=>{
-    const label=d.type==='add'?'등록':d.type==='duplicate'?'중복 삭제':'삭제';
-    const cls=d.type==='add'?'add':d.type==='duplicate'?'dup':'del';
-    let btn=d.type==='add'?'등록하기':'삭제하기';
-    let buttonClass='action-btn';
-    if(d.applied){
-      if(d.type==='add')btn='등록 수정';
-      else {btn='삭제 복구하기';buttonClass+=' restore';}
+  }
+
+  function parseCSV(text){
+    const rows=[]; let row=[],field="",quoted=false;
+    for(let i=0;i<text.length;i++){
+      const c=text[i],n=text[i+1];
+      if(quoted){
+        if(c==='"'&&n==='"'){field+='"';i++}
+        else if(c==='"') quoted=false;
+        else field+=c;
+      }else{
+        if(c==='"') quoted=true;
+        else if(c===","){row.push(field);field=""}
+        else if(c==="\r"&&n==="\n"){row.push(field);rows.push(row);row=[];field="";i++}
+        else if(c==="\n"||c==="\r"){row.push(field);rows.push(row);row=[];field=""}
+        else field+=c;
+      }
     }
-    const status=d.applied?`<span class="action-status">${d.type==='add'?'등록 반영 완료':'삭제 반영 완료'}</span>${d.type==='add'?'':'<span class="delete-confirm">엑셀 반영본에서 삭제된 상태입니다.</span>'}`:'';
-    return `<tr class="${d.applied?'applied-row':''}"><td>${i+1}</td><td>${esc(d.rank)}</td><td>${esc(d.company)}</td><td class="left">${esc(d.product)}</td><td class="left">${esc(d.requestStock||'')}</td><td>${esc(d.targetSheet)}</td><td><span class="badge ${cls}">${label}</span>${status}</td><td><button class="${buttonClass} ${d.applied?'applied':''}" data-id="${d.id}">${btn}</button></td></tr>`
-  }).join('');
-  body.querySelectorAll('.action-btn').forEach(btn=>btn.onclick=()=>handleAction(Number(btn.dataset.id)));updateStageControls();
-}
-function handleAction(id){
-  const d=differences.find(x=>x.id===id);if(!d)return;
-  if(d.applied){
-    if(d.type==='add'){
-      const last=undoStack[undoStack.length-1];
-      if(!last||last.diffId!==d.id)return alert('등록 수정은 해당 등록이 가장 최근 작업일 때 가능합니다. 마지막 작업 되돌리기를 순서대로 사용해주세요.');
-      return undoLastAction(true);
+    if(field.length||row.length){row.push(field);rows.push(row)}
+    while(rows.length&&rows[rows.length-1].every(v=>v===""))rows.pop();
+    return rows;
+  }
+
+  async function decode(file){
+    const buffer=await file.arrayBuffer();
+    const b=new Uint8Array(buffer);
+    if(b.length>=3&&b[0]===0xEF&&b[1]===0xBB&&b[2]===0xBF)
+      return new TextDecoder("utf-8").decode(buffer);
+    try{return new TextDecoder("euc-kr",{fatal:true}).decode(buffer)}
+    catch(e){return new TextDecoder("utf-8").decode(buffer)}
+  }
+
+  function cleanRows(rows,type){
+    if(!rows.length)throw new Error("파일에 데이터가 없습니다.");
+    const headers=rows[0].map(v=>String(v).replace(/^\uFEFF/,"").trim());
+    const missing=KEEP.filter(x=>!headers.includes(x));
+    if(missing.length)throw new Error("필수 열을 찾을 수 없습니다: "+missing.join(", "));
+    const idx=KEEP.map(x=>headers.indexOf(x));
+    const out=[OUT_HEADER];
+    let changed=0,filled=0;
+
+    for(let r=1;r<rows.length;r++){
+      const src=rows[r];
+      if(src.every(v=>String(v??"").trim()===""))continue;
+      const row=idx.map(i=>src[i]??"");
+      let memo=String(row[2]??"");
+
+      if(type==="exchange" || type==="swap"){
+        const s=memo.indexOf("「");
+        const e=memo.indexOf("」",s+1);
+        if(s!==-1&&e!==-1&&e>s){
+          row[2]=memo.slice(s+1,e).trim();
+          changed++;
+        }
+      }else{
+        const p=memo.indexOf("[반품정보]");
+        if(p>0){row[2]=memo.slice(0,p).trim();changed++}
+        else if(p===0){row[2]="";changed++}
+        else row[2]=memo.trim();
+      }
+
+      if(String(row[1]??"").trim()===""){
+        row[1]=(type==="exchange" || type==="swap")?"단순교환":"단순반품";filled++;
+      }
+      if(String(row[2]??"").trim()===""){
+        row[2]=(type==="exchange" || type==="swap")?"단순교환":"단순반품";filled++;
+      }
+      out.push(row);
     }
-    return restoreDeleted(d);
-  }
-  if(d.type==='add')openRegisterEditor(d);else applyDelete(d)
-}
-
-function cloneCell(cell){if(!cell)return undefined;return Object.assign({},cell,{s:cell.s?clone(cell.s):cell.s});}
-function sheetMaxCol(ws){return ws['!ref']?XLSX.utils.decode_range(ws['!ref']).e.c:10;}
-function deleteRows(ws,start,count){
-  const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):{s:{r:0,c:0},e:{r:0,c:10}};const end=start+count-1;
-  for(let r=start;r<=end;r++)for(let c=range.s.c;c<=range.e.c;c++)delete ws[XLSX.utils.encode_cell({r,c})];
-  for(let r=end+1;r<=range.e.r;r++)for(let c=range.s.c;c<=range.e.c;c++){
-    const from=XLSX.utils.encode_cell({r,c}),to=XLSX.utils.encode_cell({r:r-count,c});
-    if(ws[from])ws[to]=ws[from];else delete ws[to];delete ws[from];
-  }
-  ws['!merges']=(ws['!merges']||[]).flatMap(m=>{if(m.e.r<start)return[m];if(m.s.r>end)return[{s:{r:m.s.r-count,c:m.s.c},e:{r:m.e.r-count,c:m.e.c}}];return[]});
-  if(ws['!rows']){ws['!rows'].splice(start,count)}
-  range.e.r=Math.max(range.s.r,range.e.r-count);ws['!ref']=XLSX.utils.encode_range(range);
-}
-function extractRowBlock(ws,start,end){
-  const maxC=sheetMaxCol(ws);const cells=[];
-  for(let r=start;r<=end;r++){const row=[];for(let c=0;c<=maxC;c++)row[c]=cloneCell(ws[XLSX.utils.encode_cell({r,c})]);cells.push(row)}
-  const merges=(ws['!merges']||[]).filter(m=>m.s.r>=start&&m.e.r<=end).map(m=>({s:{r:m.s.r-start,c:m.s.c},e:{r:m.e.r-start,c:m.e.c}}));
-  const rowInfo=ws['!rows']?ws['!rows'].slice(start,end+1).map(x=>clone(x)):[];
-  return {cells,merges,rowInfo,count:end-start+1};
-}
-function insertRowBlock(ws,start,block){
-  const count=block.count;const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):{s:{r:0,c:0},e:{r:0,c:10}};const maxC=Math.max(range.e.c,block.cells.reduce((m,r)=>Math.max(m,r.length-1),0));
-  for(let r=range.e.r;r>=start;r--)for(let c=0;c<=maxC;c++){
-    const from=XLSX.utils.encode_cell({r,c}),to=XLSX.utils.encode_cell({r:r+count,c});
-    if(ws[from])ws[to]=ws[from];else delete ws[to];delete ws[from];
-  }
-  ws['!merges']=(ws['!merges']||[]).map(m=>m.s.r>=start?{s:{r:m.s.r+count,c:m.s.c},e:{r:m.e.r+count,c:m.e.c}}:m);
-  block.cells.forEach((row,ri)=>row.forEach((cell,c)=>{const a=XLSX.utils.encode_cell({r:start+ri,c});if(cell)ws[a]=cloneCell(cell);else delete ws[a]}));
-  (block.merges||[]).forEach(m=>ws['!merges'].push({s:{r:start+m.s.r,c:m.s.c},e:{r:start+m.e.r,c:m.e.c}}));
-  if(block.rowInfo?.length){if(!ws['!rows'])ws['!rows']=[];ws['!rows'].splice(start,0,...block.rowInfo.map(x=>clone(x)))}
-  range.e.r+=count;range.e.c=maxC;ws['!ref']=XLSX.utils.encode_range(range);
-}
-function applyDelete(d){
-  try{
-    const state=parseTargetSheet(d.targetSheet);const block=bestBlockForProduct(state.blocks,d.product)||d.block;
-    if(!block)return alert('현재 탭에서 삭제할 상품 블록을 찾지 못했습니다. 다시 분석해주세요.');
-    const count=block.endRow-block.startRow+1;
-    if(!confirm(`${d.company} / ${d.product}\n${block.startRow+1}행~${block.endRow+1}행을 삭제합니다.\n분류명 행도 함께 삭제됩니다.`))return;
-    pushUndo(`삭제: ${d.company} / ${d.product}`,d.id);
-    d.deletedBlob=extractRowBlock(workbook.Sheets[d.targetSheet],block.startRow,block.endRow);
-    d.deletedStartRow=block.startRow;
-    deleteRows(workbook.Sheets[d.targetSheet],block.startRow,count);
-    d.applied=true;renderDifferences();renderSummary();
-    log(`[삭제 반영] ${d.targetSheet}: ${d.product} (${block.startRow+1}~${block.endRow+1}행)`);
-    $('#lastActionStatus').innerHTML=`<b>${esc(d.company)} / ${esc(d.product)}</b><br><span class="ok">삭제 반영 완료</span><br>업무 반영 목록의 파란색 ‘삭제 복구하기’ 버튼으로 복구할 수 있습니다.`;
-  }catch(err){console.error(err);alert('삭제 반영 중 오류가 발생했습니다.\n'+err.message)}
-}
-function restoreDeleted(d){
-  try{
-    if(!d.deletedBlob)return alert('복구할 삭제 데이터가 없습니다. 파일을 다시 분석한 뒤 진행해주세요.');
-    if(!confirm(`${d.company} / ${d.product}\n삭제된 상품 블록을 다시 복구합니다.`))return;
-    pushUndo(`삭제 복구: ${d.company} / ${d.product}`,d.id);
-    const at=insertionRowForRank(d.targetSheet,Number.isFinite(Number(d.rank))?Number(d.rank):999999);
-    insertRowBlock(workbook.Sheets[d.targetSheet],at,d.deletedBlob);
-    d.applied=false;
-    d.restored=true;
-    renderDifferences();renderSummary();
-    log(`[삭제 복구] ${d.targetSheet}: ${d.product} → ${at+1}행부터 복구`);
-    $('#lastActionStatus').innerHTML=`<b>${esc(d.company)} / ${esc(d.product)}</b><br><span class="ok">삭제 복구 완료</span><br>해당 상품 블록이 거래처 탭에 다시 반영되었습니다.`;
-  }catch(err){console.error(err);alert('삭제 복구 중 오류가 발생했습니다.\n'+err.message)}
-}
-
-function openRegisterEditor(d,state=null){activeDiffId=d.id;$('#editCompany').value=state?.company||d.company;$('#editProduct').value=state?.product||d.product;$('#stockCodes').value=state?.stockCodes??d.requestStock??'';$('#sizeInput').value=state?.sizes||'';$('#colorRows').innerHTML='';$('#colorArea').classList.add('hidden');$('#generatedPanel').classList.add('hidden');$('#makeRowsBtn').disabled=true;$('#registerEditor').classList.remove('hidden');if(state?.stockCodes){$('#detectColorBtn').click();setTimeout(()=>{Object.entries(state.colors||{}).forEach(([k,v])=>{const i=[...document.querySelectorAll('#colorRows input')].find(x=>x.dataset.base===k);if(i)i.value=v});if(state.rows?.length)renderGeneratedRows(state.rows)},0)}$('#registerEditor').scrollIntoView({behavior:'smooth'})}
-$('#closeEditor').onclick=()=>$('#registerEditor').classList.add('hidden');
-function stripBracketSuffix(value){
-  // 사이즈 뒤의 [상품 설명] 전체를 삭제합니다.
-  return clean(value).replace(/\s*\[[^\]]*\]\s*$/,'').trim();
-}
-function normalizeSize(value){return clean(value).replace(/\s+/g,'').toUpperCase()}
-const SIZE_ORDER={XS:0,S:1,M:2,L:3,XL:4,'2XL':5,'3XL':6,'4XL':7,'5XL':8,'6XL':9,'7XL':10,'8XL':11,'9XL':12,F:90,FREE:91};
-function sortSizes(values){return [...new Set(values.map(normalizeSize).filter(Boolean))].sort((a,b)=>(SIZE_ORDER[a]??50)-(SIZE_ORDER[b]??50)||naturalCompare(a,b))}
-function parseStockCode(rawCode){
-  const original=clean(rawCode);
-  let code=stripBracketSuffix(original);
-  let embeddedSize='';
-
-  // 대괄호 설명을 제거한 뒤 마지막 '-사이즈'만 사이즈로 분리합니다.
-  // BA-1007S의 S는 품번이므로 중간 문자는 사이즈로 처리하지 않습니다.
-  const sizeMatch=code.match(/-\s*(XS|S|M|L|XL|[2-9]XL|FREE|F)\s*$/i);
-  if(sizeMatch){
-    embeddedSize=normalizeSize(sizeMatch[1]);
-    code=code.slice(0,sizeMatch.index).trim();
+    return {out,changed,filled};
   }
 
-  let length='기본';
-  if(/^\s*숏\s*[★*]?/i.test(code))length='숏';
-  else if(/^\s*롱\s*[★*]?/i.test(code))length='롱';
-  else if(/(?:-?SH|\(숏\))\s*$/i.test(code))length='숏';
-  else if(/(?:-?(?:LO|LONG)|\(롱\))\s*$/i.test(code))length='롱';
-  else if(/^[^#\[]*S\s*-\s*#\d+/i.test(code))length='숏';
-  else if(/^[^#\[]*L\s*-\s*#\d+/i.test(code))length='롱';
+  function esc(v){
+    return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
 
-  let colorNo='';
-  let autoColor='';
-  let colorMatch=code.match(/#\s*(\d+)\s*\(\s*([^)]+?)\s*\)/i);
-  if(colorMatch){
-    colorNo=colorMatch[1];
-    autoColor=clean(colorMatch[2]);
-  }else{
-    colorMatch=code.match(/#\s*(\d+)\s*-\s*(.+)$/i);
-    if(colorMatch){
-      colorNo=colorMatch[1];
-      autoColor=clean(colorMatch[2]);
+  function showPreview(type){
+    const rows=state[type].rows;
+    if(!rows)return;
+    $("preview").style.display="block";
+    $("tabExchange").classList.toggle("active",type==="exchange");
+    $("tabReturn").classList.toggle("active",type==="return");
+    $("tabSwap").classList.toggle("active",type==="swap");
+    const p=rows.slice(0,101);
+    $("previewTable").innerHTML="<thead><tr>"+p[0].map(v=>`<th>${esc(v)}</th>`).join("")+
+      "</tr></thead><tbody>"+p.slice(1).map(row=>"<tr>"+
+      row.map(v=>`<td title="${esc(v)}">${esc(v)}</td>`).join("")+"</tr>").join("")+"</tbody>";
+  }
+
+  async function process(type){
+    if(!state[type].file)return;
+    try{
+      setStatus(type,"파일을 정리하고 있습니다.");
+      const text=await decode(state[type].file);
+      const result=cleanRows(parseCSV(text),type);
+      state[type].rows=result.out;
+      state[type].name=state[type].file.name.replace(/\.csv$/i,"")+"_정리완료.csv";
+      $(type+"Rows").textContent=(result.out.length-1).toLocaleString();
+      $(type+"Extract").textContent=result.changed.toLocaleString();
+      $(type+"Fill").textContent=result.filled.toLocaleString();
+      $(type+"Metrics").style.display="grid";
+      $(type+"Download").disabled=false;
+      setStatus(type,`정리가 완료되었습니다.\n총 ${(result.out.length-1).toLocaleString()}행 · 8개 열`,"ok");
+      showPreview(type);
+    }catch(err){
+      state[type].rows=null;
+      $(type+"Download").disabled=true;
+      setStatus(type,"처리 중 오류가 발생했습니다.\n"+err.message,"error");
     }
   }
 
-  // 컬러 그룹은 숏/롱 품번을 한 컬러로 묶기 위해 기본 품번 + 컬러번호로 생성합니다.
-  let root=code.split('#')[0]
-    .replace(/^\s*(숏|롱)\s*[★*]?\s*/i,'')
-    .replace(/[\s-]+$/g,'')
-    .trim();
-  if(colorNo)root=root.replace(/([A-Za-z]+-\d+)[LS]$/i,'$1');
+  function csvEscape(v){
+    const s=String(v??"");
+    return /[",\r\n]/.test(s)?'"'+s.replaceAll('"','""')+'"':s;
+  }
+  function download(type){
+    if(!state[type].rows)return;
+    const csv="\uFEFF"+state[type].rows.map(r=>r.map(csvEscape).join(",")).join("\r\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;a.download=state[type].name;document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(url);
+  }
 
-  let base='';
-  if(colorNo){
-    base=`${root}#${colorNo}`;
-  }else{
-    base=code
-      .replace(/\(숏\)|\(롱\)/gi,'')
-      .replace(/(?:-?LONG|-?SH|-?LO)$/i,'')
-      .replace(/^\s*(숏|롱)\s*[★*]?\s*/i,'')
-      .replace(/[-_\s]+$/,'')
+  function extractProductCode(optionText){
+    const text=String(optionText??"");
+    const productPart=(text.match(/품명\/([^]*?)(?:\.색상\/|\.사이즈\/|$)/)||[])[1]||text;
+    const codes=[...productPart.matchAll(/\(([A-Za-z]{1,5}\d{2,})\)/g)];
+    return codes.length ? codes[codes.length-1][1].toUpperCase() : "";
+  }
+
+  function looksLikeCampaignName(value){
+    const s=String(value??"").trim();
+    if(!s)return true;
+    const hasCode=/\b[A-Za-z]{1,5}\d{2,}\b/.test(s);
+    const campaignWords=/(BEST|신상|팬츠\s*모음|기획전|무료배송|쿠폰|쿨링\s*\/|냉감\s*\/|반바지\s*\/|데님\s*\/|밴딩\s*팬츠)/i.test(s);
+    return !hasCode && campaignWords;
+  }
+
+  function cleanProductName(value){
+    return String(value??"")
+      .replaceAll("(5부/7부)","")
+      .replace(/\(5\s*color\)/ig,"")
+      .replaceAll("[GS단독]","")
+      .replaceAll("(단독)","")
+      .replace(/\s{2,}/g," ")
       .trim();
   }
 
-  return{original,code,base,length,colorNo,autoColor,embeddedSize};
-}
-const LENGTH_ORDER={숏:0,기본:1,롱:2};
-function naturalCompare(a,b){return String(a).localeCompare(String(b),'ko',{numeric:true,sensitivity:'base'})}
-function sortDetectedCodes(list){
-  return [...list].sort((a,b)=>{
-    const rootCompare=naturalCompare(a.base,b.base);
-    if(rootCompare)return rootCompare;
-    const lengthCompare=(LENGTH_ORDER[a.length]??9)-(LENGTH_ORDER[b.length]??9);
-    if(lengthCompare)return lengthCompare;
-    return naturalCompare(a.code,b.code);
-  });
-}
-function collapseDetectedCodes(parsed){
-  const map=new Map();
-  for(const item of parsed){
-    const key=`${item.code}||${item.length}`;
-    if(!map.has(key))map.set(key,{...item,embeddedSizes:[]});
-    if(item.embeddedSize)map.get(key).embeddedSizes.push(item.embeddedSize);
-  }
-  return sortDetectedCodes([...map.values()].map(x=>({...x,embeddedSizes:sortSizes(x.embeddedSizes)})));
-}
-$('#detectColorBtn').onclick=()=>{
-  const rawCodes=$('#stockCodes').value.split(/\r?\n/).map(clean).filter(Boolean);
-  if(!rawCodes.length)return alert('사입 상품명을 입력해주세요.');
+  function applyAdditionalCleanup(rows){
+    if(!rows || rows.length < 2) return rows;
+    const out=[rows[0]];
 
-  detectedCodes=collapseDetectedCodes(rawCodes.map(parseStockCode));
-  const extractedSizes=sortSizes(detectedCodes.flatMap(x=>x.embeddedSizes||[]));
-  if(extractedSizes.length&&!clean($('#sizeInput').value))$('#sizeInput').value=extractedSizes.join('    ');
+    for(let i=1;i<rows.length;i++){
+      const row=[...rows[i]];
 
-  const colorMap=new Map();
-  for(const item of detectedCodes){
-    if(!colorMap.has(item.base))colorMap.set(item.base,item.autoColor||'');
-    else if(!colorMap.get(item.base)&&item.autoColor)colorMap.set(item.base,item.autoColor);
-  }
-  $('#colorRows').innerHTML=[...colorMap.entries()].sort((a,b)=>naturalCompare(a[0],b[0])).map(([base,color])=>
-    `<div class="color-row"><div class="color-key">${esc(base)}</div><input data-base="${attr(base)}" value="${attr(color)}" placeholder="색상 입력 또는 한글로 수정"></div>`
-  ).join('');
-  $('#colorArea').classList.remove('hidden');
-  $('#makeRowsBtn').disabled=false;
-};
-function parseSizes(){return sortSizes($('#sizeInput').value.split(/[\s,\/|]+/).map(clean).filter(Boolean))}
+      // A열: 반품/교환 유형 통일
+      if(String(row[0]??"").includes("반품")) row[0]="반품";
 
-function sameGroupEnd(rows,start,fields){let end=start;while(end+1<rows.length&&fields.every(f=>rows[end+1][f]===rows[start][f]))end++;return end;}
-function bindPreviewInputs(){
-  document.querySelectorAll('#generatedBody input[data-field]').forEach(input=>{
-    input.oninput=()=>{
-      const field=input.dataset.field;const start=Number(input.dataset.start);const end=Number(input.dataset.end);
-      for(let i=start;i<=end;i++)previewRows[i][field]=input.value;
-    };
-  });
-}
-function previewInput(value,field,start,end){return `<input data-field="${field}" data-start="${start}" data-end="${end}" value="${attr(value)}">`}
-function renderGeneratedRows(rows){
-  previewRows=clone(rows);
-  let html='';
-  for(let i=0;i<previewRows.length;i++){
-    const r=previewRows[i];html+='<tr>';
-    if(i===0){html+=`<td rowspan="${previewRows.length}" class="preview-company">${previewInput(r.company,'company',0,previewRows.length-1)}</td>`;html+=`<td rowspan="${previewRows.length}" class="preview-product">${previewInput(r.product,'product',0,previewRows.length-1)}</td>`}
-    const colorStart=i===0||previewRows[i-1].color!==r.color;
-    if(colorStart){const end=sameGroupEnd(previewRows,i,['color']);html+=`<td rowspan="${end-i+1}" class="preview-color">${previewInput(r.color,'color',i,end)}</td>`}
-    const stockStart=i===0||previewRows[i-1].stock!==r.stock||previewRows[i-1].length!==r.length;
-    if(stockStart){const end=sameGroupEnd(previewRows,i,['stock','length']);html+=`<td rowspan="${end-i+1}" class="preview-stock">${previewInput(r.stock,'stock',i,end)}</td><td rowspan="${end-i+1}" class="preview-length">${previewInput(r.length,'length',i,end)}</td>`}
-    html+=`<td>${previewInput(r.size,'size',i,i)}</td></tr>`;
-  }
-  $('#generatedBody').innerHTML=html;bindPreviewInputs();$('#generatedPanel').classList.remove('hidden');$('#generatedPanel').scrollIntoView({behavior:'smooth'})
-}
+      // B열: GS 브리치교환 문구 삭제 + A열 교환 처리
+      if(String(row[1]??"").includes("[GS.브리치교환]")){
+        row[0]="교환";
+        row[1]=String(row[1]??"").replaceAll("[GS.브리치교환]","").trim();
+      }
 
-$('#makeRowsBtn').onclick=()=>{const company=clean($('#editCompany').value),product=clean($('#editProduct').value);if(!company||!product)return alert('거래처명과 상품명을 입력해주세요.');const colors={};document.querySelectorAll('#colorRows input').forEach(i=>colors[i.dataset.base]=clean(i.value));const miss=Object.entries(colors).filter(([,v])=>!v).map(([k])=>k);if(miss.length)return alert('색상을 입력하지 않은 사입명이 있습니다.\n'+miss.join('\n'));const sizes=parseSizes();if(!sizes.length)return alert('사이즈를 입력해주세요.');const rows=[];sortDetectedCodes(detectedCodes).forEach(c=>sizes.forEach(size=>rows.push({company,product,stock:stripBracketSuffix(c.code),color:colors[c.base],length:c.length,size})));renderGeneratedRows(rows)};
+      // D열: 판매처명 정리
+      const channel=String(row[3]??"");
+      if(channel.includes("네이버")) row[3]="네이버";
+      else if(channel.includes("카카오")) row[3]="카카오";
 
-function firstTemplateBlock(ws,state){if(!state.blocks.length)throw new Error('등록용 서식을 복사할 기존 상품 블록이 없습니다.');return state.blocks[0]}
-function makeRegistrationBlock(sheetName,rows){
-  const ws=workbook.Sheets[sheetName];const state=parseTargetSheet(sheetName);const tmpl=firstTemplateBlock(ws,state);
-  const header=extractRowBlock(ws,tmpl.headerRow,tmpl.headerRow);
-  const sampleRow=extractRowBlock(ws,tmpl.dataStart,tmpl.dataStart);
-  const count=rows.length;const cells=[header.cells[0].map(cloneCell)];
-  for(let i=0;i<count;i++){const row=sampleRow.cells[0].map(cloneCell);for(let c=0;c<row.length;c++)if(row[c]){row[c].v='';row[c].w='';delete row[c].f}cells.push(row)}
-  // 헤더 값은 기존 그대로 유지
-  const set=(ri,c,v)=>{const base=cells[ri][c]||{t:'s'};base.v=v;base.t=typeof v==='number'?'n':'s';base.w=String(v);cells[ri][c]=base};
-  rows.forEach((r,i)=>{const ri=i+1;set(ri,TARGET_COL_PRODUCT,i===0?r.product:'');set(ri,TARGET_COL_COLOR,r.color);set(ri,TARGET_COL_STOCK,r.stock);set(ri,TARGET_COL_LENGTH,r.length);set(ri,TARGET_COL_SIZE,r.size);});
-  const merges=[];if(count>1)merges.push({s:{r:1,c:TARGET_COL_PRODUCT},e:{r:count,c:TARGET_COL_PRODUCT}});
-  // 연속 동일 색상 병합
-  let st=0;while(st<count){let en=st;while(en+1<count&&rows[en+1].color===rows[st].color)en++;if(en>st)merges.push({s:{r:st+1,c:TARGET_COL_COLOR},e:{r:en+1,c:TARGET_COL_COLOR}});st=en+1}
-  // 사입명과 기장은 사이즈 묶음별 병합
-  st=0;while(st<count){let en=st;while(en+1<count&&rows[en+1].stock===rows[st].stock&&rows[en+1].length===rows[st].length)en++;if(en>st){merges.push({s:{r:st+1,c:TARGET_COL_STOCK},e:{r:en+1,c:TARGET_COL_STOCK}});merges.push({s:{r:st+1,c:TARGET_COL_LENGTH},e:{r:en+1,c:TARGET_COL_LENGTH}})}st=en+1}
-  // 상품 결과 수식 영역: M~N열을 상품 전체 옵션 행 기준으로 병합
-  merges.push({s:{r:1,c:12},e:{r:count,c:13}});
-  return{cells,merges,rowInfo:[...(header.rowInfo||[]),...Array(count).fill(sampleRow.rowInfo?.[0]||null)],count:count+1};
-}
-function insertionRowForRank(sheetName,rank){
-  const state=parseTargetSheet(sheetName);const reqs=requestByCompany.get(norm(sheetName))||[];
-  const higher=reqs.filter(x=>x.rank>rank).sort((a,b)=>a.rank-b.rank);
-  for(const h of higher){const b=bestBlockForProduct(state.blocks,h.product);if(b)return b.startRow}
-  if(state.blocks.length)return state.blocks[state.blocks.length-1].endRow+1;
-  return PRODUCT_START_ROW-1;
-}
-$('#applyRegisterBtn').onclick=()=>{
-  const d=differences.find(x=>x.id===activeDiffId);if(!d)return;
-  try{
-    const rows=previewRows.map(r=>({company:clean(r.company),product:clean(r.product),stock:clean(r.stock),color:clean(r.color),length:clean(r.length),size:clean(r.size)}));
-    if(!rows.length)return alert('등록할 데이터가 없습니다.');
-    if(!workbook.Sheets[d.targetSheet])return alert('등록 대상 거래처 탭을 찾지 못했습니다.');
-    const colors={};document.querySelectorAll('#colorRows input').forEach(i=>colors[i.dataset.base]=clean(i.value));const editorState={company:clean($('#editCompany').value),product:clean($('#editProduct').value),stockCodes:$('#stockCodes').value,sizes:$('#sizeInput').value,colors,rows:clone(rows)};pushUndo(`등록: ${d.company} / ${d.product}`,d.id,editorState);
-    const block=makeRegistrationBlock(d.targetSheet,rows);const at=insertionRowForRank(d.targetSheet,Number(d.rank));
-    insertRowBlock(workbook.Sheets[d.targetSheet],at,block);
-    d.applied=true;renderDifferences();$('#registerEditor').classList.add('hidden');$('#generatedPanel').classList.add('hidden');log(`[등록 반영] ${d.targetSheet}: ${rows[0].product} → ${at+1}행에 ${block.count}행 삽입`);$('#lastActionStatus').innerHTML=`<b>${esc(d.company)} / ${esc(d.product)}</b><br>등록 반영 완료. 업무 반영 목록에서 등록 수정을 눌러 다시 수정할 수 있습니다.`;
-  }catch(err){console.error(err);alert('등록 반영 중 오류가 발생했습니다.\n'+err.message)}
-};
+      if(String(row[0]??"").includes("교환")) row[0]="교환";
 
-function sortOneSheet(sheetName){
-  const ws=workbook.Sheets[sheetName];const state=parseTargetSheet(sheetName);if(!state.blocks.length)return;
-  const reqs=requestByCompany.get(norm(sheetName))||[];
-  const blocks=state.blocks.map((b,idx)=>{const req=bestRequestForProduct(reqs,b.product);return{b,idx,rank:req?req.rank:999999,blob:extractRowBlock(ws,b.startRow,b.endRow)}});
-  const sorted=[...blocks].sort((a,b)=>a.rank-b.rank||a.idx-b.idx);
-  const same=blocks.every((x,i)=>x===sorted[i]);if(same)return;
-  const regionStart=blocks[0].b.startRow,regionEnd=blocks[blocks.length-1].b.endRow;
-  deleteRows(ws,regionStart,regionEnd-regionStart+1);
-  let at=regionStart;for(const x of sorted){insertRowBlock(ws,at,x.blob);at+=x.blob.count}
-  log(`[순위 정렬] ${sheetName}: ${blocks.length}개 상품 블록 정렬 완료`);
-}
-$('#sortBtn').onclick=()=>{
-  if(!workbook)return;
-  if(!confirm('업무요청서 순위에 따라 거래처 탭의 상품 블록을 정렬합니다.\n미반영 등록 상품은 정렬 대상에 포함되지 않습니다.'))return;
-  try{pushUndo('전체 거래처 탭 순위 정렬');requestByCompany.forEach((_,companyKey)=>{const name=workbook.SheetNames.slice(1).find(n=>norm(n)===companyKey);if(name)sortOneSheet(name)});$('#sortBtn').textContent='✓ 1. 순위 정렬 반영됨';$('#sortBtn').style.background='#3478d4';$('#downloadBtn').disabled=false;$('#lastActionStatus').innerHTML='<span class="ok">순위 정렬 반영 완료</span><br>이제 반영 파일 다운로드 버튼을 눌러주세요.';}
-  catch(err){console.error(err);alert('순위 정렬 중 오류가 발생했습니다.\n'+err.message)}
-};
+      // G열 상품명이 행사명/기획전명 형태이면 H열 상품옵션에서 상품코드 추출
+      if(looksLikeCampaignName(row[6])){
+        const code=extractProductCode(row[7]);
+        if(code) row[6]=code;
+      }
 
-
-// ============================================================
-// v2 다운로드 엔진: 원본 XLSX 패키지를 유지하고 거래처 시트의
-// 5행 이후 상품 영역만 XML로 재작성합니다.
-// ============================================================
-const MAIN_NS='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-const REL_NS='http://schemas.openxmlformats.org/package/2006/relationships';
-function xmlParse(text){const doc=new DOMParser().parseFromString(text,'application/xml');const e=doc.getElementsByTagName('parsererror');if(e.length)throw new Error('XML 파싱 오류: '+e[0].textContent.slice(0,250));return doc}
-function xmlText(doc){return new XMLSerializer().serializeToString(doc)}
-function localEls(root,name){return [...root.getElementsByTagNameNS('*',name)]}
-function colName(n){let s='';for(let x=n+1;x;x=Math.floor((x-1)/26))s=String.fromCharCode(65+(x-1)%26)+s;return s}
-function xmlCellCol(ref){const m=String(ref||'').match(/^([A-Z]+)/);if(!m)return -1;let n=0;for(const ch of m[1])n=n*26+ch.charCodeAt(0)-64;return n-1}
-function getCellNode(row,col){return localEls(row,'c').find(c=>xmlCellCol(c.getAttribute('r'))===col)||null}
-function getSharedStrings(doc){if(!doc)return[];return localEls(doc,'si').map(si=>{const ts=localEls(si,'t');return ts.map(t=>t.textContent||'').join('')})}
-function nodeCellValue(c,shared){if(!c)return'';const t=c.getAttribute('t');const v=localEls(c,'v')[0];if(t==='s')return shared[Number(v?.textContent||0)]??'';if(t==='inlineStr')return localEls(c,'t').map(x=>x.textContent||'').join('');if(t==='str')return v?.textContent||'';return v?.textContent||''}
-function rowCellValue(row,col,shared){return nodeCellValue(getCellNode(row,col),shared)}
-function isXmlHeaderRow(row,shared){return norm(rowCellValue(row,1,shared))==='상품명'&&['컬러','색상'].includes(norm(rowCellValue(row,2,shared)))&&['사입명','사입상품명'].includes(norm(rowCellValue(row,3,shared)))&&norm(rowCellValue(row,5,shared))==='사이즈'}
-function cloneAttrs(from,to,except=[]){for(const a of [...from.attributes])if(!except.includes(a.name))to.setAttribute(a.name,a.value)}
-function makeInlineCell(doc,ref,style,value){const c=doc.createElementNS(MAIN_NS,'c');c.setAttribute('r',ref);if(style!==''&&style!=null)c.setAttribute('s',String(style));if(value!==''&&value!=null){c.setAttribute('t','inlineStr');const is=doc.createElementNS(MAIN_NS,'is'),t=doc.createElementNS(MAIN_NS,'t');const str=String(value);if(/^\s|\s$/.test(str))t.setAttribute('xml:space','preserve');t.textContent=str;is.appendChild(t);c.appendChild(is)}return c}
-function makeNumberCell(doc,ref,style,value){const c=doc.createElementNS(MAIN_NS,'c');c.setAttribute('r',ref);if(style!==''&&style!=null)c.setAttribute('s',String(style));if(value!==''&&value!=null&&value!==''){const v=doc.createElementNS(MAIN_NS,'v');v.textContent=String(value);c.appendChild(v)}return c}
-function makeFormulaCell(doc,ref,style,formula,arrayRef=null,dynamicResult=false){const c=doc.createElementNS(MAIN_NS,'c');c.setAttribute('r',ref);if(style!==''&&style!=null)c.setAttribute('s',String(style));if(dynamicResult){c.setAttribute('t','str');c.setAttribute('cm','1')}const f=doc.createElementNS(MAIN_NS,'f');if(arrayRef){f.setAttribute('t','array');f.setAttribute('ref',arrayRef)}f.textContent=formula;c.appendChild(f);return c}
-function mFormula(){return '_xlfn.LET(_xlpm.현재상품,LOOKUP(2,1/($B$1:INDEX($B:$B,ROW())<>""),$B$1:INDEX($B:$B,ROW())),_xlpm.상품,LOOKUP(ROW($B$6:$B$4913),ROW($B$6:$B$4913)/($B$6:$B$4913<>""),$B$6:$B$4913),_xlpm.컬러,LOOKUP(ROW($C$6:$C$4913),ROW($C$6:$C$4913)/($C$6:$C$4913<>""),$C$6:$C$4913),_xlpm.기장,LOOKUP(ROW($E$6:$E$4913),ROW($E$6:$E$4913)/($E$6:$E$4913<>""),$E$6:$E$4913),_xlpm.브리치,IFERROR(VALUE($L$6:$L$4913),999),IFERROR(_xlfn.TEXTJOIN(CHAR(10),TRUE,_xlfn._xlws.FILTER(_xlpm.컬러&" "&_xlpm.기장&" "&$F$6:$F$4913&" "&_xlpm.브리치,(_xlpm.상품=_xlpm.현재상품)*($F$6:$F$4913<>"")*(_xlpm.브리치<80))),""))'}
-function sheetPathMap(workbookDoc,relsDoc){const relMap=new Map(localEls(relsDoc,'Relationship').map(r=>[r.getAttribute('Id'),r.getAttribute('Target')]));const map=new Map();for(const sh of localEls(workbookDoc,'sheet')){const rid=sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||sh.getAttribute('r:id');let target=relMap.get(rid)||'';target=target.replace(/^\//,'');if(!target.startsWith('xl/'))target='xl/'+target.replace(/^\.\//,'');map.set(sh.getAttribute('name'),target)}return map}
-function templateFromOriginal(doc,shared){
-  const sheetData=localEls(doc,'sheetData')[0];const rows=localEls(sheetData,'row');
-  const header=rows.find(r=>Number(r.getAttribute('r'))>=5&&isXmlHeaderRow(r,shared));
-  if(!header)throw new Error('분류명 행을 찾지 못했습니다.');
-  const hr=Number(header.getAttribute('r'));
-  const laterHeader=rows.find(r=>Number(r.getAttribute('r'))>hr&&isXmlHeaderRow(r,shared));
-  const dataRows=rows.filter(r=>Number(r.getAttribute('r'))>hr&&(!laterHeader||Number(r.getAttribute('r'))<Number(laterHeader.getAttribute('r'))));
-  if(!dataRows.length)throw new Error('상품 템플릿 데이터 행을 찾지 못했습니다.');
-  const first=dataRows[0],middle=dataRows[Math.min(1,dataRows.length-1)],last=dataRows[dataRows.length-1];
-  const stylesOf=row=>Array.from({length:14},(_,c)=>getCellNode(row,c)?.getAttribute('s')??'');
-  const rowByNo=new Map(rows.map(r=>[Number(r.getAttribute('r')),r]));
-  const styleAt=(rowNo,col)=>getCellNode(rowByNo.get(rowNo),col)?.getAttribute('s')??'';
-  const mergeRefs=localEls(doc,'mergeCell').map(x=>x.getAttribute('ref'));
-  const mergeRanges=mergeRefs.map(ref=>{const m=ref.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);if(!m)return null;return{s:{c:xmlCellCol(m[1]),r:Number(m[2])},e:{c:xmlCellCol(m[3]),r:Number(m[4])}}}).filter(Boolean);
-  const rangesForCol=col=>mergeRanges.filter(m=>m.s.c===col&&m.e.c===col&&m.s.r>hr&&(!laterHeader||m.e.r<Number(laterHeader.getAttribute('r')))).sort((a,b)=>a.s.r-b.s.r);
-  const semanticStyles={};
-  for(const col of [2,3]){
-    const gs=rangesForCol(col);const g0=gs[0],g1=gs[1]||g0,gl=gs[gs.length-1]||g0;
-    semanticStyles[col]={
-      productStart:g0?styleAt(g0.s.r,col):styleAt(hr+1,col),
-      groupStart:g1?styleAt(g1.s.r,col):styleAt(hr+1,col),
-      middle:g0&&g0.e.r>g0.s.r?styleAt(g0.s.r+1,col):styleAt(hr+1,col),
-      groupEnd:g0?styleAt(g0.e.r,col):styleAt(hr+1,col),
-      productEnd:gl?styleAt(gl.e.r,col):styleAt(dataRows[dataRows.length-1].getAttribute('r'),col)
-    };
-  }
-  return{header,headerStyles:stylesOf(header),first,middle,last,firstStyles:stylesOf(first),middleStyles:stylesOf(middle),lastStyles:stylesOf(last),headerRowAttrs:header,dataRowAttrs:first,semanticStyles}
-}
-function mergeForCell(merges,row,col){return(merges||[]).find(m=>m.s.c===col&&m.e.c===col&&row>=m.s.r&&row<=m.e.r)||null}
-function semanticStyleFor(tmpl,desiredWs,b,row,col,defaultStyle){
-  if(!b||![2,3].includes(col))return defaultStyle;
-  const profile=tmpl.semanticStyles?.[col];if(!profile)return defaultStyle;
-  const mg=mergeForCell(desiredWs['!merges'],row,col);if(!mg)return defaultStyle;
-  if(row===mg.s.r&&row===b.dataStart)return profile.productStart||defaultStyle;
-  if(row===mg.s.r)return profile.groupStart||defaultStyle;
-  if(row===mg.e.r&&row===b.endRow)return profile.productEnd||defaultStyle;
-  if(row===mg.e.r)return profile.groupEnd||defaultStyle;
-  return profile.middle||defaultStyle;
-}
-function mergeAnchorSet(ws){const anchors=new Set();for(const m of(ws['!merges']||[]))anchors.add(`${m.s.r}:${m.s.c}`);return anchors}
-function buildWorksheetXml(originalText,desiredWs,shared){const doc=xmlParse(originalText),sheetData=localEls(doc,'sheetData')[0];if(!sheetData)throw new Error('sheetData가 없습니다.');const tmpl=templateFromOriginal(doc,shared);const originalRows=localEls(sheetData,'row');const preserved=originalRows.filter(r=>Number(r.getAttribute('r'))<=4).map(r=>r.cloneNode(true));while(sheetData.firstChild)sheetData.removeChild(sheetData.firstChild);for(const r of preserved)sheetData.appendChild(r);
-  const state=parseTargetSheetForWs(desiredWs);const blockByRow=new Map();for(const b of state.blocks)for(let r=b.startRow;r<=b.endRow;r++)blockByRow.set(r,b);const end=desiredWs['!ref']?XLSX.utils.decode_range(desiredWs['!ref']).e.r:3;const anchors=mergeAnchorSet(desiredWs);
-  for(let r=4;r<=end;r++){
-    const row=doc.createElementNS(MAIN_NS,'row');row.setAttribute('r',String(r+1));row.setAttribute('spans','2:14');cloneAttrs(isHeaderRow(sheetRows(desiredWs)[r])?tmpl.headerRowAttrs:tmpl.dataRowAttrs,row,['r','spans']);
-    const header=isHeaderRow(sheetRows(desiredWs)[r]);const b=blockByRow.get(r);const firstData=b&&r===b.dataStart,lastData=b&&r===b.endRow;const styles=header?tmpl.headerStyles:(firstData?tmpl.firstStyles:(lastData?tmpl.lastStyles:tmpl.middleStyles));
-    for(let c=1;c<=13;c++){
-      const ref=colName(c)+(r+1),cell=desiredWs[ref];let style=styles[c]??(c===13?styles[12]??'':'');style=semanticStyleFor(tmpl,desiredWs,b,r,c,style);let out;
-      if(header){out=makeInlineCell(doc,ref,style,cell?.v??'')}
-      else if(c===9){out=makeFormulaCell(doc,ref,style,`G${r+1}+H${r+1}+I${r+1}`)}
-      else if(c===10){out=makeFormulaCell(doc,ref,style,`IF(J${r+1}>=50,400,0)`)}
-      else if(c===11){out=makeFormulaCell(doc,ref,style,`IF(K${r+1}="",MAX(0,FLOOR(K${r+1}/5,1)),IF(J${r+1}>=50,80,MAX(0,FLOOR(J${r+1}/5,1))))`)}
-      else if(c===12&&b&&r===b.dataStart){out=makeFormulaCell(doc,ref,style,mFormula(),ref,true)}
-      else if(c===13){out=makeNumberCell(doc,ref,style,'')}
-      else if(cell&&cell.v!==undefined&&cell.v!==null&&cell.v!=='')out=typeof cell.v==='number'?makeNumberCell(doc,ref,style,cell.v):makeInlineCell(doc,ref,style,cell.v);
-      else out=makeNumberCell(doc,ref,style,'');
-      row.appendChild(out)
+      // G열 불필요 문구 삭제
+      row[6]=cleanProductName(row[6]);
+      out.push(row);
     }
-    sheetData.appendChild(row)
-  }
-  const dim=localEls(doc,'dimension')[0];if(dim)dim.setAttribute('ref',`B1:N${Math.max(4,end+1)}`);
-  // 병합 범위는 현재 화면의 최종 상태로 교체하되 1~4행 병합은 원본 유지
-  const oldMerges=localEls(doc,'mergeCell').map(x=>x.getAttribute('ref')).filter(ref=>{const m=ref.match(/^[A-Z]+(\d+):[A-Z]+(\d+)$/);return m&&Number(m[2])<=4});
-  const normalMerges=(desiredWs['!merges']||[]).filter(m=>m.e.r>=4&&!(m.s.c>=12||m.e.c>=12)).map(m=>XLSX.utils.encode_range(m));
-  const resultMerges=state.blocks.map(b=>`M${b.dataStart+1}:N${b.endRow+1}`);
-  const refs=[...new Set([...oldMerges,...normalMerges,...resultMerges])];
-  const existing=localEls(doc,'mergeCells')[0];if(existing)existing.remove();if(refs.length){const mc=doc.createElementNS(MAIN_NS,'mergeCells');mc.setAttribute('count',String(refs.length));for(const ref of refs){const x=doc.createElementNS(MAIN_NS,'mergeCell');x.setAttribute('ref',ref);mc.appendChild(x)}const anchor=[...sheetData.parentNode.children].find(x=>x.localName==='phoneticPr'||x.localName==='conditionalFormatting'||x.localName==='dataValidations'||x.localName==='hyperlinks'||x.localName==='printOptions'||x.localName==='pageMargins');sheetData.parentNode.insertBefore(mc,anchor||null)}
-  // G/L 50미만 조건부서식은 전체 상품 영역으로 통일
-  for(const x of localEls(doc,'conditionalFormatting'))x.remove();const parent=sheetData.parentNode;const insertion=[...parent.children].find(x=>['dataValidations','hyperlinks','printOptions','pageMargins','pageSetup','headerFooter','rowBreaks','colBreaks','drawing','legacyDrawing','legacyDrawingHF','picture','oleObjects','controls','webPublishItems','tableParts','extLst'].includes(x.localName));
-  for(const [col,dxf,priority] of [['G','0','1'],['L','1','2']]){const cf=doc.createElementNS(MAIN_NS,'conditionalFormatting');cf.setAttribute('sqref',`${col}6:${col}4913`);const rule=doc.createElementNS(MAIN_NS,'cfRule');rule.setAttribute('type','cellIs');rule.setAttribute('dxfId',dxf);rule.setAttribute('priority',priority);rule.setAttribute('operator','lessThan');const f=doc.createElementNS(MAIN_NS,'formula');f.textContent='50';rule.appendChild(f);cf.appendChild(rule);parent.insertBefore(cf,insertion||null)}
-  return xmlText(doc)
-}
-function parseTargetSheetForWs(ws){const rows=sheetRows(ws),blocks=[],headers=[];for(let r=4;r<rows.length;r++)if(isHeaderRow(rows[r]))headers.push(r);for(let i=0;i<headers.length;i++){const headerRow=headers[i],dataStart=headerRow+1,nextHeader=headers[i+1]??rows.length;let product='';for(let r=dataStart;r<nextHeader;r++){product=getMergedValue(ws,r,TARGET_COL_PRODUCT);if(product)break}if(product)blocks.push({product,startRow:headerRow,headerRow,dataStart,endRow:nextHeader-1})}return{rows,blocks,headers}}
-async function safeDownloadV2(){if(!workbook||!originalArrayBuffer)throw new Error('원본 파일을 다시 선택해주세요.');if(typeof JSZip==='undefined')throw new Error('JSZip 라이브러리를 불러오지 못했습니다.');const zip=await JSZip.loadAsync(originalArrayBuffer);const wbDoc=xmlParse(await zip.file('xl/workbook.xml').async('string'));const relDoc=xmlParse(await zip.file('xl/_rels/workbook.xml.rels').async('string'));const pathMap=sheetPathMap(wbDoc,relDoc);let shared=[];if(zip.file('xl/sharedStrings.xml'))shared=getSharedStrings(xmlParse(await zip.file('xl/sharedStrings.xml').async('string')));
-  for(const name of workbook.SheetNames.slice(1)){const path=pathMap.get(name);if(!path||!zip.file(path))continue;const original=await zip.file(path).async('string');const next=buildWorksheetXml(original,workbook.Sheets[name],shared);xmlParse(next);zip.file(path,next)}
-  // 계산 체인 제거 후 Excel에서 전체 재계산. calcPr는 DOM으로 안전하게 수정합니다.
-  if(zip.file('xl/calcChain.xml'))zip.remove('xl/calcChain.xml');for(const rel of localEls(relDoc,'Relationship'))if((rel.getAttribute('Type')||'').endsWith('/calcChain'))rel.remove();zip.file('xl/_rels/workbook.xml.rels',xmlText(relDoc));let calc=localEls(wbDoc,'calcPr')[0];if(!calc){calc=wbDoc.createElementNS(MAIN_NS,'calcPr');wbDoc.documentElement.appendChild(calc)}calc.setAttribute('calcMode','auto');calc.setAttribute('fullCalcOnLoad','1');calc.setAttribute('forceFullCalc','1');zip.file('xl/workbook.xml',xmlText(wbDoc));
-  const ct=xmlParse(await zip.file('[Content_Types].xml').async('string'));for(const o of localEls(ct,'Override'))if(o.getAttribute('PartName')==='/xl/calcChain.xml')o.remove();zip.file('[Content_Types].xml',xmlText(ct));
-  const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});const stem=originalFileName.replace(/\.(xlsx|xls|xlsm)$/i,'');const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${stem}_업무반영_v2검증.xlsx`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);log('[다운로드] v2 XML 직접 편집 방식으로 반영 파일을 생성했습니다.')
-}
 
-$('#fileInput').onchange=async e=>{
-  const file=e.target.files[0];if(!file)return;resetStageUi();originalFileName=file.name;$('#fileName').textContent=file.name;$('#loadStatus').textContent='파일 읽는 중...';
-  try{
-    if(typeof XLSX==='undefined')throw new Error('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결 또는 사내 보안 설정을 확인해주세요.');
-    const data=await file.arrayBuffer();originalArrayBuffer=data.slice(0);workbook=XLSX.read(data,{type:'array',cellStyles:true,cellFormula:true,cellDates:true});undoStack=[];updateUndoUi();
-    $('#analyzeBtn').disabled=false;$('#sortBtn').disabled=true;$('#downloadBtn').disabled=true;$('#loadStatus').textContent=`${workbook.SheetNames.length}개 탭을 불러왔습니다.`;log(`파일 로드 완료: ${file.name}\n탭: ${workbook.SheetNames.join(', ')}`,true);
-  }catch(err){console.error(err);alert('엑셀 파일을 읽지 못했습니다.\n'+err.message);$('#loadStatus').textContent='파일 읽기 실패'}
-};
-$('#analyzeBtn').onclick=analyzeWorkbook;
-$('#goFinalBtn').onclick=()=>{
-  updateStageControls();
-  if($('#goFinalBtn').disabled)return;
-  $('#finalPanel').classList.remove('hidden');setStage(3);
-  setTimeout(()=>$('#finalPanel').scrollIntoView({behavior:'smooth',block:'start'}),80);
-};
-$('#undoBtn').onclick=()=>undoLastAction(false);
-$('#downloadBtn').onclick=async()=>{if(!workbook)return;try{$('#downloadBtn').disabled=true;$('#loadStatus').textContent='원본 보존 파일 생성 중...';await safeDownloadV2();$('#loadStatus').textContent='반영 파일 생성 완료';}catch(err){console.error(err);alert('파일 다운로드 중 오류가 발생했습니다.\n'+err.message);$('#loadStatus').textContent='다운로드 실패';}finally{$('#downloadBtn').disabled=false}};
-$('#clearLog').onclick=()=>$('#analysisLog').textContent='';
-resetStageUi();
+    // G열 상품명 기준 한글/영문/숫자 오름차순 정렬
+    const header=out[0];
+    const body=out.slice(1).sort((a,b)=>
+      String(a[6]??"").localeCompare(String(b[6]??""),"ko",{numeric:true,sensitivity:"base"})
+    );
+    return [header,...body];
+  }
+
+  function buildMergedRows(){
+    if(!state.exchange.rows || !state.return.rows) return null;
+    const merged=[OUT_HEADER];
+    merged.push(...state.exchange.rows.slice(1));
+    merged.push(...state.return.rows.slice(1));
+    if(state.swap.rows) merged.push(...state.swap.rows.slice(1));
+    return applyAdditionalCleanup(merged);
+  }
+
+  function xmlEscape(v){
+    return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&apos;");
+  }
+
+  function colName(n){
+    let s="";
+    while(n>0){n--;s=String.fromCharCode(65+n%26)+s;n=Math.floor(n/26)}
+    return s;
+  }
+
+  function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+  function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+  function concatBytes(parts){
+    const len=parts.reduce((s,p)=>s+p.length,0), out=new Uint8Array(len);
+    let o=0; for(const p of parts){out.set(p,o);o+=p.length} return out;
+  }
+  function crc32(bytes){
+    let c=0xFFFFFFFF;
+    for(const b of bytes){
+      c^=b;
+      for(let k=0;k<8;k++) c=(c>>>1)^((c&1)?0xEDB88320:0);
+    }
+    return (c^0xFFFFFFFF)>>>0;
+  }
+
+  function makeZip(files){
+    const enc=new TextEncoder();
+    const localParts=[], centralParts=[];
+    let offset=0;
+    for(const file of files){
+      const name=enc.encode(file.name), data=typeof file.data==="string"?enc.encode(file.data):file.data;
+      const crc=crc32(data);
+      const local=concatBytes([
+        u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data
+      ]);
+      localParts.push(local);
+      const central=concatBytes([
+        u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name
+      ]);
+      centralParts.push(central);
+      offset+=local.length;
+    }
+    const central=concatBytes(centralParts);
+    const end=concatBytes([u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(central.length),u32(offset),u16(0)]);
+    return new Blob([...localParts,central,end],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  }
+
+  function createXlsxBlob(rows){
+    const rowXml=rows.map((row,ri)=>{
+      const cells=row.map((v,ci)=>{
+        const ref=colName(ci+1)+(ri+1);
+        const style=ri===0?' s="1"':'';
+        return `<c r="${ref}" t="inlineStr"${style}><is><t xml:space="preserve">${xmlEscape(v)}</t></is></c>`;
+      }).join("");
+      return `<row r="${ri+1}">${cells}</row>`;
+    }).join("");
+    const lastRow=Math.max(rows.length,1);
+    const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:H${lastRow}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="2" width="15" customWidth="1"/><col min="3" max="3" width="30" customWidth="1"/><col min="4" max="6" width="18" customWidth="1"/><col min="7" max="7" width="45" customWidth="1"/><col min="8" max="8" width="40" customWidth="1"/></cols><sheetData>${rowXml}</sheetData><autoFilter ref="A1:H${lastRow}"/></worksheet>`;
+    const files=[
+      {name:"[Content_Types].xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
+      {name:"_rels/.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+      {name:"xl/workbook.xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="CS통합완료" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+      {name:"xl/_rels/workbook.xml.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+      {name:"xl/styles.xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="맑은 고딕"/></font><font><b/><sz val="10"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE7F2EC"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`},
+      {name:"xl/worksheets/sheet1.xml",data:sheet}
+    ];
+    return makeZip(files);
+  }
+
+  function downloadMerged(){
+    if(!state.merged.rows)return;
+    const blob=createXlsxBlob(state.merged.rows);
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=state.merged.name;
+    document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  bindDrop("exchange"); bindDrop("return"); bindDrop("swap");
+  $("exchangeProcess").onclick=()=>process("exchange");
+  $("returnProcess").onclick=()=>process("return");
+  $("swapProcess").onclick=()=>process("swap");
+  $("exchangeDownload").onclick=()=>download("exchange");
+  $("returnDownload").onclick=()=>download("return");
+  $("swapDownload").onclick=()=>download("swap");
+  $("tabExchange").onclick=()=>showPreview("exchange");
+  $("tabReturn").onclick=()=>showPreview("return");
+  $("tabSwap").onclick=()=>showPreview("swap");
+  $("processAll").onclick=async()=>{
+    await process("exchange");
+    await process("return");
+
+    if(state.swap.file){
+      await process("swap");
+    }else{
+      state.swap.rows=null;
+      $("swapDownload").disabled=true;
+      $("swapMetrics").style.display="none";
+      setStatus("swap","맞교환완료 파일은 선택사항으로, 미첨부 상태에서 통합했습니다.");
+    }
+
+    if(state.exchange.rows && state.return.rows && (!state.swap.file || state.swap.rows)){
+      state.merged.rows=buildMergedRows();
+      state.merged.name="CS_교환반품"+(state.swap.rows?"맞교환":"")+"_통합완료.xlsx";
+      $("downloadMerged").disabled=false;
+      showPreview("exchange");
+      alert("파일별 정리, 통합 및 추가 데이터 정리가 완료되었습니다.\n통합 Excel 다운로드 버튼을 눌러 주세요.");
+    }else{
+      state.merged.rows=null;
+      $("downloadMerged").disabled=true;
+    }
+  };
+  $("downloadMerged").onclick=downloadMerged;
+
+  $("resetAll").onclick=()=>{
+    for(const type of ["exchange","return","swap"]){
+      state[type].file=null;state[type].rows=null;
+      $(type+"Input").value="";
+      $(type+"Label").textContent=type==="exchange"?"교환완료 CSV 파일 첨부":(type==="return"?"반품완료 CSV 파일 첨부":"맞교환완료 CSV 파일 첨부");
+      $(type+"Process").disabled=true;$(type+"Download").disabled=true;
+      $(type+"Metrics").style.display="none";
+      setStatus(type,type==="exchange"?"교환완료 파일을 선택해 주세요.":(type==="return"?"반품완료 파일을 선택해 주세요.":"맞교환완료 파일을 선택해 주세요."));
+    }
+    state.merged.rows=null;
+    $("downloadMerged").disabled=true;
+    $("preview").style.display="none";$("previewTable").innerHTML="";
+    updateAllButton();
+  };
+})();
 </script>
 </body>
 </html>
