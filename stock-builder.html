@@ -1720,6 +1720,526 @@ h1::after{
   }
 }
 
+
+/* =========================================================
+   LAVENDER ATELIER — refined editorial UI
+   ========================================================= */
+
+:root{
+  --ink:#342f3d;
+  --muted:#887f91;
+  --violet:#7562a7;
+  --violet-deep:#54456f;
+  --violet-soft:#eee8f7;
+  --violet-pale:#f8f4fc;
+  --blush:#f4dfe7;
+  --sage:#dfece7;
+  --butter:#f6e9bd;
+  --cream:#fffdf8;
+  --line:#e6deed;
+  --white:#ffffff;
+}
+
+/* page */
+body{
+  background:
+    radial-gradient(1000px 520px at 5% -8%,rgba(201,184,230,.28),transparent 60%),
+    radial-gradient(880px 460px at 100% 3%,rgba(244,223,231,.38),transparent 58%),
+    linear-gradient(180deg,#fbf9fd 0%,#f7f4fa 52%,#fbfafc 100%) !important;
+  color:var(--ink) !important;
+}
+
+.wrap{
+  max-width:1180px !important;
+  padding:50px 30px 84px !important;
+}
+
+/* header */
+.top{
+  padding:6px 2px 20px !important;
+  margin-bottom:24px !important;
+  border-bottom:1px solid rgba(220,211,231,.72) !important;
+}
+
+h1{
+  font-size:33px !important;
+  font-weight:900 !important;
+  letter-spacing:-1.25px !important;
+  color:var(--violet-deep) !important;
+}
+
+.subtitle{
+  margin-top:7px !important;
+  color:#8d8592 !important;
+  font-size:13.5px !important;
+  letter-spacing:-.1px !important;
+}
+
+/* decorative header dots */
+h1::after{
+  content:"" !important;
+  display:inline-block !important;
+  width:7px !important;
+  height:7px !important;
+  margin-left:13px !important;
+  border-radius:50% !important;
+  background:#a893ce !important;
+  box-shadow:
+    12px -7px 0 var(--blush),
+    24px 2px 0 var(--sage),
+    35px -5px 0 var(--butter) !important;
+  vertical-align:middle !important;
+}
+
+.top::before{
+  content:"✦" !important;
+  left:0 !important;
+  top:-22px !important;
+  color:#ad97d2 !important;
+  font-size:14px !important;
+  text-shadow:
+    24px 8px 0 #dfd4ef,
+    48px -3px 0 #c8b6e4 !important;
+  opacity:.8 !important;
+}
+
+.top::after{
+  content:"✧" !important;
+  right:4px !important;
+  top:-17px !important;
+  color:#c1adda !important;
+  font-size:16px !important;
+  text-shadow:-28px 8px 0 #eadbe4 !important;
+  opacity:.72 !important;
+}
+
+/* step badge */
+.step{
+  min-width:154px !important;
+  min-height:50px !important;
+  padding:8px 15px !important;
+  border-radius:16px !important;
+  border:1px solid #ded4e9 !important;
+  background:linear-gradient(145deg,#fff,#f8f4fb) !important;
+  color:#5f4f78 !important;
+  box-shadow:0 8px 22px rgba(81,61,112,.07) !important;
+}
+
+.step span{
+  width:28px !important;
+  height:28px !important;
+  border-radius:9px !important;
+  background:linear-gradient(145deg,#6d5a9b,#927dbd) !important;
+  box-shadow:none !important;
+}
+
+.step::before{
+  content:"♡" !important;
+  top:-9px !important;
+  right:-3px !important;
+  color:#c3acd9 !important;
+  font-size:11px !important;
+}
+
+.step::after{display:none !important}
+
+/* main panel */
+.panel{
+  position:relative !important;
+  padding:26px !important;
+  border-radius:24px !important;
+  border:1px solid rgba(223,215,234,.96) !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.98),rgba(254,253,255,.98)) !important;
+  box-shadow:
+    0 24px 60px rgba(74,56,102,.065),
+    0 2px 8px rgba(74,56,102,.025) !important;
+}
+
+.panel::before{
+  content:"" !important;
+  position:absolute !important;
+  left:34px !important;
+  top:-5px !important;
+  width:8px !important;
+  height:8px !important;
+  border-radius:50% !important;
+  background:#a88fcf !important;
+  box-shadow:
+    15px 6px 0 var(--blush),
+    30px -1px 0 -1px var(--sage),
+    44px 5px 0 -2px var(--butter) !important;
+}
+
+.panel::after{
+  content:"•   •   •" !important;
+  position:absolute !important;
+  right:24px !important;
+  bottom:-25px !important;
+  color:#b6a1d2 !important;
+  text-shadow:
+    13px 0 0 #e8cbd6,
+    26px 0 0 #c7dfd6 !important;
+  font-size:6px !important;
+  letter-spacing:4px !important;
+  opacity:.7 !important;
+}
+
+/* weekly setup — keep the user's preferred structure */
+.period-box{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:12px 16px !important;
+  margin:4px 0 22px !important;
+  padding:21px 20px 20px !important;
+  border:1px solid #dfd6eb !important;
+  border-radius:18px !important;
+  background:
+    radial-gradient(circle at 96% 8%,rgba(244,223,231,.25),transparent 22%),
+    radial-gradient(circle at 0% 100%,rgba(223,236,231,.24),transparent 25%),
+    linear-gradient(135deg,#fcfbfe 0%,#f6f1fa 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+.period-box::before{
+  content:"WEEKLY SETUP" !important;
+  position:absolute !important;
+  top:-10px !important;
+  left:22px !important;
+  padding:3px 11px !important;
+  border:1px solid #dfd4ea !important;
+  border-radius:999px !important;
+  background:#fff !important;
+  color:#927dc0 !important;
+  font-size:8px !important;
+  font-weight:900 !important;
+  letter-spacing:1.6px !important;
+  box-shadow:0 3px 9px rgba(87,65,121,.05) !important;
+}
+
+.period-title{
+  flex:0 0 auto !important;
+  color:#5c4b74 !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+}
+
+.period-title::before{
+  content:"✦" !important;
+  margin-right:8px !important;
+  color:#a58bcd !important;
+  font-size:11px !important;
+}
+
+.period-title::after{display:none !important}
+
+.period-box > label{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  margin:0 !important;
+  font-size:12.5px !important;
+  font-weight:700 !important;
+  color:#5f536b !important;
+}
+
+.period-preview{
+  flex:1 1 200px !important;
+  margin-left:auto !important;
+  padding:0 !important;
+  background:transparent !important;
+  color:#998da0 !important;
+  font-size:11.5px !important;
+  text-align:right !important;
+}
+
+.period-dates{
+  flex:1 0 100% !important;
+  display:flex !important;
+  gap:14px 24px !important;
+  padding-top:4px !important;
+}
+
+.date-group{
+  flex:1 1 430px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+
+.date-group strong{
+  flex:0 0 112px !important;
+  min-width:0 !important;
+  color:#65527e !important;
+  font-size:12px !important;
+}
+
+.period-box select,
+.date-group input[type="date"]{
+  height:39px !important;
+  border-radius:10px !important;
+  border:1px solid #dad1e5 !important;
+  background:#fff !important;
+  color:#403747 !important;
+  box-shadow:0 2px 7px rgba(88,68,118,.035) !important;
+}
+
+.period-box select:focus,
+.date-group input[type="date"]:focus{
+  border-color:#a68fcf !important;
+  box-shadow:0 0 0 3px rgba(166,143,207,.12) !important;
+}
+
+/* delicate accent by field */
+.date-group:first-child input[type="date"]{
+  border-color:#e7d4dc !important;
+  background:linear-gradient(180deg,#fff,#fffafb) !important;
+}
+
+.date-group:last-child input[type="date"]{
+  border-color:#d6e3de !important;
+  background:linear-gradient(180deg,#fff,#fafdfc) !important;
+}
+
+/* upload zone */
+.drop-zone{
+  position:relative !important;
+  min-height:184px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  padding:36px 28px !important;
+  border:1.5px dashed #baa9d7 !important;
+  border-radius:20px !important;
+  background:
+    radial-gradient(circle at 8% 12%,rgba(244,223,231,.25),transparent 21%),
+    radial-gradient(circle at 92% 85%,rgba(220,235,229,.25),transparent 23%),
+    linear-gradient(180deg,#fff 0%,#faf8fd 100%) !important;
+}
+
+.drop-zone:hover{
+  border-color:#8e78bd !important;
+  background:
+    radial-gradient(circle at 8% 12%,rgba(244,223,231,.3),transparent 21%),
+    radial-gradient(circle at 92% 85%,rgba(220,235,229,.3),transparent 23%),
+    linear-gradient(180deg,#fefcff,#f6f1fa) !important;
+  box-shadow:0 12px 28px rgba(84,62,117,.06) !important;
+}
+
+.drop-zone::before{
+  content:"✦" !important;
+  position:absolute !important;
+  top:18px !important;
+  left:22px !important;
+  color:#ad95d1 !important;
+  font-size:12px !important;
+  text-shadow:
+    22px 8px 0 #e9c8d4,
+    43px -1px 0 #c5ddd4,
+    64px 7px 0 #ecd895 !important;
+  opacity:.82 !important;
+}
+
+.drop-title{
+  font-size:19px !important;
+  font-weight:900 !important;
+  color:#55466d !important;
+}
+
+.drop-title::before{
+  content:"" !important;
+  display:inline-block !important;
+  width:28px !important;
+  height:28px !important;
+  margin-right:10px !important;
+  border-radius:9px !important;
+  background:
+    radial-gradient(circle at 40% 38%,#fff 0 22%,transparent 23%),
+    linear-gradient(145deg,#d6c9ea,#b39bd6) !important;
+  vertical-align:middle !important;
+  box-shadow:0 5px 12px rgba(91,67,130,.09) !important;
+}
+
+.drop-title::after{
+  content:" ✧" !important;
+  color:#ae95d0 !important;
+}
+
+.drop-desc{
+  max-width:650px !important;
+  color:#857b8b !important;
+  font-size:12.5px !important;
+  line-height:1.65 !important;
+  text-align:center !important;
+}
+
+/* file button */
+.file-btn{
+  margin-top:4px !important;
+  padding:10px 18px !important;
+  border-radius:11px !important;
+  background:linear-gradient(135deg,#6d5a9a 0%,#8b76b7 75%,#987fc0 100%) !important;
+  box-shadow:0 8px 18px rgba(89,66,126,.11) !important;
+}
+
+/* info */
+.info{
+  margin-top:16px !important;
+  padding:13px 15px !important;
+  border:1px solid #ebe4f1 !important;
+  border-radius:13px !important;
+  background:#fcfafd !important;
+  color:#756b7d !important;
+  font-size:12.2px !important;
+}
+
+.info::before{
+  content:"✧" !important;
+  margin-right:7px !important;
+  color:#9e86c6 !important;
+  background:none !important;
+}
+
+/* metric cards */
+.summary{
+  margin-top:16px !important;
+  gap:10px !important;
+}
+
+.summary>div{
+  min-height:72px !important;
+  padding:14px 16px !important;
+  border:1px solid #e8e1ee !important;
+  border-radius:15px !important;
+  background:linear-gradient(145deg,#fdfcff,#f8f5fa) !important;
+  box-shadow:none !important;
+}
+
+.summary>div:nth-child(1){border-top:2px solid #baa5db !important}
+.summary>div:nth-child(2){border-top:2px solid #e6bccd !important}
+.summary>div:nth-child(3){border-top:2px solid #bdd8ce !important}
+.summary>div:nth-child(4){border-top:2px solid #ebd596 !important}
+
+.summary small{
+  margin-bottom:3px !important;
+  color:#8e8494 !important;
+  font-size:11px !important;
+}
+
+.summary b{
+  color:#5d4b78 !important;
+  font-size:22px !important;
+}
+
+/* table */
+.table-wrap{
+  margin-top:16px !important;
+  border:1px solid #e7e0ed !important;
+  border-radius:16px !important;
+  overflow:hidden !important;
+  background:#fff !important;
+  box-shadow:none !important;
+}
+
+th{
+  height:38px !important;
+  background:linear-gradient(180deg,#f5f1f7,#f0ebf4) !important;
+  color:#55485d !important;
+  font-size:11.5px !important;
+}
+
+td{
+  color:#4c4551 !important;
+  font-size:11.5px !important;
+}
+
+th,td{
+  padding:9px 10px !important;
+  border-bottom-color:#ece6f1 !important;
+}
+
+tbody tr:hover td{
+  background:#fcfaff !important;
+}
+
+/* buttons */
+.actions{
+  margin-top:16px !important;
+  gap:9px !important;
+}
+
+button{
+  min-height:39px !important;
+  padding:0 15px !important;
+  border-radius:11px !important;
+  font-size:12.5px !important;
+  font-weight:800 !important;
+}
+
+.secondary{
+  background:#f1edf5 !important;
+  color:#62527a !important;
+}
+
+.primary{
+  background:linear-gradient(135deg,#8872b7,#a087c9) !important;
+}
+
+.download{
+  background:linear-gradient(135deg,#574374,#715994) !important;
+}
+
+button:not(:disabled):hover{
+  transform:translateY(-1px) !important;
+  box-shadow:0 8px 18px rgba(80,59,114,.11) !important;
+}
+
+/* status */
+.status{
+  margin-top:12px !important;
+  padding:11px 13px !important;
+  border:1px solid #e8e1ef !important;
+  border-radius:12px !important;
+  background:#f8f5fa !important;
+  color:#6e6575 !important;
+  font-size:12px !important;
+}
+
+.status::before{
+  content:"•" !important;
+  color:#88b4a5 !important;
+  font-size:16px !important;
+  vertical-align:-1px !important;
+}
+
+/* responsive */
+@media(max-width:900px){
+  .period-preview{
+    flex-basis:100% !important;
+    margin-left:0 !important;
+    text-align:left !important;
+  }
+  .period-dates{
+    flex-direction:column !important;
+  }
+}
+
+@media(max-width:620px){
+  .wrap{padding:34px 16px 58px !important}
+  h1{font-size:27px !important}
+  .period-box{display:block !important}
+  .period-box>*{margin-bottom:10px !important}
+  .date-group{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+  .date-group strong{flex-basis:auto !important}
+  .date-sep{display:none !important}
+}
+
 </style>
 </head>
 <body>
