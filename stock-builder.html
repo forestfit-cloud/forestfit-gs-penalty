@@ -274,6 +274,1452 @@ button:not(:disabled):hover{
   .step{min-width:0;width:auto}
 }
 
+
+/* ===== top sparkle decoration ===== */
+.top{position:relative}
+.top::before{
+  content:"✦";
+  position:absolute;
+  top:-26px;
+  left:18px;
+  color:#a78bd9;
+  font-size:22px;
+  line-height:1;
+  text-shadow:
+    38px 16px 0 #d5c6ef,
+    78px -3px 0 #bea7e6,
+    116px 18px 0 #e2d7f4;
+  opacity:.92;
+  animation:sparkleFloat 3.2s ease-in-out infinite;
+  pointer-events:none;
+}
+.top::after{
+  content:"✧";
+  position:absolute;
+  top:-18px;
+  right:28px;
+  color:#c3afe8;
+  font-size:25px;
+  line-height:1;
+  text-shadow:
+    -42px 17px 0 #e3d8f4,
+    -88px -5px 0 #a98fd9,
+    -128px 15px 0 #d5c5ee;
+  opacity:.82;
+  animation:sparkleFloat 3.8s ease-in-out infinite reverse;
+  pointer-events:none;
+}
+@keyframes sparkleFloat{
+  0%,100%{transform:translateY(0) scale(1);opacity:.72}
+  50%{transform:translateY(-4px) scale(1.08);opacity:1}
+}
+
+
+/* ===== cute lavender decorations ===== */
+body::before{
+  content:"✦  ˚₊  ✧  ♡  ⋆  ✦  ☁  ✧  ₊˚  ♡  ✦";
+  position:fixed;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:max-content;
+  max-width:90vw;
+  overflow:hidden;
+  white-space:nowrap;
+  color:#b59ddd;
+  font-size:15px;
+  letter-spacing:12px;
+  opacity:.55;
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{position:relative;z-index:1}
+
+/* title mini sparkles */
+h1::after{
+  content:" ✦";
+  color:#aa8ed9;
+  font-size:18px;
+  vertical-align:top;
+  margin-left:5px;
+}
+
+/* cute floating dots/hearts around main panel */
+.panel{position:relative}
+.panel::before{
+  content:"♡";
+  position:absolute;
+  top:-16px;
+  right:42px;
+  width:31px;
+  height:31px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:#fff;
+  border:1px solid #dfd4f0;
+  color:#a78bd5;
+  font-size:15px;
+  box-shadow:0 6px 15px rgba(91,68,132,.09);
+  animation:cuteBob 3s ease-in-out infinite;
+  pointer-events:none;
+}
+.panel::after{
+  content:"✦";
+  position:absolute;
+  top:25px;
+  right:-12px;
+  color:#c2ace6;
+  font-size:19px;
+  animation:cuteTwinkle 2.4s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* period box label decoration */
+.period-title::before{
+  content:"✿";
+  margin-right:7px;
+  color:#a98fd7;
+}
+.period-title::after{
+  content:" ˚₊";
+  color:#c9b7e8;
+}
+
+/* upload box cute icon */
+.drop-title::before{
+  content:"☁";
+  display:inline-flex;
+  width:31px;
+  height:31px;
+  margin-right:9px;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:#f0e9fa;
+  color:#8068b6;
+  font-size:16px;
+  vertical-align:middle;
+  box-shadow:inset 0 0 0 1px #e0d5f1;
+}
+
+/* tiny sparkles in upload area */
+.drop-zone::before{
+  content:"✦";
+  position:absolute;
+  top:17px;
+  left:22px;
+  color:#c2abe6;
+  font-size:16px;
+  text-shadow:23px 17px 0 #e0d3f2;
+  opacity:.8;
+  animation:cuteTwinkle 2.7s ease-in-out infinite;
+  pointer-events:none;
+}
+.drop-zone::after{
+  content:"♡";
+  position:absolute;
+  bottom:18px;
+  right:25px;
+  color:#c8b4e8;
+  font-size:15px;
+  text-shadow:-25px -11px 0 #e3d7f4;
+  opacity:.72;
+  animation:cuteBob 3.5s ease-in-out infinite reverse;
+  pointer-events:none;
+}
+.drop-zone{position:relative}
+
+/* buttons get subtle sparkle */
+.download::after{
+  content:" ✦";
+  font-size:12px;
+  opacity:.8;
+}
+.file-btn::after{
+  content:" ♡";
+  font-size:11px;
+  opacity:.75;
+}
+
+/* small decorative chip for status */
+.status::before{
+  content:"✧";
+  color:#9f85ce;
+  margin-right:6px;
+}
+
+/* soft decorative bubbles */
+.actions{position:relative}
+.actions::before{
+  content:"";
+  position:absolute;
+  left:-18px;
+  bottom:-20px;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:rgba(205,190,233,.18);
+  box-shadow:
+    30px 18px 0 rgba(225,215,243,.22),
+    1110px -10px 0 rgba(211,197,236,.16);
+  pointer-events:none;
+}
+
+@keyframes cuteBob{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-5px) rotate(3deg)}
+}
+@keyframes cuteTwinkle{
+  0%,100%{opacity:.45;transform:scale(.9) rotate(0)}
+  50%{opacity:1;transform:scale(1.15) rotate(12deg)}
+}
+
+@media(max-width:700px){
+  body::before{letter-spacing:5px;font-size:12px}
+  .panel::after{display:none}
+}
+
+
+/* ===== MAX CUTE lavender pack ===== */
+
+/* 화면 양쪽에 떠 있는 데코 */
+.wrap::before{
+  content:"✦\A ♡\A ✧\A ☁\A ✿\A ⋆\A ♡";
+  white-space:pre;
+  position:absolute;
+  left:-54px;
+  top:115px;
+  color:#c3afe5;
+  font-size:18px;
+  line-height:3.4;
+  text-align:center;
+  opacity:.62;
+  animation:sideFloat 5s ease-in-out infinite;
+  pointer-events:none;
+}
+.wrap::after{
+  content:"♡\A ⋆\A ✿\A ✧\A ☁\A ✦\A ♡";
+  white-space:pre;
+  position:absolute;
+  right:-52px;
+  top:170px;
+  color:#bda7df;
+  font-size:17px;
+  line-height:3.6;
+  text-align:center;
+  opacity:.58;
+  animation:sideFloat 5.8s ease-in-out infinite reverse;
+  pointer-events:none;
+}
+
+/* 상단 타이틀 주변 더 풍성한 반짝이 */
+h1{
+  position:relative;
+  text-shadow:0 2px 0 rgba(255,255,255,.8);
+}
+h1::before{
+  content:"˚₊‧";
+  position:absolute;
+  left:-36px;
+  top:-14px;
+  color:#c4afe5;
+  font-size:15px;
+  transform:rotate(-10deg);
+}
+.subtitle::after{
+  content:"  ♡  ✧  ₊˚";
+  color:#bca5df;
+  letter-spacing:3px;
+}
+
+/* 단계 카드에 리본 느낌 */
+.step{
+  position:relative;
+  overflow:visible;
+}
+.step::before{
+  content:"୨୧";
+  position:absolute;
+  top:-15px;
+  right:-8px;
+  color:#9f82d0;
+  font-size:19px;
+  transform:rotate(8deg);
+  text-shadow:0 3px 7px rgba(91,68,132,.12);
+  animation:cuteBob 3.1s ease-in-out infinite;
+}
+.step::after{
+  content:"✦";
+  position:absolute;
+  bottom:-9px;
+  left:-7px;
+  color:#d0bfeb;
+  font-size:13px;
+  animation:cuteTwinkle 2.1s ease-in-out infinite;
+}
+
+/* 기준 선택 박스 */
+.period-box::before{
+  content:"✧  SELECT  ✧";
+  position:absolute;
+  top:-10px;
+  left:20px;
+  padding:2px 10px;
+  border:1px solid #e0d5f0;
+  border-radius:999px;
+  background:#fff;
+  color:#9b82c9;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.3px;
+  box-shadow:0 3px 9px rgba(84,61,125,.07);
+}
+.period-box{position:relative;margin-top:5px}
+
+/* 날짜 그룹에 작은 하트 */
+.date-group::after{
+  content:"♡";
+  color:#c0a9e2;
+  margin-left:2px;
+  font-size:12px;
+}
+
+/* 업로드 영역: 별/하트 더 추가 */
+.drop-zone .drop-title::after{
+  content:"  ✧";
+  color:#a98ed7;
+}
+.drop-desc::after{
+  content:"  ₊˚♡";
+  color:#c5b0e4;
+}
+
+/* 파일 목록/미리보기 카드에 데코 */
+.file-list{position:relative}
+.file-list::before{
+  content:"✦";
+  position:absolute;
+  top:-8px;
+  right:8px;
+  color:#c2ace3;
+  font-size:13px;
+  animation:cuteTwinkle 2.5s ease-in-out infinite;
+}
+.preview-panel{position:relative}
+.preview-panel::before{
+  content:"♡";
+  position:absolute;
+  top:-10px;
+  left:18px;
+  color:#bca4df;
+  font-size:14px;
+  z-index:2;
+}
+
+/* 요약 카드 각각 귀엽게 */
+.summary>div{
+  position:relative;
+  overflow:visible;
+}
+.summary>div:nth-child(1)::after{content:"✦"; }
+.summary>div:nth-child(2)::after{content:"♡"; }
+.summary>div:nth-child(3)::after{content:"✧"; }
+.summary>div:nth-child(4)::after{content:"⋆"; }
+.summary>div::after{
+  position:absolute;
+  top:8px;
+  right:11px;
+  color:#b49bd9;
+  font-size:12px;
+  opacity:.72;
+}
+
+/* 표 헤더에 아주 작은 반짝이 느낌 */
+th:first-child::before{
+  content:"✧ ";
+  color:#a98fd3;
+}
+
+/* 하단 버튼영역 장식 */
+.actions::after{
+  content:"✦  ♡  ✧  ₊˚  ☁  ⋆  ✿";
+  position:absolute;
+  right:5px;
+  bottom:-30px;
+  color:#bba5dd;
+  letter-spacing:8px;
+  font-size:12px;
+  opacity:.6;
+  pointer-events:none;
+}
+
+/* 화면 모서리 고정 장식 */
+body::after{
+  content:"✦";
+  position:fixed;
+  right:24px;
+  bottom:22px;
+  width:44px;
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(215,201,237,.7);
+  border-radius:15px;
+  background:rgba(255,255,255,.68);
+  color:#a78bd2;
+  font-size:17px;
+  box-shadow:0 8px 24px rgba(82,60,122,.08);
+  backdrop-filter:blur(5px);
+  animation:cornerSparkle 3s ease-in-out infinite;
+  pointer-events:none;
+  z-index:3;
+}
+
+/* 은은한 점 패턴 */
+.panel{
+  background-image:
+    radial-gradient(circle at 18px 18px, rgba(170,145,211,.08) 1px, transparent 1.4px);
+  background-size:34px 34px;
+}
+
+/* input/select 작은 광택 */
+.period-box select,
+.date-group input[type="date"]{
+  background-image:linear-gradient(180deg,rgba(255,255,255,1),rgba(251,248,255,.96));
+}
+
+/* 다운로드 버튼 강조 */
+.download{
+  position:relative;
+  overflow:hidden;
+}
+.download::before{
+  content:"";
+  position:absolute;
+  width:34px;
+  height:130%;
+  top:-15%;
+  left:-50px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);
+  transform:skewX(-18deg);
+  animation:buttonShine 4.3s ease-in-out infinite;
+}
+
+/* 구분용 귀여운 작은 라인 */
+.info::before{
+  content:"✿";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  margin-right:8px;
+  border-radius:8px;
+  background:#eee6f8;
+  color:#8d72bf;
+  font-size:11px;
+}
+
+@keyframes sideFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-12px)}
+}
+@keyframes cornerSparkle{
+  0%,100%{transform:rotate(-5deg) scale(1);opacity:.72}
+  50%{transform:rotate(7deg) scale(1.08);opacity:1}
+}
+@keyframes buttonShine{
+  0%,65%{left:-55px}
+  85%,100%{left:115%}
+}
+
+@media(max-width:1350px){
+  .wrap::before,.wrap::after{display:none}
+}
+@media(max-width:700px){
+  .actions::after{display:none}
+  body::after{width:34px;height:34px;right:12px;bottom:12px}
+}
+
+
+/* ===== Aesthetic Lavender Redesign ===== */
+
+/* 기존 과한 장식 숨기기 */
+.wrap::before,
+.wrap::after,
+body::after,
+.actions::after,
+.panel::after,
+.drop-zone::after,
+.summary>div::after,
+.subtitle::after{
+  display:none !important;
+}
+
+/* 전체 톤 정리 */
+body{
+  background:
+    radial-gradient(circle at 8% 3%, rgba(215,204,239,.34), transparent 28%),
+    radial-gradient(circle at 92% 4%, rgba(233,225,247,.48), transparent 26%),
+    linear-gradient(180deg,#fbfaff 0%,#f7f4fb 46%,#faf9fc 100%);
+}
+
+.wrap{
+  max-width:1180px;
+  padding-top:52px;
+}
+
+/* 상단 */
+.top{
+  position:relative;
+  padding:10px 2px 18px;
+  margin-bottom:22px;
+}
+.top::before{
+  content:"✦";
+  position:absolute;
+  left:-3px;
+  top:-22px;
+  color:#9d84cd;
+  font-size:18px;
+  text-shadow:
+    28px 11px 0 #d7cbed,
+    58px -4px 0 #baa4df,
+    92px 14px 0 #e5dcf4;
+  opacity:.82;
+  animation:aestheticTwinkle 3.2s ease-in-out infinite;
+}
+.top::after{
+  content:"✧";
+  position:absolute;
+  right:6px;
+  top:-17px;
+  color:#bca7df;
+  font-size:20px;
+  text-shadow:
+    -30px 12px 0 #ddcff0,
+    -67px -1px 0 #a990d5;
+  opacity:.7;
+  animation:aestheticTwinkle 3.8s ease-in-out infinite reverse;
+}
+
+h1{
+  font-size:32px;
+  letter-spacing:-1px;
+  color:#4f416c;
+}
+h1::before{
+  display:none !important;
+}
+h1::after{
+  content:"";
+  display:inline-block;
+  width:7px;
+  height:7px;
+  margin-left:10px;
+  border-radius:50%;
+  background:#a98fd4;
+  vertical-align:middle;
+  box-shadow:11px -7px 0 #d5c5eb;
+}
+
+.subtitle{
+  margin-top:6px;
+  color:#898091;
+  font-size:13.5px;
+}
+
+/* 단계 카드 */
+.step{
+  min-width:158px;
+  min-height:54px;
+  border-radius:17px;
+  border:1px solid #dfd6ee;
+  background:rgba(255,255,255,.88);
+  box-shadow:0 10px 26px rgba(92,70,132,.08);
+  backdrop-filter:blur(8px);
+}
+.step span{
+  width:29px;
+  height:29px;
+  border-radius:9px;
+  background:linear-gradient(145deg,#7560a8,#9a84cb);
+  box-shadow:0 4px 11px rgba(97,75,139,.16);
+}
+.step::before{
+  content:"✦";
+  top:-12px;
+  right:-5px;
+  color:#b79edb;
+  font-size:13px;
+}
+.step::after{
+  display:none;
+}
+
+/* 메인 패널 */
+.panel{
+  border:1px solid rgba(222,213,238,.9);
+  border-radius:22px;
+  background:rgba(255,255,255,.92);
+  box-shadow:
+    0 22px 55px rgba(73,56,105,.07),
+    0 3px 10px rgba(73,56,105,.025);
+  background-image:none;
+  overflow:visible;
+}
+.panel::before{
+  content:"";
+  position:absolute;
+  width:10px;
+  height:10px;
+  top:-5px;
+  left:36px;
+  border-radius:50%;
+  background:#aa92d4;
+  box-shadow:
+    17px 7px 0 1px #ded2ef,
+    36px -1px 0 -2px #baa5de;
+  border:none;
+  animation:aestheticTwinkle 3s ease-in-out infinite;
+}
+
+/* 기준 선택 영역 */
+.period-box{
+  position:relative;
+  margin:0 0 20px;
+  padding:19px 20px;
+  border-radius:17px;
+  border:1px solid #e1d9ef;
+  background:
+    linear-gradient(135deg,rgba(251,249,255,.98),rgba(245,240,251,.98));
+}
+.period-box::before{
+  content:"WEEKLY SETUP";
+  top:-9px;
+  left:22px;
+  padding:3px 10px;
+  border-radius:999px;
+  border:1px solid #e3daf0;
+  background:#fff;
+  color:#9b84c7;
+  font-size:8px;
+  letter-spacing:1.5px;
+  font-weight:900;
+}
+.period-title{
+  color:#5e4e7b;
+}
+.period-title::before{
+  content:"✦";
+  margin-right:8px;
+  color:#a890d2;
+}
+.period-title::after{display:none}
+
+.period-box select,
+.date-group input[type="date"]{
+  border-radius:10px;
+  border:1px solid #dcd3e9;
+  background:#fff;
+  box-shadow:none;
+}
+.date-group::after{
+  display:none;
+}
+
+/* 업로드 */
+.drop-zone{
+  position:relative;
+  padding:38px 28px;
+  border:1.5px dashed #bdaedf;
+  border-radius:19px;
+  background:
+    linear-gradient(180deg,#fdfcff 0%,#faf7fe 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8);
+}
+.drop-zone::before{
+  content:"✦";
+  top:16px;
+  left:20px;
+  color:#b49bd9;
+  font-size:13px;
+  text-shadow:
+    24px 10px 0 #e0d5f1,
+    48px -1px 0 #c9b7e7;
+}
+.drop-title{
+  color:#57476f;
+  font-size:18px;
+}
+.drop-title::before{
+  content:"";
+  display:inline-block;
+  width:27px;
+  height:27px;
+  margin-right:10px;
+  border-radius:9px;
+  background:
+    radial-gradient(circle at 42% 42%,#fff 0 24%,transparent 25%),
+    linear-gradient(145deg,#d7c9ec,#b49bd9);
+  vertical-align:middle;
+  box-shadow:0 5px 12px rgba(98,75,139,.12);
+}
+.drop-title::after{
+  content:" ✧";
+  color:#a990d2;
+}
+.drop-desc::after{display:none}
+
+/* 버튼 */
+.file-btn,
+.primary,
+.download,
+.secondary{
+  border-radius:12px;
+}
+.file-btn{
+  background:linear-gradient(135deg,#725da5,#8f79bf);
+}
+.download{
+  background:linear-gradient(135deg,#5b477e,#745e9d);
+}
+.primary{
+  background:linear-gradient(135deg,#8c74bf,#a08ad0);
+}
+.secondary{
+  background:#f1edf7;
+  color:#5f4e7d;
+}
+.download::before{
+  opacity:.6;
+}
+
+/* 요약 카드 */
+.summary{
+  gap:12px;
+}
+.summary>div{
+  border:1px solid #e7e0f0;
+  border-radius:14px;
+  background:#fbf9fd;
+  box-shadow:none;
+}
+.summary b{
+  color:#5e4b80;
+}
+.summary small{
+  color:#8b8294;
+}
+
+/* 안내 / 표 */
+.info{
+  border:1px solid #ece5f4;
+  border-radius:13px;
+  background:#fcfaff;
+}
+.info::before{
+  content:"✦";
+  width:auto;
+  height:auto;
+  margin-right:7px;
+  background:none;
+  color:#a28acc;
+}
+
+.table-wrap{
+  border:1px solid #e7e0ef;
+  border-radius:14px;
+  box-shadow:none;
+}
+th{
+  background:#f4eff9;
+  color:#554862;
+}
+th:first-child::before{
+  display:none;
+}
+
+/* status */
+.status{
+  border-radius:12px;
+  background:#f8f5fb;
+  border:1px solid #e8e0f1;
+}
+.status::before{
+  content:"•";
+  color:#9d83c9;
+  font-size:18px;
+  vertical-align:-1px;
+}
+
+/* 아주 제한된 귀여운 포인트 */
+.actions{
+  position:relative;
+}
+.actions::before{
+  content:"♡";
+  position:absolute;
+  left:-8px;
+  bottom:-23px;
+  color:#c2addf;
+  font-size:13px;
+  background:none;
+  box-shadow:none;
+  width:auto;
+  height:auto;
+}
+
+.file-list::before{
+  content:"✧";
+  right:11px;
+  top:-9px;
+  color:#b59dd7;
+  font-size:12px;
+}
+.preview-panel::before{
+  content:"";
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#b59fd7;
+  box-shadow:9px -4px 0 #ded2ee;
+}
+
+/* 모션도 조용하게 */
+@keyframes aestheticTwinkle{
+  0%,100%{opacity:.45;transform:scale(.92)}
+  50%{opacity:.95;transform:scale(1.06)}
+}
+
+@media(max-width:700px){
+  .top::after{display:none}
+  h1{font-size:26px}
+  .period-box{padding:17px 15px}
+}
+
+
+/* ===== Premium Lavender Workspace v3 ===== */
+:root{
+  --ink:#342d43;
+  --sub:#81778f;
+  --lav-900:#4e4167;
+  --lav-800:#5d4d7d;
+  --lav-700:#705da3;
+  --lav-600:#8a74bd;
+  --lav-500:#a28bd1;
+  --lav-300:#cfc2e8;
+  --lav-200:#e2d9f0;
+  --lav-100:#f2edf8;
+  --lav-050:#fbf9fe;
+  --panel:#ffffff;
+}
+
+/* overall canvas */
+html{background:#f7f4fb}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(900px 420px at 12% -6%, rgba(190,171,224,.26), transparent 58%),
+    radial-gradient(760px 360px at 92% 2%, rgba(225,213,242,.42), transparent 54%),
+    linear-gradient(180deg,#faf8fd 0%,#f7f4fb 45%,#fbfafe 100%);
+  color:var(--ink);
+}
+.wrap{
+  max-width:1160px;
+  padding:54px 28px 76px;
+}
+
+/* hero header */
+.top{
+  margin-bottom:24px;
+  padding:0 4px 14px;
+  border-bottom:1px solid rgba(220,211,235,.72);
+}
+h1{
+  margin:0;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:-1.2px;
+  color:var(--lav-900);
+}
+.subtitle{
+  margin-top:7px;
+  font-size:13.5px;
+  color:#898090;
+  letter-spacing:-.15px;
+}
+.top::before{
+  content:"✦";
+  top:-24px;
+  left:1px;
+  color:#967dca;
+  font-size:15px;
+  text-shadow:
+    24px 8px 0 #d7cbed,
+    49px -4px 0 #b9a2de;
+}
+.top::after{
+  content:"✧";
+  top:-18px;
+  right:8px;
+  color:#bca7de;
+  font-size:17px;
+  text-shadow:-26px 7px 0 #dfd4ef;
+}
+h1::after{
+  content:"";
+  width:6px;height:6px;
+  margin-left:12px;
+  background:#967fca;
+  box-shadow:11px -6px 0 #d6c8eb,20px 4px 0 -1px #b9a3dd;
+}
+
+/* compact step badge */
+.step{
+  min-width:150px;
+  min-height:50px;
+  padding:8px 14px;
+  border-radius:15px;
+  border:1px solid #dfd5ed;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(246,241,251,.97));
+  color:#5d4b7b;
+  font-size:13px;
+  box-shadow:0 8px 24px rgba(77,57,110,.07);
+}
+.step span{
+  width:28px;height:28px;
+  border-radius:9px;
+  background:linear-gradient(145deg,#6f5ca3,#927bc3);
+  font-size:12px;
+}
+.step::before{
+  content:"♡";
+  top:-10px;
+  right:-4px;
+  color:#b79fdb;
+  font-size:12px;
+}
+.step::after{display:none}
+
+/* panel */
+.panel{
+  padding:24px;
+  border-radius:24px;
+  border:1px solid rgba(222,214,235,.95);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.97),rgba(254,253,255,.97));
+  box-shadow:
+    0 24px 64px rgba(76,56,108,.065),
+    0 4px 14px rgba(76,56,108,.025);
+}
+.panel::before{
+  width:7px;height:7px;top:-4px;left:34px;
+  background:#a089cb;
+  box-shadow:13px 5px 0 #ddd1ee,27px -1px 0 -1px #baa4dd;
+}
+
+/* setup block */
+.period-box{
+  display:grid;
+  grid-template-columns:auto auto auto 1fr;
+  gap:10px 14px;
+  align-items:center;
+  margin:0 0 22px;
+  padding:20px 18px 18px;
+  border:1px solid #e1d8ee;
+  border-radius:18px;
+  background:
+    linear-gradient(135deg,#fbf9fe 0%,#f4eff9 100%);
+}
+.period-box::before{
+  content:"WEEKLY SETUP";
+  top:-9px;
+  left:20px;
+  padding:3px 9px;
+  background:#fff;
+  border-color:#e2d9ef;
+  color:#947bc4;
+  font-size:8px;
+}
+.period-title{
+  font-size:14px;
+  font-weight:900;
+  color:#5c4a78;
+}
+.period-title::before{content:"✦";font-size:11px}
+.period-box label{
+  gap:7px;
+  font-size:12.5px;
+  color:#695b78;
+}
+.period-preview{
+  justify-self:end;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(255,255,255,.68);
+  color:#8d8198;
+  font-size:11.5px;
+}
+.period-dates{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px 18px;
+  padding-top:3px;
+}
+.date-group{
+  display:grid;
+  grid-template-columns:120px 1fr auto 1fr;
+  gap:8px;
+  align-items:center;
+}
+.date-group strong{
+  min-width:0;
+  color:#65517f;
+  font-size:12px;
+}
+.period-box select,
+.date-group input[type="date"]{
+  height:38px;
+  border:1px solid #dbd2e8;
+  border-radius:10px;
+  padding:0 10px;
+  background:#fff;
+  color:#41374f;
+  font-size:12.5px;
+}
+.period-box select:focus,
+.date-group input[type="date"]:focus{
+  border-color:#a68ed1;
+  box-shadow:0 0 0 3px rgba(163,139,208,.13);
+}
+
+/* upload area */
+.drop-zone{
+  min-height:178px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:34px 26px;
+  border:1.5px dashed #baa9da;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(233,225,246,.36),transparent 36%),
+    linear-gradient(180deg,#fefeff 0%,#faf7fd 100%);
+}
+.drop-zone:hover{
+  border-color:#8f77c0;
+  background:linear-gradient(180deg,#fcfaff 0%,#f5f0fa 100%);
+  box-shadow:0 12px 30px rgba(86,64,122,.065);
+}
+.drop-zone::before{
+  content:"✦";
+  top:20px;
+  left:24px;
+  color:#b39bd7;
+  font-size:12px;
+  text-shadow:22px 9px 0 #e0d5ef,43px -1px 0 #c6b5e4;
+}
+.drop-title{
+  font-size:19px;
+  font-weight:900;
+  color:#55456f;
+}
+.drop-title::before{
+  width:28px;height:28px;
+  border-radius:9px;
+  background:linear-gradient(145deg,#d9cdec,#b49cda);
+  box-shadow:0 5px 13px rgba(94,70,136,.11);
+}
+.drop-desc{
+  max-width:650px;
+  text-align:center;
+  line-height:1.65;
+  color:#857a8f;
+  font-size:12.5px;
+}
+.file-btn{
+  margin-top:4px;
+  padding:10px 17px;
+  background:linear-gradient(135deg,#6b589a,#8973b9);
+  border-radius:11px;
+  font-size:12.5px;
+  box-shadow:0 8px 18px rgba(92,69,132,.12);
+}
+
+/* info */
+.info{
+  margin-top:16px;
+  padding:13px 15px;
+  border:1px solid #ebe4f2;
+  border-radius:13px;
+  background:#fcfaff;
+  color:#746a80;
+  font-size:12.2px;
+}
+.info::before{
+  content:"✧";
+  color:#9f87ca;
+}
+
+/* summary metrics */
+.summary{
+  margin-top:16px;
+  gap:10px;
+}
+.summary>div{
+  min-height:72px;
+  padding:14px 16px;
+  border:1px solid #e8e1ef;
+  border-radius:15px;
+  background:linear-gradient(145deg,#fdfcff,#f8f4fb);
+}
+.summary small{
+  display:block;
+  margin-bottom:3px;
+  color:#8d8395;
+  font-size:11px;
+}
+.summary b{
+  color:#5d4a7d;
+  font-size:22px;
+  line-height:1.1;
+}
+
+/* tables */
+.table-wrap{
+  margin-top:16px;
+  border:1px solid #e7e0ef;
+  border-radius:16px;
+  overflow:hidden;
+  background:#fff;
+}
+table{
+  background:#fff;
+}
+th{
+  height:38px;
+  background:linear-gradient(180deg,#f5f1f8,#f0ebf5);
+  color:#55475f;
+  font-size:11.5px;
+}
+td{
+  min-height:34px;
+  color:#4c4554;
+  font-size:11.5px;
+}
+th,td{
+  padding:9px 10px;
+  border-bottom-color:#ece6f2;
+}
+tbody tr:hover td{
+  background:#fcfaff;
+}
+
+/* actions */
+.actions{
+  margin-top:16px;
+  gap:9px;
+}
+button{
+  min-height:39px;
+  padding:0 15px;
+  border-radius:11px;
+  font-size:12.5px;
+  font-weight:800;
+}
+.secondary{
+  background:#f1ecf6;
+  color:#62517d;
+}
+.primary{
+  background:linear-gradient(135deg,#8a73bb,#a089cc);
+}
+.download{
+  background:linear-gradient(135deg,#574275,#725a97);
+}
+button:not(:disabled):hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(81,60,116,.12);
+}
+button:disabled{
+  opacity:.45;
+}
+
+/* status */
+.status{
+  margin-top:12px;
+  padding:11px 13px;
+  border:1px solid #e8e0f0;
+  border-radius:12px;
+  background:#f8f5fb;
+  color:#6e6477;
+  font-size:12px;
+}
+.status::before{
+  content:"•";
+  color:#9d84c6;
+  font-size:16px;
+}
+
+/* subtle decorative footer line */
+.panel::after{
+  display:block !important;
+  content:"✦   ·   ♡   ·   ✧";
+  position:absolute;
+  right:24px;
+  bottom:-30px;
+  color:#c4b0df;
+  font-size:10px;
+  letter-spacing:5px;
+  opacity:.62;
+  pointer-events:none;
+}
+
+/* responsiveness */
+@media(max-width:920px){
+  .period-box{
+    grid-template-columns:1fr 1fr;
+  }
+  .period-title,.period-preview{grid-column:1 / -1}
+  .period-preview{justify-self:start}
+  .period-dates{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .wrap{padding:36px 16px 56px}
+  .top{align-items:flex-start}
+  h1{font-size:27px}
+  .step{min-width:0}
+  .period-box{display:block}
+  .period-box>*{margin-bottom:9px}
+  .date-group{
+    grid-template-columns:1fr;
+  }
+  .date-sep{display:none}
+}
+
+
+/* ===== Pastel Accent Polish ===== */
+
+/* WEEKLY SETUP 영역: 직전 프리미엄 버전의 빽빽한 grid를 해제하고
+   이전처럼 자연스럽고 여유 있는 구조로 복원 */
+.period-box{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:12px 16px !important;
+  margin:5px 0 22px !important;
+  padding:22px 20px 19px !important;
+  border:1px solid #dfd5ef !important;
+  border-radius:18px !important;
+  background:
+    radial-gradient(circle at 94% 8%,rgba(255,226,238,.34),transparent 24%),
+    linear-gradient(135deg,#fcfaff 0%,#f6f0fb 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+
+.period-box::before{
+  content:"WEEKLY SETUP" !important;
+  position:absolute !important;
+  top:-10px !important;
+  left:21px !important;
+  padding:3px 11px !important;
+  border:1px solid #dfd4ef !important;
+  border-radius:999px !important;
+  background:#fff !important;
+  color:#9279c2 !important;
+  font-size:8px !important;
+  font-weight:900 !important;
+  letter-spacing:1.5px !important;
+  box-shadow:0 4px 10px rgba(90,67,127,.06) !important;
+}
+
+.period-title{
+  flex:0 0 auto !important;
+  margin-right:2px !important;
+  color:#5d4a7b !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+}
+.period-title::before{
+  content:"✦" !important;
+  margin-right:8px !important;
+  color:#a58bd1 !important;
+}
+
+.period-box > label{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  margin:0 !important;
+  color:#554967 !important;
+  font-size:12.5px !important;
+  font-weight:700 !important;
+}
+
+.period-preview{
+  flex:1 1 180px !important;
+  justify-self:auto !important;
+  margin-left:auto !important;
+  padding:0 !important;
+  background:transparent !important;
+  color:#96899e !important;
+  text-align:right !important;
+  font-size:11.5px !important;
+}
+
+.period-dates{
+  flex:1 0 100% !important;
+  display:flex !important;
+  gap:14px 24px !important;
+  padding-top:3px !important;
+}
+
+.date-group{
+  flex:1 1 430px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+.date-group strong{
+  flex:0 0 105px !important;
+  color:#695484 !important;
+  font-size:12px !important;
+}
+.date-group input[type="date"]{
+  flex:1 1 130px !important;
+  min-width:125px !important;
+  height:39px !important;
+}
+.date-sep{
+  color:#9a8ba5 !important;
+}
+
+/* select/input에 아주 옅은 핑크/민트 포인트 */
+.period-box label:nth-of-type(1) select{
+  border-color:#d9cdec !important;
+  background:linear-gradient(180deg,#fff,#fbf8ff) !important;
+}
+.period-box label:nth-of-type(2) select{
+  border-color:#d8cfea !important;
+  background:linear-gradient(180deg,#fff,#faf8ff) !important;
+}
+.date-group:first-child input[type="date"]{
+  border-color:#ead4df !important;
+  background:linear-gradient(180deg,#fff,#fff9fc) !important;
+}
+.date-group:last-child input[type="date"]{
+  border-color:#d4e4df !important;
+  background:linear-gradient(180deg,#fff,#f9fdfc) !important;
+}
+
+/* 상단 타이틀 작은 멀티 파스텔 포인트 */
+h1::after{
+  content:"" !important;
+  display:inline-block !important;
+  width:6px !important;
+  height:6px !important;
+  margin-left:12px !important;
+  border-radius:50% !important;
+  background:#9b82c9 !important;
+  box-shadow:
+    11px -6px 0 #e9b9cf,
+    21px 3px 0 -1px #c8dfd7,
+    31px -5px 0 -1px #efd995 !important;
+}
+
+/* 카드의 작은 장식에 파스텔 색을 섞되 절제 */
+.panel::before{
+  background:#a38bce !important;
+  box-shadow:
+    14px 5px 0 #e7b8cf,
+    28px -1px 0 -1px #c5ddd5,
+    40px 6px 0 -2px #efd994 !important;
+}
+
+/* 업로드 영역: 라벤더 베이스 + 핑크/민트 아주 옅은 빛 */
+.drop-zone{
+  background:
+    radial-gradient(circle at 10% 15%,rgba(255,220,235,.28),transparent 22%),
+    radial-gradient(circle at 92% 84%,rgba(210,235,228,.27),transparent 23%),
+    linear-gradient(180deg,#fefeff 0%,#faf7fd 100%) !important;
+}
+.drop-zone::before{
+  color:#a98fd3 !important;
+  text-shadow:
+    22px 9px 0 #e7bcd0,
+    44px -1px 0 #c6ded6,
+    65px 8px 0 #efd99b !important;
+}
+
+/* 요약카드에 아주 얇은 서로 다른 파스텔 상단선 */
+.summary>div:nth-child(1){border-top:2px solid #bca8df !important}
+.summary>div:nth-child(2){border-top:2px solid #e9bfd2 !important}
+.summary>div:nth-child(3){border-top:2px solid #c4ddd5 !important}
+.summary>div:nth-child(4){border-top:2px solid #edd89d !important}
+
+/* 주요 버튼도 단색 보라 대신 미묘한 컬러 변화 */
+.file-btn{
+  background:linear-gradient(135deg,#705ca2 0%,#8c76bd 72%,#9a82c5 100%) !important;
+}
+.primary{
+  background:linear-gradient(135deg,#8b73bb 0%,#a087cc 70%,#b092cf 100%) !important;
+}
+.download{
+  background:linear-gradient(135deg,#574274 0%,#715994 75%,#8068a5 100%) !important;
+}
+
+/* 작은 상태점은 민트 */
+.status::before{
+  color:#88b8a8 !important;
+}
+
+/* 하단 장식은 네 가지 파스텔 점 */
+.panel::after{
+  content:"●   ●   ●   ●" !important;
+  color:#b59fd8 !important;
+  text-shadow:
+    14px 0 0 #e7b8cd,
+    28px 0 0 #bdd8cf,
+    42px 0 0 #ead393 !important;
+  letter-spacing:5px !important;
+  font-size:5px !important;
+  opacity:.72 !important;
+}
+
+@media(max-width:900px){
+  .period-preview{
+    flex-basis:100% !important;
+    margin-left:0 !important;
+    text-align:left !important;
+  }
+  .period-dates{
+    flex-direction:column !important;
+  }
+}
+@media(max-width:620px){
+  .period-box{
+    display:block !important;
+  }
+  .period-box > *{
+    margin-bottom:10px !important;
+  }
+  .date-group{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+  .date-group strong{
+    flex-basis:auto !important;
+  }
+}
+
 </style>
 </head>
 <body>
