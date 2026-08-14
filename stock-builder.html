@@ -4329,6 +4329,19 @@ function downloadMerged(){
     });
   });
 
+  // 엑셀 탭 순서 변경
+  // 기본 생성 순서(반품리스트 → 통계)는 유지하고,
+  // 최종 다운로드 파일에서는 통계를 첫 번째 탭으로 배치합니다.
+  const sheetOrder=['통계','반품리스트']
+    .map(name=>wb.getWorksheet(name))
+    .filter(Boolean);
+
+  wb.worksheets.forEach(ws=>{
+    if(!sheetOrder.includes(ws)) sheetOrder.push(ws);
+  });
+
+  wb.worksheets.splice(0, wb.worksheets.length, ...sheetOrder);
+
   const now=new Date();const p=n=>String(n).padStart(2,'0');
   const fileName=`CS목록_통합_${now.getFullYear()}${p(now.getMonth()+1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}.xlsx`;
 
