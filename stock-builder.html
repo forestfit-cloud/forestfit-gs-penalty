@@ -2355,7 +2355,7 @@ button:not(:disabled):hover{
     <div class="actions">
       <button id="resetBtn" class="secondary" disabled>초기화</button>
       <button id="mergeBtn" class="primary" disabled>파일 통합하기</button>
-      <span class="manual-entry-note"><span class="manual-entry-swatch"></span><span>다운로드 후 노란색 칸은 수기 입력 · 입력 완료 시 흰색으로 자동 변경됩니다.</span><span class="manual-entry-arrow" aria-hidden="true">➜</span></span>
+      <span class="manual-entry-note"><span class="manual-entry-swatch"></span><span>다운로드 후 노란색 칸은 수기 입력 · J2~K9는 입력 후에도 노란색 유지 · 그 외 입력칸은 입력 완료 시 흰색으로 자동 변경됩니다.</span><span class="manual-entry-arrow" aria-hidden="true">➜</span></span>
       <button id="downloadBtn" class="download" disabled>통합 XLSX 다운로드</button>
     </div>
     <div id="status" class="status">CSV 파일을 첨부해주세요.</div>
@@ -3159,9 +3159,23 @@ function downloadMerged(){
   // 1행 A~H를 하나의 셀로 병합하고 제목을 표시합니다.
   ws.mergeCells('A1:H1');
   const selectedPeriod=getSelectedPeriod();
+  const isPeriodPlaceholder=selectedPeriod.label==='*월 *주차';
   ws.getCell('A1').value=`${selectedPeriod.label} 반품리스트`;
   ws.getCell('A1').font={bold:true,size:15};
   ws.getCell('A1').alignment={horizontal:'center',vertical:'middle'};
+
+  // 월/주차 미선택 상태는 노란색 조건부서식으로 표시합니다.
+  // 사용자가 제목을 직접 입력하면 조건이 해제되어
+  // "회색, 배경 1, 15% 더 어둡게" (#D9D9D9) 색상이 보입니다.
+  if(isPeriodPlaceholder){
+    for(let c=1;c<=8;c++){
+      ws.getCell(1,c).fill={
+        type:'pattern',
+        pattern:'solid',
+        fgColor:{argb:'FFD9D9D9'}
+      };
+    }
+  }
 
   // 2행부터 기존 통합 데이터(헤더 + 데이터)를 기록합니다.
   for(const row of mergedRows){
@@ -3202,6 +3216,38 @@ function downloadMerged(){
       }]
     });
   };
+
+  // 미입력/미선택 상태에서만 노란색을 보여주는 조건부서식입니다.
+  // 값이 수정되어 조건이 해제되면 셀의 원래 채우기 색상으로 자동 복귀합니다.
+  const addManualInputYellowRule=(worksheet,ref,formula)=>{
+    if(!worksheet || typeof worksheet.addConditionalFormatting!=='function')return;
+    worksheet.addConditionalFormatting({
+      ref,
+      rules:[{
+        type:'expression',
+        priority:manualCfPriority++,
+        formulae:[formula],
+        style:{
+          fill:{
+            type:'pattern',
+            pattern:'solid',
+            fgColor:{argb:unresolvedPartnerFill},
+            bgColor:{argb:unresolvedPartnerFill}
+          }
+        }
+      }]
+    });
+  };
+
+  // 반품리스트 제목이 "*월 *주차 반품리스트"인 동안만 노란색 표시.
+  // 사용자가 제목을 수정하면 아래 조건이 해제되어 #D9D9D9로 돌아갑니다.
+  if(isPeriodPlaceholder){
+    addManualInputYellowRule(
+      ws,
+      'A1:H1',
+      '$A$1="*월 *주차 반품리스트"'
+    );
+  }
 
   for(let i=1;i<mergedRows.length;i++){
     if(String(mergedRows[i][2]??'').trim()==='포레스트핏 협력사'){
@@ -3424,8 +3470,11 @@ function downloadMerged(){
     summaryWs.getCell(r,7).alignment={horizontal:'center',vertical:'middle',wrapText:true};
   });
   summaryWs.getCell('H3').value='';
+  summaryWs.getCell('H3').numFmt='#,##0';
   summaryWs.getCell('H4').value=weeklyReturnCount;
+  summaryWs.getCell('H4').numFmt='#,##0';
   summaryWs.getCell('H5').value=weeklyExchangeCount;
+  summaryWs.getCell('H5').numFmt='#,##0';
   summaryWs.getCell('H6').value={formula:'IF(OR(H3="",H3=0),"",H4/H3)'};
   summaryWs.getCell('H7').value={formula:'IF(OR(H3="",H3=0),"",H5/H3)'};
   summaryWs.getCell('H6').numFmt='0.00%';
@@ -3469,6 +3518,15 @@ function downloadMerged(){
   summaryWs.getCell('G8').alignment={horizontal:'center',vertical:'middle',wrapText:true};
   summaryWs.getCell('G8').border=thinBorder;
 
+  // G8:H9 날짜 미입력으로 값이 "*"인 항목이 하나라도 있으면 노란색 표시.
+  // 다운로드 후 사용자가 "*" 부분을 실제 기간으로 입력하면
+  // 조건부서식이 해제되어 기존처럼 "채우기 없음"으로 자동 복귀합니다.
+  addManualInputYellowRule(
+    summaryWs,
+    'G8:H9',
+    'NOT(ISERROR(SEARCH(": ~*",$G$8)))'
+  );
+
   // 오른쪽 안내셀은 기존 빈 다음 주차 양식 유지
   summaryWs.mergeCells('J8:K9');
   summaryWs.getCell('J8').value='*출고량 :\n*반품/교환 건수 :';
@@ -3493,19 +3551,11 @@ function downloadMerged(){
       summaryWs.getCell(r,c).fill={type:'pattern',pattern:'solid',fgColor:{argb:unresolvedPartnerFill}};
     }
   }
-  // 다음 주차 입력 양식은 입력 단위가 완료되면 해당 영역을 자동 흰색으로 전환
-  // J2:K2 : 주차 제목을 기존 안내문구에서 실제 주차로 변경했을 때
-  addManualInputWhiteRule(summaryWs,'J2:K2','$J$2<>"*월 *주차"');
-  // J3:K7 : 오른쪽 K열의 각 수기 입력값이 들어오면 같은 행 J:K를 흰색으로 표시
-  for(let r=3;r<=7;r++){
-    addManualInputWhiteRule(summaryWs,`J${r}:K${r}`,`$K${r}<>""`);
-  }
-  // J8:K9 : 조회기간 안내문구를 실제 기간으로 수정했을 때
-  addManualInputWhiteRule(
-    summaryWs,
-    'J8:K9',
-    '$J$8<>"*출고량 :"&CHAR(10)&"*반품/교환 건수 :"'
-  );
+  // J2:K9는 다음 주차 내용을 복사/붙여넣기하는 영역이므로
+  // 값이 입력되더라도 흰색으로 전환하지 않고 노란색을 계속 유지합니다.
+  // K3~K5는 수량/건수용 천 단위 콤마, K6~K7은 퍼센트 형식을 미리 지정합니다.
+  for(let r=3;r<=5;r++)summaryWs.getCell(r,11).numFmt='#,##0';
+  for(let r=6;r<=7;r++)summaryWs.getCell(r,11).numFmt='0.00%';
 
   // 통계 탭 열 너비
   // G와 J 동일 / H와 K 동일 / I는 5
@@ -3651,9 +3701,11 @@ function downloadMerged(){
     const r=25+idx;
     summaryWs.getCell(r,7).value=marketplace;
     summaryWs.getCell(r,8).value=''; // 출고량은 다운로드 후 사용자가 직접 입력
+    summaryWs.getCell(r,8).numFmt='#,##0';
     summaryWs.getCell(r,8).fill={type:'pattern',pattern:'solid',fgColor:{argb:unresolvedPartnerFill}};
     addManualInputWhiteRule(summaryWs,`H${r}`,`H${r}<>""`);
     summaryWs.getCell(r,9).value=marketplaceCsCountMap.get(marketplace)||0;
+    summaryWs.getCell(r,9).numFmt='#,##0';
 
     // 출고량이 비어 있거나 0이면 반품률도 빈칸, 숫자를 입력하면 자동 계산
     summaryWs.getCell(r,10).value={formula:`IF(OR(H${r}="",H${r}=0),"",I${r}/H${r})`};
@@ -3663,7 +3715,9 @@ function downloadMerged(){
   // 31행 총합계
   summaryWs.getCell('G31').value='총합계';
   summaryWs.getCell('H31').value={formula:'SUM(H25:H30)'};
+  summaryWs.getCell('H31').numFmt='#,##0';
   summaryWs.getCell('I31').value={formula:'SUM(I25:I30)'};
+  summaryWs.getCell('I31').numFmt='#,##0';
   summaryWs.getCell('J31').value={formula:'IF(OR(H31="",H31=0),"",I31/H31)'};
   summaryWs.getCell('J31').numFmt='0.00%';
 
@@ -4049,10 +4103,12 @@ function downloadMerged(){
     }
 
     detailWs.getCell('B4').value=''; // 상품별 출고량은 다운로드 후 직접 입력
+    detailWs.getCell('B4').numFmt='#,##0';
     // 다운로드 후 수기 입력 안내 대상: 100건 초과 상품 상세 탭의 B4 출고량 입력칸을 동일한 쨍한 노란색으로 표시
     detailWs.getCell('B4').fill={type:'pattern',pattern:'solid',fgColor:{argb:unresolvedPartnerFill}};
     addManualInputWhiteRule(detailWs,'B4','B4<>""');
     detailWs.getCell('C4').value=returnRows.length;
+    detailWs.getCell('C4').numFmt='#,##0';
     detailWs.mergeCells('D4:E4');
     detailWs.getCell('D4').value={formula:'IF(OR(B4="",B4=0),"",C4/B4)'};
     detailWs.getCell('D4').numFmt='0.00%';
@@ -4131,6 +4187,7 @@ function downloadMerged(){
       detailWs.getCell(reasonStart,1).value=reasonIdx+1;
       detailWs.getCell(reasonStart,2).value=reasonItem.reason;
       detailWs.getCell(reasonStart,3).value=reasonItem.count;
+      detailWs.getCell(reasonStart,3).numFmt='#,##0';
       detailWs.getCell(reasonStart,4).value={formula:`C${reasonStart}/$C$4`};
       detailWs.getCell(reasonStart,4).numFmt='0.00%';
 
@@ -4246,6 +4303,31 @@ function downloadMerged(){
   // 제목 셀은 병합 후 서식 재확정
   misdeliveryWs.getCell('A1').font={bold:true,size:14};
   misdeliveryWs.getCell('A1').alignment={horizontal:'center',vertical:'middle'};
+
+  // ------------------------------------------------------------
+  // 숫자 표시 형식 통일
+  // 정수형 수량/건수/순위 등 숫자는 1,000 단위 콤마로 표시합니다.
+  // 주문번호(@)와 퍼센트(%) 셀은 기존 형식을 유지합니다.
+  // ------------------------------------------------------------
+  wb.eachSheet(worksheet=>{
+    worksheet.eachRow({includeEmpty:false},row=>{
+      row.eachCell({includeEmpty:false},cell=>{
+        const currentFmt=String(cell.numFmt||'');
+        if(currentFmt==='@' || currentFmt.includes('%'))return;
+
+        const value=cell.value;
+        if(typeof value==='number' && Number.isFinite(value)){
+          cell.numFmt='#,##0';
+          return;
+        }
+
+        // SUM 등 수량 합계를 계산하는 일반 수식도 콤마 형식을 적용합니다.
+        if(value && typeof value==='object' && typeof value.formula==='string'){
+          if(!currentFmt || currentFmt==='General')cell.numFmt='#,##0';
+        }
+      });
+    });
+  });
 
   const now=new Date();const p=n=>String(n).padStart(2,'0');
   const fileName=`CS목록_통합_${now.getFullYear()}${p(now.getMonth()+1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}.xlsx`;
