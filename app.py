@@ -493,7 +493,54 @@ async def sellmate_products(
 # FLOW Open API
 # ============================================================
 
+FLOW_BASE_URL = "https://api.flow.team"
 FLOW_API_KEY = os.getenv("FLOW_API_KEY", "").strip()
+
+
+def flow_headers() -> Dict[str, str]:
+    if not FLOW_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="FLOW_API_KEY 환경변수가 설정되지 않았습니다."
+        )
+
+    return {
+        "Content-Type": "application/json",
+        "x-flow-api-key": FLOW_API_KEY,
+    }
+
+
+async def flow_get(interface_path: str, params: Optional[Dict[str, str]] = None):
+    path = interface_path if interface_path.startswith("/") else f"/{interface_path}"
+    url = f"{FLOW_BASE_URL}{path}"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                url,
+                headers=flow_headers(),
+                params=params or {},
+            )
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"FLOW API 연결 실패: {exc}"
+        )
+
+    if response.status_code >= 400:
+        detail = response.text[:1500]
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"FLOW API 오류 ({response.status_code}): {detail}"
+        )
+
+    try:
+        return response.json()
+    except ValueError:
+        raise HTTPException(
+            status_code=502,
+            detail="FLOW API가 JSON이 아닌 응답을 반환했습니다."
+        )
 
 
 @app.get("/api/flow/health")
@@ -507,4 +554,17 @@ async def flow_health():
             else "FLOW_API_KEY 환경변수가 설정되지 않았습니다."
         ),
     }
+
+
+@app.get("/api/flow/projects")
+async def flow_projects(cursor: str = Query("0")):
+    """
+    FLOW User API: GET /user/projects
+    현재 API Key 사용자에게 접근 가능한 프로젝트 목록을 조회합니다.
+    """
+    data = await flow_get(
+        "/user/projects",
+        {"cursor": cursor},
+    )
+    return data
 
