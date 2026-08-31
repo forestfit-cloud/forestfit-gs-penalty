@@ -489,3 +489,22 @@ async def sellmate_products(
     )
     return data
 
+# ============================================================
+# FLOW Open API
+# ============================================================
+
+FLOW_API_KEY = os.getenv("FLOW_API_KEY", "").strip()
+
+
+@app.get("/api/flow/health")
+async def flow_health():
+    return {
+        "ok": True,
+        "flow_api_key_configured": bool(FLOW_API_KEY),
+        "message": (
+            "FLOW API KEY가 정상적으로 설정되었습니다."
+            if FLOW_API_KEY
+            else "FLOW_API_KEY 환경변수가 설정되지 않았습니다."
+        ),
+    }
+
