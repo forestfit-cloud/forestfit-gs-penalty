@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import csv
 import io
+import os
 import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -11,7 +12,8 @@ import cv2
 import numpy as np
 import pandas as pd
 import pytesseract
-from fastapi import FastAPI, File, UploadFile
+import httpx
+from fastapi import FastAPI, File, UploadFile, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
@@ -366,3 +368,124 @@ async def analyze(
         "schedule_count": len(schedules),
         "cellmate_csv_base64": cellmate_csv_b64,
     }
+
+# ============================================================
+# Sellmate API integration
+# - Existing OCR endpoints remain unchanged.
+# - Sellmate credentials are read ONLY from environment variables.
+# ============================================================
+
+SELLMATE_BASE_URL = "https://c-api.sellmate.co.kr/external"
+SELLMATE_DOMAIN = os.getenv("SELLMATE_DOMAIN", "").strip()
+SELLMATE_ACCESS_TOKEN = os.getenv("SELLMATE_ACCESS_TOKEN", "").strip()
+
+def sellmate_headers() -> Dict[str, str]:
+    if not SELLMATE_DOMAIN:
+        raise HTTPException(
+            status_code=500,
+            detail="SELLMATE_DOMAIN 환경변수가 설정되지 않았습니다."
+        )
+    if not SELLMATE_ACCESS_TOKEN:
+        raise HTTPException(
+            status_code=500,
+            detail="SELLMATE_ACCESS_TOKEN 환경변수가 설정되지 않았습니다."
+        )
+    return {
+        "Authorization": f"Bearer {SELLMATE_ACCESS_TOKEN}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+async def sellmate_get(interface_path: str, params: Optional[Dict[str, str]] = None):
+    path = interface_path if interface_path.startswith("/") else f"/{interface_path}"
+    url = f"{SELLMATE_BASE_URL}/{SELLMATE_DOMAIN}{path}"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                url,
+                headers=sellmate_headers(),
+                params=params or {},
+            )
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"셀메이트 API 연결 실패: {exc}"
+        )
+
+    # Do not expose the access token or Authorization header in errors.
+    if response.status_code >= 400:
+        detail = response.text[:1000]
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"셀메이트 API 오류 ({response.status_code}): {detail}"
+        )
+
+    try:
+        return response.json()
+    except ValueError:
+        raise HTTPException(
+            status_code=502,
+            detail="셀메이트 API가 JSON이 아닌 응답을 반환했습니다."
+        )
+
+@app.get("/api/sellmate/health")
+async def sellmate_health():
+    return {
+        "ok": True,
+        "sellmate_domain_configured": bool(SELLMATE_DOMAIN),
+        "sellmate_token_configured": bool(SELLMATE_ACCESS_TOKEN),
+        "message": (
+            "환경변수 설정 완료. 실제 API 테스트가 가능합니다."
+            if SELLMATE_DOMAIN and SELLMATE_ACCESS_TOKEN
+            else "SELLMATE_DOMAIN / SELLMATE_ACCESS_TOKEN 설정이 필요합니다."
+        ),
+    }
+
+@app.get("/api/sellmate/orders")
+async def sellmate_orders(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(100, ge=1, le=500),
+):
+    """
+    Sellmate: GET /orders
+    첫 실데이터 연결 테스트용.
+    """
+    data = await sellmate_get(
+        "/orders",
+        {"page": str(page), "per_page": str(per_page)},
+    )
+    return data
+
+@app.get("/api/sellmate/stock-work-categories")
+async def sellmate_stock_work_categories(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(100, ge=1, le=500),
+):
+    """
+    Sellmate: GET /stockWorkCategories
+    재고/입출고 작업구분 확인용.
+    """
+    data = await sellmate_get(
+        "/stockWorkCategories",
+        {"page": str(page), "per_page": str(per_page)},
+    )
+    return data
+
+@app.get("/api/sellmate/products")
+async def sellmate_products(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(100, ge=1, le=500),
+):
+    """
+    Sellmate product endpoint.
+    기본 경로는 /products로 두되, 실제 개발자 문서의 상품 엔드포인트가
+    다른 경우 SELLMATE_PRODUCTS_PATH 환경변수로 변경할 수 있도록 구성.
+    """
+    product_path = os.getenv("SELLMATE_PRODUCTS_PATH", "/products").strip() or "/products"
+    data = await sellmate_get(
+        product_path,
+        {"page": str(page), "per_page": str(per_page)},
+    )
+    return data
+
